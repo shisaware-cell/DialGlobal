@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View, Text, StyleSheet, ScrollView, Pressable, Alert, Platform, Animated,
 } from "react-native";
@@ -6,8 +6,7 @@ import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import C from "@/constants/colors";
-import { useApp } from "@/context/AppContext";
-import { VirtualNumber } from "@/data/mockData";
+import { useApp, VirtualNumber } from "@/context/AppContext";
 
 function NumberRow({ num, idx, onDelete }: { num: VirtualNumber; idx: number; onDelete: () => void }) {
   const [open, setOpen] = useState(false);
@@ -19,25 +18,25 @@ function NumberRow({ num, idx, onDelete }: { num: VirtualNumber; idx: number; on
       >
         <View style={styles.flagBox}>
           <Text style={styles.flagTxt}>{num.flag}</Text>
-          <View style={styles.activeDot} />
+          {num.status === "active" && <View style={styles.activeDot} />}
         </View>
         <View style={{ flex: 1, minWidth: 0 }}>
-          <Text style={styles.numTxt} numberOfLines={1}>{num.number}</Text>
+          <Text style={styles.numTxt} numberOfLines={1}>{num.phone_number}</Text>
           <View style={styles.numMeta}>
             <Text style={styles.numCountry}>{num.country}</Text>
             <View style={styles.dot} />
             <Text style={[styles.numType, { color: num.type === "permanent" ? C.accent : C.green }]}>
-              {num.type === "permanent" ? "Permanent" : `⏱ ${num.expiresIn}`}
+              {num.type === "permanent" ? "Permanent" : `⏱ Temporary`}
             </Text>
           </View>
         </View>
         <View style={styles.rowRight}>
           <View style={{ alignItems: "flex-end" }}>
-            <Text style={styles.statsMini}>{num.calls} calls · {num.sms} msg</Text>
-            {num.missedCalls > 0 && (
+            <Text style={styles.statsMini}>{num.call_count} calls · {num.sms_count} msg</Text>
+            {(num.missed_count || 0) > 0 && (
               <View style={styles.missedRow}>
                 <View style={styles.missedDot} />
-                <Text style={styles.missedTxt}>{num.missedCalls} missed</Text>
+                <Text style={styles.missedTxt}>{num.missed_count} missed</Text>
               </View>
             )}
           </View>
@@ -70,9 +69,13 @@ function NumberRow({ num, idx, onDelete }: { num: VirtualNumber; idx: number; on
 
 export default function NumbersScreen() {
   const insets = useSafeAreaInsets();
-  const { numbers, removeNumber } = useApp();
+  const { numbers, messages, removeNumber, refreshNumbers, profile } = useApp();
   const isWeb = Platform.OS === "web";
   const tabBarH = isWeb ? 84 : 66;
+
+  useEffect(() => {
+    refreshNumbers();
+  }, []);
 
   const handleDelete = (id: string) => {
     Alert.alert("Release Number?", "This number will be permanently deleted.", [
@@ -81,8 +84,16 @@ export default function NumbersScreen() {
     ]);
   };
 
-  const totalCalls = numbers.reduce((s, n) => s + n.calls, 0);
-  const totalSms = numbers.reduce((s, n) => s + n.sms, 0);
+  const totalCalls = numbers.reduce((s, n) => s + (n.call_count || 0), 0);
+  const totalSms = numbers.reduce((s, n) => s + (n.sms_count || 0), 0);
+
+  const greeting = (() => {
+    const h = new Date().getHours();
+    if (h < 12) return "GOOD MORNING";
+    if (h < 17) return "GOOD AFTERNOON";
+    return "GOOD EVENING";
+  })();
+  const userName = profile?.name || "User";
 
   const STATS = [
     { label: "Numbers",  value: numbers.length, iconName: "hash",         color: C.accent },
@@ -97,8 +108,8 @@ export default function NumbersScreen() {
         {/* ── Header ── */}
         <View style={styles.header}>
           <View style={{ flex: 1 }}>
-            <Text style={styles.greeting}>GOOD MORNING</Text>
-            <Text style={styles.headerTitle}>Vusi Hal 👋</Text>
+            <Text style={styles.greeting}>{greeting}</Text>
+            <Text style={styles.headerTitle}>{userName} 👋</Text>
           </View>
           <View style={styles.headerRight}>
             <View style={styles.bellWrap}>
@@ -106,7 +117,7 @@ export default function NumbersScreen() {
               <View style={styles.bellDot} />
             </View>
             <Pressable onPress={() => router.push("/profile")}>
-              <View style={styles.avatar}><Text style={styles.avatarTxt}>V</Text></View>
+              <View style={styles.avatar}><Text style={styles.avatarTxt}>{userName.charAt(0).toUpperCase()}</Text></View>
             </Pressable>
           </View>
         </View>

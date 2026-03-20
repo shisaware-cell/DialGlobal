@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons, Feather } from "@expo/vector-icons";
 import C from "@/constants/colors";
 import { useApp } from "@/context/AppContext";
+import { supabase } from "@/lib/supabase";
 
 export default function Auth() {
   const insets = useSafeAreaInsets();
@@ -19,10 +20,58 @@ export default function Auth() {
   const [err, setErr] = useState("");
   const [showPass, setShowPass] = useState(false);
 
-  const submit = () => {
-    if (!email || !pass || (mode === "signup" && !name)) { setErr("Please fill in all fields."); return; }
-    setErr(""); setLoading(true);
-    setTimeout(() => { setLoading(false); setAuthed(true); router.replace("/(tabs)"); }, 1400);
+  const submit = async () => {
+    if (!email || !pass || (mode === "signup" && !name)) {
+      setErr("Please fill in all fields.");
+      return;
+    }
+    setErr("");
+    setLoading(true);
+
+    try {
+      if (mode === "signup") {
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password: pass,
+          options: { data: { name } },
+        });
+        if (error) throw error;
+
+        if (data.user) {
+          await supabase.from("profiles").upsert({
+            id: data.user.id,
+            email,
+            name,
+            plan: "basic",
+          });
+        }
+
+        if (data.session) {
+          setAuthed(true);
+          router.replace("/(tabs)");
+        } else {
+          const { error: signInErr } = await supabase.auth.signInWithPassword({
+            email,
+            password: pass,
+          });
+          if (signInErr) throw signInErr;
+          setAuthed(true);
+          router.replace("/(tabs)");
+        }
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password: pass,
+        });
+        if (error) throw error;
+        setAuthed(true);
+        router.replace("/(tabs)");
+      }
+    } catch (e: any) {
+      setErr(e.message || "Authentication failed");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (

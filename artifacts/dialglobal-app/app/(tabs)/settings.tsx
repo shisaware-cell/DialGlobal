@@ -41,7 +41,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 export default function Settings() {
   const insets = useSafeAreaInsets();
-  const { currentPlan, billing, setAuthed } = useApp();
+  const { currentPlan, billing, profile, signOut: doSignOut } = useApp();
   const [notifs, setNotifs] = useState(true);
   const [biometric, setBiometric] = useState(false);
   const [forwarding, setForwarding] = useState(true);
@@ -49,17 +49,20 @@ export default function Settings() {
   const plan = PLANS.find(p => p.id === currentPlan);
   const price = billing === "yearly" ? plan?.yearlyPrice : plan?.monthlyPrice;
 
+  const userName = profile?.name || "User";
+  const userEmail = profile?.email || "user@dialglobal.io";
+
   const signOut = () => {
     Alert.alert("Sign Out?", "You'll be logged out on this device.", [
       { text: "Cancel", style: "cancel" },
-      { text: "Sign Out", style: "destructive", onPress: () => { setAuthed(false); router.replace("/auth"); } },
+      { text: "Sign Out", style: "destructive", onPress: async () => { await doSignOut(); router.replace("/auth"); } },
     ]);
   };
 
   const deleteAccount = () => {
     Alert.alert("Delete Account?", "All your numbers and data will be permanently deleted. This cannot be undone.", [
       { text: "Cancel", style: "cancel" },
-      { text: "Delete", style: "destructive", onPress: () => { setAuthed(false); router.replace("/auth"); } },
+      { text: "Delete", style: "destructive", onPress: async () => { await doSignOut(); router.replace("/auth"); } },
     ]);
   };
 
@@ -68,10 +71,10 @@ export default function Settings() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: (isWeb ? 84 : 66) + (insets.bottom > 0 ? insets.bottom : 16) }}>
         {/* Profile header card */}
         <View style={styles.profileCard}>
-          <View style={styles.profileAvatar}><Text style={styles.avatarTxt}>V</Text></View>
+          <View style={styles.profileAvatar}><Text style={styles.avatarTxt}>{userName.charAt(0).toUpperCase()}</Text></View>
           <View style={{ flex: 1, gap: 3 }}>
-            <Text style={styles.profileName}>Vusi Hal</Text>
-            <Text style={styles.profileEmail}>vusi@dialglobal.io</Text>
+            <Text style={styles.profileName}>{userName}</Text>
+            <Text style={styles.profileEmail}>{userEmail}</Text>
             <View style={styles.planTag}>
               <Ionicons name="star" size={11} color={C.accent} />
               <Text style={styles.planTagTxt}>{plan?.name} Plan</Text>
