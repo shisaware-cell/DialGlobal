@@ -65,9 +65,9 @@ export default function Settings() {
 
   return (
     <View style={[styles.root, { paddingTop: insets.top + (isWeb ? 67 : 0) }]}>
-      <Text style={styles.title}>Settings</Text>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: (isWeb ? 84 : 66) + (insets.bottom > 0 ? insets.bottom : 16) }}>
-        <Pressable style={styles.profileCard} onPress={() => router.push("/profile")}>
+        {/* Profile header card */}
+        <View style={styles.profileCard}>
           <View style={styles.profileAvatar}><Text style={styles.avatarTxt}>V</Text></View>
           <View style={{ flex: 1, gap: 3 }}>
             <Text style={styles.profileName}>Vusi Hal</Text>
@@ -77,8 +77,10 @@ export default function Settings() {
               <Text style={styles.planTagTxt}>{plan?.name} Plan</Text>
             </View>
           </View>
-          <Feather name="chevron-right" size={18} color={C.textMuted} />
-        </Pressable>
+          <Pressable style={styles.editBtn} onPress={() => router.push("/profile")}>
+            <Text style={styles.editBtnTxt}>Edit</Text>
+          </Pressable>
+        </View>
 
         <Section title="PREFERENCES">
           <Row icon="bell" label="Notifications" sublabel="Calls, messages & alerts" value={notifs} onToggle={setNotifs} />
@@ -116,21 +118,22 @@ export default function Settings() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: C.bg },
-  title: { fontFamily: "Inter_700Bold", fontSize: 28, color: C.text, paddingHorizontal: 20, paddingBottom: 14, letterSpacing: -0.8 },
-  profileCard: { marginHorizontal: 16, marginBottom: 24, backgroundColor: C.surface, borderRadius: 16, padding: 16, flexDirection: "row", alignItems: "center", gap: 14, borderWidth: 1, borderColor: C.border },
-  profileAvatar: { width: 52, height: 52, borderRadius: 16, backgroundColor: C.accent, alignItems: "center", justifyContent: "center" },
+  profileCard: { backgroundColor: C.surface, padding: 16, paddingHorizontal: 20, flexDirection: "row", alignItems: "center", gap: 14, borderBottomWidth: 1, borderBottomColor: C.border, marginBottom: 20 },
+  profileAvatar: { width: 56, height: 56, borderRadius: 14, backgroundColor: C.accent, alignItems: "center", justifyContent: "center", shadowColor: C.accent, shadowOpacity: 0.3, shadowRadius: 12, shadowOffset: { width:0, height:4 }, elevation: 6 },
   avatarTxt: { fontFamily: "Inter_700Bold", fontSize: 20, color: C.onAccent },
-  profileName: { fontFamily: "Inter_700Bold", fontSize: 17, color: C.text, letterSpacing: -0.3 },
-  profileEmail: { fontFamily: "Inter_400Regular", fontSize: 12.5, color: C.textMuted },
-  planTag: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
-  planTagTxt: { fontFamily: "Inter_600SemiBold", fontSize: 11, color: C.accent },
+  profileName: { fontFamily: "Inter_700Bold", fontSize: 18, color: C.text, letterSpacing: -0.3 },
+  profileEmail: { fontFamily: "Inter_400Regular", fontSize: 12, color: C.textMuted, marginTop: 2 },
+  planTag: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 6 },
+  planTagTxt: { fontFamily: "Inter_700Bold", fontSize: 11, color: C.accent },
+  editBtn: { backgroundColor: C.accentDim, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 8 },
+  editBtnTxt: { fontFamily: "Inter_600SemiBold", fontSize: 12, color: C.accent },
   section: { marginHorizontal: 16, marginBottom: 20 },
-  secTitle: { fontFamily: "Inter_600SemiBold", fontSize: 10, color: C.textMuted, letterSpacing: 1.2, marginBottom: 8 },
-  secCard: { backgroundColor: C.surface, borderRadius: 14, borderWidth: 1, borderColor: C.border, overflow: "hidden" },
-  row: { flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 13, gap: 12 },
-  iconBox: { width: 34, height: 34, borderRadius: 9, alignItems: "center", justifyContent: "center" },
-  rowLabel: { fontFamily: "Inter_500Medium", fontSize: 14, color: C.text },
-  rowSub: { fontFamily: "Inter_400Regular", fontSize: 11.5, color: C.textMuted },
-  divider: { height: 1, backgroundColor: C.border, marginLeft: 60 },
-  version: { textAlign: "center", fontFamily: "Inter_400Regular", fontSize: 11.5, color: C.textMuted, paddingVertical: 16 },
+  secTitle: { fontFamily: "Inter_700Bold", fontSize: 10, color: C.textMuted, letterSpacing: 1.4, marginBottom: 8, paddingLeft: 4 },
+  secCard: { backgroundColor: C.surface, borderRadius: 20, borderWidth: 1, borderColor: C.border, overflow: "hidden" },
+  row: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 14, gap: 12 },
+  iconBox: { width: 34, height: 34, borderRadius: 8, alignItems: "center", justifyContent: "center" },
+  rowLabel: { fontFamily: "Inter_500Medium", fontSize: 13.5, color: C.text },
+  rowSub: { fontFamily: "Inter_400Regular", fontSize: 11, color: C.textMuted },
+  divider: { height: 1, backgroundColor: C.border },
+  version: { textAlign: "center", fontFamily: "Inter_400Regular", fontSize: 11, color: C.textMuted, paddingVertical: 4, paddingBottom: 20 },
 });

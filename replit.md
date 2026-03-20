@@ -55,14 +55,29 @@ Full React + Vite product web app. Light theme — cream bg `#FAFAF9`, white sur
 
 ### DialGlobal Mobile App (`artifacts/dialglobal-app`, port 21355, path `/dialglobal-app/`)
 Expo React Native app for iOS App Store and Google Play. Testable via Expo Go QR code.
-- **Theme**: Light — matches web app exactly: bg `#FAFAF9`, surface `#FFFFFF`, text `#1A1A18`, accent `#E8A020` amber
+- **Theme**: Light cream/amber — exactly matches reference design: bg `#F5F3EF`, surface `#FFFFFF`, raised `#EEECE8`, text `#1A1714`, textSec `#6B6560`, accent `#E8A020`
 - **Navigation**: Expo Router file-based + NativeTabs (liquid glass on iOS 26+) / BlurView (light tint) fallback
-- **4 Tabs**: Numbers (Dashboard + FAB), Inbox (threads + chat), Calls (log), Settings
-- **Stack screens**: Onboarding, Auth, Paywall, Country Picker, Profile, NumberDetail
-- **State**: React Context + AsyncStorage (`context/AppContext.tsx`)
+- **4 Tabs**: Numbers (Dashboard with stats strip + flat expandable rows), Inbox (Messages + Call Log tabs), Calls (log), Settings
+- **Stack screens**: Onboarding (3-slide: globe+flags, dashboard mockup, lock+privacy badges), Auth, Paywall, Country Picker, Profile, NumberDetail
+- **State**: React Context + AsyncStorage (`context/AppContext.tsx`) — currently mock data, pending Supabase
 - **Data**: Mock data in `data/mockData.ts`
 - **Colors**: All tokens in `constants/colors.ts` — use `C.onAccent` for text/icons on amber backgrounds
 - **Bundle IDs**: iOS `com.dialglobal.app`, Android `com.dialglobal.app`
+- **Pending**: Supabase auth + data, Telnyx number provisioning + SMS + VoIP calls
+
+## Integration Roadmap
+
+### Phase 2: Supabase (need credentials)
+- Schema: `profiles`, `virtual_numbers`, `messages`, `calls` tables
+- Auth: Supabase Auth (email/password + session management)
+- Real-time: Supabase Realtime for inbound SMS/call events
+- Env vars needed: `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
+
+### Phase 3: Telnyx (need credentials)
+- Number search + provisioning (Telnyx Numbers API)
+- SMS send/receive (Telnyx Messaging API + webhooks)
+- VoIP calls (Telnyx WebRTC SDK — `@telnyx/webrtc`)
+- Env vars needed: `TELNYX_API_KEY`, `TELNYX_MESSAGING_PROFILE_ID`, `TELNYX_CONNECTION_ID`
 
 ### DialGlobal Admin Dashboard (`artifacts/dialglobal-admin`, port 25321, path `/admin/`)
 React + Vite + Tailwind + shadcn admin panel. Always dark. Sidebar navigation.
