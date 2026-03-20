@@ -1,0 +1,68 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --accent:         #E8A020;
+  --accent-dim:     rgba(232,160,32,0.12);
+  --accent-glow:    rgba(232,160,32,0.28);
+
+  --green:          #16A34A;
+  --green-dim:      rgba(22,163,74,0.12);
+  --red:            #DC2626;
+  --red-dim:        rgba(220,38,38,0.12);
+  --blue:           #2563EB;
+  --blue-dim:       rgba(37,99,235,0.12);
+
+  --bg-base:        #FAFAF9;
+  --bg-surface:     #FFFFFF;
+  --bg-raised:      #F4F4F2;
+  --bg-hover:       #EEEEED;
+  --bg-input:       #F9F9F8;
+
+  --text-primary:   #1A1A18;
+  --text-secondary: #52524E;
+  --text-muted:     #A0A09C;
+
+  --border:         rgba(0,0,0,0.08);
+  --border-strong:  rgba(0,0,0,0.15);
+
+  --font-mono:      'Menlo', 'SF Mono', 'Consolas', monospace;
+
+  --r-sm:  10px;
+  --r-md:  14px;
+  --r-lg:  20px;
+}
+
+html, body, #root {
+  height: 100%;
+  font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'Segoe UI', sans-serif;
+  background: #1a1a2e;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Animations */
+@keyframes spin   { to { transform: rotate(360deg); } }
+@keyframes float  { 0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)} }
+@keyframes pulse  { 0%,100%{opacity:1}50%{opacity:0.45} }
+@keyframes pop    { 0%{transform:scale(0.7);opacity:0}70%{transform:scale(1.12)}100%{transform:scale(1);opacity:1} }
+@keyframes fadeUp { from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)} }
+@keyframes scaleIn{ from{opacity:0;transform:scale(0.96)}to{opacity:1;transform:scale(1)} }
+@keyframes slideUp{ from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)} }
+
+.fade-up  { animation: fadeUp  0.35s ease both; }
+.scale-in { animation: scaleIn 0.4s ease both; }
+.slide-up { animation: slideUp 0.3s cubic-bezier(.34,1.56,.64,1) both; }
+
+/* Interaction helpers */
+.press:active         { transform: scale(0.96); }
+.row-hover:hover      { background: var(--bg-raised) !important; }
+
+/* Scrollbar */
+::-webkit-scrollbar       { width: 0; }
+::-webkit-scrollbar-track { background: transparent; }
+
+/* Input reset */
+input, button, textarea { font-family: inherit; }
+input::placeholder { color: var(--text-muted); }
+
+/* Bottom sheet */
+.bottom-sheet { max-height: 85vh; overflow-y: auto; }
