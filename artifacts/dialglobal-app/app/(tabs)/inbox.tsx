@@ -44,7 +44,7 @@ function ConvoView({ item, onBack }: { item: Msg; onBack: () => void }) {
         renderItem={({ item: m }) => (
           <View style={{ alignItems: m.from === "me" ? "flex-end" : "flex-start" }}>
             <View style={[cv.bubble, m.from === "me" ? cv.mine : cv.theirs]}>
-              <Text style={[cv.bubbleTxt, m.from === "me" && { color: "#0D0D0E" }]}>{m.text}</Text>
+              <Text style={[cv.bubbleTxt, m.from === "me" && { color: C.onAccent }]}>{m.text}</Text>
             </View>
           </View>
         )}
@@ -53,7 +53,7 @@ function ConvoView({ item, onBack }: { item: Msg; onBack: () => void }) {
         <TextInput value={input} onChangeText={setInput} placeholder="Message…" placeholderTextColor={C.textMuted}
           style={cv.msgInput} onSubmitEditing={send} returnKeyType="send" />
         <Pressable style={({ pressed }) => [cv.sendBtn, { opacity: pressed ? 0.8 : 1 }]} onPress={send}>
-          <Feather name="send" size={16} color="#0D0D0E" />
+          <Feather name="send" size={16} color={C.onAccent} />
         </Pressable>
       </View>
     </View>

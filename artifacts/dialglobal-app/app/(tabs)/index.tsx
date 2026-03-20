@@ -47,8 +47,8 @@ function NumberCard({ num, onDelete }: { num: VirtualNumber; onDelete: () => voi
           </View>
           <View style={styles.actionBtns}>
             <Pressable style={[styles.actionBtn, { backgroundColor: C.accent }]}>
-              <Feather name="phone" size={15} color="#0D0D0E" />
-              <Text style={[styles.actionTxt, { color: "#0D0D0E" }]}>Call</Text>
+              <Feather name="phone" size={15} color={C.onAccent} />
+              <Text style={[styles.actionTxt, { color: C.onAccent }]}>Call</Text>
             </Pressable>
             <Pressable style={styles.actionBtn} onPress={() => router.push("/inbox")}>
               <Feather name="message-square" size={15} color={C.textSec} />
@@ -116,7 +116,7 @@ export default function NumbersScreen() {
       </ScrollView>
 
       <Pressable style={[styles.fab, { bottom: tabBarH + (insets.bottom > 0 ? 12 : 20) }]} onPress={() => router.push("/picker")}>
-        <Feather name="plus" size={22} color="#0D0D0E" />
+        <Feather name="plus" size={22} color={C.onAccent} />
       </Pressable>
     </View>
   );
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   greeting: { fontFamily: "Inter_400Regular", fontSize: 11, color: C.textMuted, letterSpacing: 0.5, textTransform: "uppercase" },
   headerTitle: { fontFamily: "Inter_700Bold", fontSize: 28, color: C.text, letterSpacing: -0.8, marginTop: 2 },
   avatar: { width: 40, height: 40, borderRadius: 12, backgroundColor: C.accent, alignItems: "center", justifyContent: "center" },
-  avatarTxt: { fontFamily: "Inter_700Bold", fontSize: 16, color: "#0D0D0E" },
+  avatarTxt: { fontFamily: "Inter_700Bold", fontSize: 16, color: C.onAccent },
   planBanner: { marginHorizontal: 16, marginBottom: 14, backgroundColor: C.accentDim, borderRadius: 12, borderWidth: 1, borderColor: "rgba(232,160,32,0.2)", padding: 12, flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
   planLeft: { flexDirection: "row", alignItems: "center", gap: 6 },
   planTxt: { fontFamily: "Inter_600SemiBold", fontSize: 13, color: C.accent },

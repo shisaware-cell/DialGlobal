@@ -37,7 +37,7 @@ export default function Paywall() {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 100 }}>
         <View style={styles.hero}>
           <View style={styles.heroIcon}>
-            <Ionicons name="globe" size={32} color="#0D0D0E" />
+            <Ionicons name="globe" size={32} color={C.onAccent} />
           </View>
           <Text style={styles.heroTitle}>DialGlobal</Text>
           <Text style={styles.heroSub}>Virtual phone numbers for every use case</Text>
@@ -72,7 +72,7 @@ export default function Paywall() {
                     {cycle === "yearly" && <View style={styles.saveBadge}><Text style={styles.saveTxt}>20% OFF</Text></View>}
                   </View>
                 </View>
-                {isOn && <View style={[styles.check, { backgroundColor: col.main }]}><Feather name="check" size={14} color="#0D0D0E" /></View>}
+                {isOn && <View style={[styles.check, { backgroundColor: col.main }]}><Feather name="check" size={14} color={C.onAccent} /></View>}
                 {!isOn && plan.id === "unlimited" && <View style={styles.popularBadge}><Text style={styles.popularTxt}>POPULAR</Text></View>}
               </View>
               <View style={styles.ftList}>
@@ -128,6 +128,6 @@ const styles = StyleSheet.create({
   ftTxt: { fontFamily: "Inter_400Regular", fontSize: 13.5, color: C.textSec, flex: 1 },
   footer: { paddingHorizontal: 20, paddingTop: 12, gap: 10, borderTopWidth: 1, borderTopColor: C.border, backgroundColor: C.bg },
   btn: { height: 54, backgroundColor: C.accent, borderRadius: 16, alignItems: "center", justifyContent: "center", shadowColor: C.accent, shadowOpacity: 0.4, shadowRadius: 16, shadowOffset: { width:0, height:4 }, elevation: 8 },
-  btnTxt: { fontFamily: "Inter_700Bold", fontSize: 16, color: "#0D0D0E" },
+  btnTxt: { fontFamily: "Inter_700Bold", fontSize: 16, color: C.onAccent },
   legal: { textAlign: "center", fontFamily: "Inter_400Regular", fontSize: 11, color: C.textMuted },
 });

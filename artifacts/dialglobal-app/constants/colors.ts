@@ -1,25 +1,28 @@
 const C = {
   accent: "#E8A020",
-  accentDim: "rgba(232,160,32,0.15)",
-  accentGlow: "rgba(232,160,32,0.3)",
+  accentDim: "rgba(232,160,32,0.12)",
+  accentGlow: "rgba(232,160,32,0.28)",
 
-  green: "#22C55E",
-  greenDim: "rgba(34,197,94,0.15)",
-  red: "#EF4444",
-  redDim: "rgba(239,68,68,0.15)",
-  blue: "#3B82F6",
-  blueDim: "rgba(59,130,246,0.15)",
+  green: "#16A34A",
+  greenDim: "rgba(22,163,74,0.12)",
+  red: "#DC2626",
+  redDim: "rgba(220,38,38,0.12)",
+  blue: "#2563EB",
+  blueDim: "rgba(37,99,235,0.12)",
 
-  bg: "#0D0D0E",
-  surface: "#141416",
-  raised: "#1E1E21",
-  hover: "#262629",
-  border: "rgba(255,255,255,0.08)",
-  borderStrong: "rgba(255,255,255,0.14)",
+  bg: "#FAFAF9",
+  surface: "#FFFFFF",
+  raised: "#F4F4F2",
+  hover: "#EEEEED",
+  input: "#F9F9F8",
+  border: "rgba(0,0,0,0.08)",
+  borderStrong: "rgba(0,0,0,0.15)",
 
-  text: "#FFFFFF",
-  textSec: "rgba(255,255,255,0.6)",
-  textMuted: "rgba(255,255,255,0.35)",
+  text: "#1A1A18",
+  textSec: "#52524E",
+  textMuted: "#A0A09C",
+
+  onAccent: "#FAFAF9",
 };
 
 export default C;

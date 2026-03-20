@@ -88,7 +88,7 @@ export default function Onboarding() {
         </View>
         <Pressable style={({ pressed }) => [styles.btn, { opacity: pressed ? 0.88 : 1 }]} onPress={next}>
           <Text style={styles.btnTxt}>{idx === SLIDES.length - 1 ? "Get Started" : "Continue"}</Text>
-          <Feather name="arrow-right" size={18} color="#0D0D0E" />
+          <Feather name="arrow-right" size={18} color={C.onAccent} />
         </Pressable>
         {idx === 0 && (
           <Pressable onPress={() => router.replace("/auth")} hitSlop={10}>
@@ -115,6 +115,6 @@ const styles = StyleSheet.create({
     height: 56, backgroundColor: C.accent, borderRadius: 16,
     flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8,
   },
-  btnTxt: { fontFamily: "Inter_700Bold", fontSize: 16, color: "#0D0D0E" },
+  btnTxt: { fontFamily: "Inter_700Bold", fontSize: 16, color: C.onAccent },
   logIn: { fontFamily: "Inter_400Regular", fontSize: 13.5, color: C.textMuted, textAlign: "center" },
 });

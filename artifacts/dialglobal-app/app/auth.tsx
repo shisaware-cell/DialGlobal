@@ -34,7 +34,7 @@ export default function Auth() {
 
         <View style={styles.logo}>
           <View style={styles.logoIcon}>
-            <Ionicons name="globe" size={28} color="#0D0D0E" />
+            <Ionicons name="globe" size={28} color={C.onAccent} />
           </View>
           <Text style={styles.logoTxt}>DialGlobal</Text>
           <Text style={styles.logoSub}>Virtual numbers for the world</Text>
@@ -74,8 +74,8 @@ export default function Auth() {
           {err ? <Text style={styles.err}>{err}</Text> : null}
 
           <Pressable style={({ pressed }) => [styles.btn, { opacity: pressed ? 0.88 : 1 }]} onPress={submit} disabled={loading}>
-            {loading ? <ActivityIndicator color="#0D0D0E" /> : (
-              <><Text style={styles.btnTxt}>{mode === "login" ? "Log In" : "Create Account"}</Text><Feather name="arrow-right" size={18} color="#0D0D0E" /></>
+            {loading ? <ActivityIndicator color={C.onAccent} /> : (
+              <><Text style={styles.btnTxt}>{mode === "login" ? "Log In" : "Create Account"}</Text><Feather name="arrow-right" size={18} color={C.onAccent} /></>
             )}
           </Pressable>
 
@@ -116,7 +116,7 @@ const styles = StyleSheet.create({
   eye: { padding: 14 },
   err: { fontFamily: "Inter_400Regular", fontSize: 13, color: C.red, backgroundColor: C.redDim, padding: 12, borderRadius: 10 },
   btn: { height: 54, backgroundColor: C.accent, borderRadius: 16, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8, marginTop: 4, shadowColor: C.accent, shadowOpacity: 0.4, shadowRadius: 16, shadowOffset: { width:0, height:4 }, elevation: 8 },
-  btnTxt: { fontFamily: "Inter_700Bold", fontSize: 16, color: "#0D0D0E" },
+  btnTxt: { fontFamily: "Inter_700Bold", fontSize: 16, color: C.onAccent },
   divRow: { flexDirection: "row", alignItems: "center", gap: 10 },
   div: { flex: 1, height: 1, backgroundColor: C.border },
   divTxt: { fontFamily: "Inter_400Regular", fontSize: 12, color: C.textMuted },

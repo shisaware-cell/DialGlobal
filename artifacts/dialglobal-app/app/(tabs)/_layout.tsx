@@ -51,7 +51,7 @@ function ClassicTabLayout() {
         },
         tabBarBackground: () =>
           isIOS ? (
-            <BlurView intensity={80} tint="dark" style={[StyleSheet.absoluteFill, { borderTopWidth: 0.5, borderTopColor: C.border }]} />
+            <BlurView intensity={80} tint="light" style={[StyleSheet.absoluteFill, { borderTopWidth: 0.5, borderTopColor: C.border }]} />
           ) : (
             <View style={[StyleSheet.absoluteFill, { backgroundColor: C.surface, borderTopWidth: 0.5, borderTopColor: C.border }]} />
           ),

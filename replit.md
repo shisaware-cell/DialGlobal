@@ -51,16 +51,17 @@ Every package extends `tsconfig.base.json` which sets `composite: true`. The roo
 ## Artifacts
 
 ### DialGlobal Web App (`artifacts/dialglobal`, port auto-assigned, path `/`)
-Full React + Vite marketing/product web app. Dark amber theme. Screens: Onboarding, Auth, Dashboard (numbers, FAB), Paywall, Country Picker, Inbox/Messaging, Calls, Settings (Danger Zone), Profile, NumberDetail.
+Full React + Vite product web app. Light theme — cream bg `#FAFAF9`, white surfaces, dark `#1A1A18` text, amber `#E8A020` accent. Screens: Onboarding (3-slide globe), Auth, Dashboard (numbers + FAB), Paywall, Country Picker, Inbox/Messaging (Messages + Call Log subtabs), Settings, Profile, NumberDetail.
 
 ### DialGlobal Mobile App (`artifacts/dialglobal-app`, port 21355, path `/dialglobal-app/`)
 Expo React Native app for iOS App Store and Google Play. Testable via Expo Go QR code.
-- **Theme**: Dark (#0D0D0E) with amber accent (#E8A020)
-- **Navigation**: Expo Router file-based + NativeTabs (liquid glass on iOS 26+) / BlurView fallback
+- **Theme**: Light — matches web app exactly: bg `#FAFAF9`, surface `#FFFFFF`, text `#1A1A18`, accent `#E8A020` amber
+- **Navigation**: Expo Router file-based + NativeTabs (liquid glass on iOS 26+) / BlurView (light tint) fallback
 - **4 Tabs**: Numbers (Dashboard + FAB), Inbox (threads + chat), Calls (log), Settings
 - **Stack screens**: Onboarding, Auth, Paywall, Country Picker, Profile, NumberDetail
 - **State**: React Context + AsyncStorage (`context/AppContext.tsx`)
 - **Data**: Mock data in `data/mockData.ts`
+- **Colors**: All tokens in `constants/colors.ts` — use `C.onAccent` for text/icons on amber backgrounds
 - **Bundle IDs**: iOS `com.dialglobal.app`, Android `com.dialglobal.app`
 
 ### DialGlobal Admin Dashboard (`artifacts/dialglobal-admin`, port 25321, path `/admin/`)

@@ -16,7 +16,7 @@ const queryClient = new QueryClient();
 
 function RootLayoutNav() {
   return (
-    <Stack screenOptions={{ headerShown: false, animation: "ios_from_right", contentStyle: { backgroundColor: "#0D0D0E" } }}>
+    <Stack screenOptions={{ headerShown: false, animation: "ios_from_right", contentStyle: { backgroundColor: "#FAFAF9" } }}>
       <Stack.Screen name="index" />
       <Stack.Screen name="onboarding" />
       <Stack.Screen name="auth" />

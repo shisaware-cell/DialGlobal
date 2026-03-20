@@ -119,7 +119,7 @@ const styles = StyleSheet.create({
   title: { fontFamily: "Inter_700Bold", fontSize: 28, color: C.text, paddingHorizontal: 20, paddingBottom: 14, letterSpacing: -0.8 },
   profileCard: { marginHorizontal: 16, marginBottom: 24, backgroundColor: C.surface, borderRadius: 16, padding: 16, flexDirection: "row", alignItems: "center", gap: 14, borderWidth: 1, borderColor: C.border },
   profileAvatar: { width: 52, height: 52, borderRadius: 16, backgroundColor: C.accent, alignItems: "center", justifyContent: "center" },
-  avatarTxt: { fontFamily: "Inter_700Bold", fontSize: 20, color: "#0D0D0E" },
+  avatarTxt: { fontFamily: "Inter_700Bold", fontSize: 20, color: C.onAccent },
   profileName: { fontFamily: "Inter_700Bold", fontSize: 17, color: C.text, letterSpacing: -0.3 },
   profileEmail: { fontFamily: "Inter_400Regular", fontSize: 12.5, color: C.textMuted },
   planTag: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },

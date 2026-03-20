@@ -45,7 +45,7 @@ export default function Profile() {
           <View style={styles.avatar}>
             <Text style={styles.avatarTxt}>V</Text>
             <Pressable style={styles.editAvatar}>
-              <Feather name="camera" size={13} color="#0D0D0E" />
+              <Feather name="camera" size={13} color={C.textSec} />
             </Pressable>
           </View>
           <Text style={styles.name}>Vusi Hal</Text>
@@ -102,7 +102,7 @@ const styles = StyleSheet.create({
   headerTxt: { fontFamily: "Inter_700Bold", fontSize: 17, color: C.text },
   avatarSection: { alignItems: "center", paddingVertical: 24, gap: 8 },
   avatar: { width: 88, height: 88, borderRadius: 28, backgroundColor: C.accent, alignItems: "center", justifyContent: "center", position: "relative", shadowColor: C.accent, shadowOpacity: 0.4, shadowRadius: 20, shadowOffset: { width:0, height:6 }, elevation: 8 },
-  avatarTxt: { fontFamily: "Inter_700Bold", fontSize: 32, color: "#0D0D0E" },
+  avatarTxt: { fontFamily: "Inter_700Bold", fontSize: 32, color: C.onAccent },
   editAvatar: { position: "absolute", bottom: -6, right: -6, width: 28, height: 28, borderRadius: 8, backgroundColor: C.raised, alignItems: "center", justifyContent: "center", borderWidth: 2, borderColor: C.bg },
   name: { fontFamily: "Inter_700Bold", fontSize: 22, color: C.text, letterSpacing: -0.4 },
   email: { fontFamily: "Inter_400Regular", fontSize: 13, color: C.textMuted },
@@ -118,7 +118,7 @@ const styles = StyleSheet.create({
   planName: { fontFamily: "Inter_700Bold", fontSize: 15, color: C.text },
   planSub: { fontFamily: "Inter_400Regular", fontSize: 12.5, color: C.textMuted },
   upgBtn: { backgroundColor: C.accent, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 99 },
-  upgTxt: { fontFamily: "Inter_700Bold", fontSize: 12, color: "#0D0D0E" },
+  upgTxt: { fontFamily: "Inter_700Bold", fontSize: 12, color: C.onAccent },
   saveBtn: { marginHorizontal: 16, height: 52, backgroundColor: C.accent, borderRadius: 16, alignItems: "center", justifyContent: "center", shadowColor: C.accent, shadowOpacity: 0.35, shadowRadius: 14, shadowOffset: { width:0, height:4 }, elevation: 6 },
-  saveTxt: { fontFamily: "Inter_700Bold", fontSize: 15, color: "#0D0D0E" },
+  saveTxt: { fontFamily: "Inter_700Bold", fontSize: 15, color: C.onAccent },
 });
