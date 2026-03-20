@@ -64,7 +64,7 @@ type AppCtx = {
   messages: Message[];
   calls: Call[];
   addNumber: (n: VirtualNumber) => void;
-  removeNumber: (id: string) => void;
+  removeNumber: (id: string) => Promise<void>;
   refreshNumbers: () => Promise<void>;
   refreshMessages: () => Promise<void>;
   refreshCalls: () => Promise<void>;
@@ -184,7 +184,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addNumber = (n: VirtualNumber) => setNumbers((prev) => [n, ...prev]);
-  const removeNumber = (id: string) => setNumbers((prev) => prev.filter((n) => n.id !== id));
+  const removeNumber = async (id: string) => {
+    setNumbers((prev) => prev.filter((n) => n.id !== id));
+    try {
+      await api.deleteNumber(id);
+    } catch (e) {
+      console.log("Delete number error:", e);
+      refreshNumbers();
+    }
+  };
 
   const signOut = async () => {
     await supabase.auth.signOut();
