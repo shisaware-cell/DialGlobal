@@ -1,0 +1,27 @@
+kind = "mobile"
+previewPath = "/dialglobal-app/"
+title = "DialGlobal Mobile"
+version = "1.0.0"
+id = "artifacts/dialglobal-app"
+router = "expo-domain"
+
+[[integratedSkills]]
+name = "expo"
+version = "1.0.0"
+
+[[services]]
+ensurePreviewReachable = "/status"
+name = "expo"
+paths = [ "/dialglobal-app/" ]
+localPort = 21355
+
+[services.development]
+run = "pnpm --filter @workspace/dialglobal-app run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/dialglobal-app", "run", "build" ]
+run = [ "pnpm", "--filter", "@workspace/dialglobal-app", "run", "serve" ]
+
+[services.env]
+PORT = "21355"
+BASE_PATH = "/dialglobal-app/"

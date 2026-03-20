@@ -48,6 +48,27 @@ Every package extends `tsconfig.base.json` which sets `composite: true`. The roo
 - `pnpm run build` — runs `typecheck` first, then recursively runs `build` in all packages that define it
 - `pnpm run typecheck` — runs `tsc --build --emitDeclarationOnly` using project references
 
+## Artifacts
+
+### DialGlobal Web App (`artifacts/dialglobal`, port auto-assigned, path `/`)
+Full React + Vite marketing/product web app. Dark amber theme. Screens: Onboarding, Auth, Dashboard (numbers, FAB), Paywall, Country Picker, Inbox/Messaging, Calls, Settings (Danger Zone), Profile, NumberDetail.
+
+### DialGlobal Mobile App (`artifacts/dialglobal-app`, port 21355, path `/dialglobal-app/`)
+Expo React Native app for iOS App Store and Google Play. Testable via Expo Go QR code.
+- **Theme**: Dark (#0D0D0E) with amber accent (#E8A020)
+- **Navigation**: Expo Router file-based + NativeTabs (liquid glass on iOS 26+) / BlurView fallback
+- **4 Tabs**: Numbers (Dashboard + FAB), Inbox (threads + chat), Calls (log), Settings
+- **Stack screens**: Onboarding, Auth, Paywall, Country Picker, Profile, NumberDetail
+- **State**: React Context + AsyncStorage (`context/AppContext.tsx`)
+- **Data**: Mock data in `data/mockData.ts`
+- **Bundle IDs**: iOS `com.dialglobal.app`, Android `com.dialglobal.app`
+
+### DialGlobal Admin Dashboard (`artifacts/dialglobal-admin`, port 25321, path `/admin/`)
+React + Vite + Tailwind + shadcn admin panel. Always dark. Sidebar navigation.
+- **Pages**: Dashboard (charts, KPIs, recent signups), Users (table + search/filter), Numbers (virtual number registry), Call Logs (bar chart + log), Revenue (MRR charts, plan pie, transactions), Settings (General, Security, Notifications, Billing, Database, API)
+- **Charts**: recharts (AreaChart, LineChart, BarChart, PieChart)
+- **Supabase**: credentials needed — add `SUPABASE_URL` + `SUPABASE_ANON_KEY` to environment secrets
+
 ## Packages
 
 ### `artifacts/api-server` (`@workspace/api-server`)
