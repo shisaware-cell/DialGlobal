@@ -87,7 +87,7 @@ export default function Profile() {
               <Feather name="camera" size={13} color={C.textSec} />
             </Pressable>
           </View>
-          <Text style={styles.name}>{profile?.name || "User"}</Text>
+          <Text style={styles.name}>{profile?.name || profile?.email?.split("@")[0] || "User"}</Text>
           <Text style={styles.email}>{profile?.email || ""}</Text>
           {plan && (
             <View style={styles.planBadge}>

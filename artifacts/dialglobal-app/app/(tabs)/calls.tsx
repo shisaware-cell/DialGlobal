@@ -12,13 +12,15 @@ const TYPE_META: Record<string, { color: string; bg: string; label: string; icon
   missed:    { color: C.red,      bg: C.redDim,   label: "Missed",    icon: "phone-missed" },
   inbound:   { color: C.green,    bg: C.greenDim, label: "Incoming",  icon: "phone-incoming" },
   outbound:  { color: C.blue,     bg: C.blueDim,  label: "Outgoing",  icon: "phone-outgoing" },
+  voicemail: { color: "#7C3AED",  bg: "rgba(124,58,237,0.09)", label: "Voicemail", icon: "voicemail" },
 };
 
 const FILTERS = [
-  { id: "all",      label: "All" },
-  { id: "missed",   label: "Missed" },
-  { id: "inbound",  label: "Incoming" },
-  { id: "outbound", label: "Outgoing" },
+  { id: "all",       label: "All" },
+  { id: "missed",    label: "Missed" },
+  { id: "inbound",   label: "Incoming" },
+  { id: "outbound",  label: "Outgoing" },
+  { id: "voicemail", label: "Voicemail" },
 ];
 
 function timeAgo(dateStr: string) {
@@ -46,6 +48,7 @@ export default function Calls() {
     if (filter === "missed") return c.status === "missed";
     if (filter === "inbound") return c.direction === "inbound";
     if (filter === "outbound") return c.direction === "outbound";
+    if (filter === "voicemail") return c.status === "voicemail";
     return true;
   });
 
@@ -84,7 +87,7 @@ export default function Calls() {
           </View>
         }
         renderItem={({ item }) => {
-          const statusKey = item.status === "missed" ? "missed" : item.direction;
+          const statusKey = item.status === "voicemail" ? "voicemail" : item.status === "missed" ? "missed" : item.direction;
           const m = TYPE_META[statusKey] ?? TYPE_META.completed;
           const contactNumber = item.direction === "inbound" ? item.from_number : item.to_number;
           const durationStr = item.duration > 0

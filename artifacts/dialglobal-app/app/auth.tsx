@@ -42,6 +42,7 @@ export default function Auth() {
             refresh_token: result.session.refresh_token,
           });
         }
+        await new Promise(resolve => setTimeout(resolve, 300));
         setAuthed(true);
         router.replace("/(tabs)");
       } else {
@@ -50,6 +51,7 @@ export default function Auth() {
           password: pass,
         });
         if (error) throw error;
+        await new Promise(resolve => setTimeout(resolve, 300));
         setAuthed(true);
         router.replace("/(tabs)");
       }

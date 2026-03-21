@@ -4,9 +4,10 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Feather } from "@expo/vector-icons";
+import { Feather, Ionicons } from "@expo/vector-icons";
 import C from "@/constants/colors";
 import { useApp, VirtualNumber } from "@/context/AppContext";
+import { PLANS } from "@/data/mockData";
 
 function NumberRow({ num, idx, onDelete }: { num: VirtualNumber; idx: number; onDelete: () => void }) {
   const [open, setOpen] = useState(false);
@@ -69,7 +70,7 @@ function NumberRow({ num, idx, onDelete }: { num: VirtualNumber; idx: number; on
 
 export default function NumbersScreen() {
   const insets = useSafeAreaInsets();
-  const { numbers, messages, removeNumber, refreshNumbers, profile } = useApp();
+  const { numbers, messages, removeNumber, refreshNumbers, profile, currentPlan } = useApp();
   const isWeb = Platform.OS === "web";
   const tabBarH = isWeb ? 84 : 66;
 
@@ -93,7 +94,7 @@ export default function NumbersScreen() {
     if (h < 17) return "GOOD AFTERNOON";
     return "GOOD EVENING";
   })();
-  const userName = profile?.name || "User";
+  const userName = profile?.name || profile?.email?.split("@")[0] || "User";
 
   const STATS = [
     { label: "Numbers",  value: numbers.length, iconName: "hash",         color: C.accent },
@@ -132,6 +133,33 @@ export default function NumbersScreen() {
             </View>
           ))}
         </View>
+
+        {/* ── Plan banner ── */}
+        {(() => {
+          const plan = PLANS.find(p => p.id === currentPlan) ?? PLANS[0];
+          return (
+            <Pressable
+              style={styles.planBanner}
+              onPress={() => router.push("/paywall")}
+            >
+              <View style={styles.planIconWrap}>
+                <Ionicons name="star" size={18} color={C.accent} />
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.planTitle}>{plan.name} Plan</Text>
+                <Text style={styles.planSub}>
+                  {numbers.length} / {plan.numberLimit} numbers · {plan.countries} countries
+                </Text>
+              </View>
+              <View style={styles.upgradePill}>
+                <Text style={styles.upgradeTxt}>
+                  {currentPlan === "global" ? "Active" : "Upgrade"}
+                </Text>
+                {currentPlan !== "global" && <Feather name="chevron-right" size={12} color={C.onAccent} />}
+              </View>
+            </Pressable>
+          );
+        })()}
 
         {/* ── Numbers list ── */}
         <View style={[styles.listCard, { marginTop: 10 }]}>
@@ -237,6 +265,23 @@ const styles = StyleSheet.create({
   ctaIcon: { width: 40, height: 40, borderRadius: 12, backgroundColor: C.accentDim, alignItems: "center", justifyContent: "center", flexShrink: 0 },
   ctaTitle: { fontFamily: "Inter_700Bold", fontSize: 13.5, color: C.text, letterSpacing: -0.2 },
   ctaSub: { fontFamily: "Inter_400Regular", fontSize: 12, color: C.textSec, marginTop: 2 },
+
+  planBanner: {
+    flexDirection: "row", alignItems: "center", gap: 12, marginHorizontal: 16, marginTop: 16,
+    backgroundColor: C.surface, borderRadius: 16, borderWidth: 1,
+    borderColor: "rgba(232,160,32,0.25)", padding: 14, overflow: "hidden",
+  },
+  planIconWrap: {
+    width: 42, height: 42, borderRadius: 12, backgroundColor: C.accentDim,
+    alignItems: "center", justifyContent: "center", flexShrink: 0,
+  },
+  planTitle: { fontFamily: "Inter_700Bold", fontSize: 14, color: C.text, letterSpacing: -0.2 },
+  planSub: { fontFamily: "Inter_400Regular", fontSize: 11.5, color: C.textMuted, marginTop: 2 },
+  upgradePill: {
+    flexDirection: "row", alignItems: "center", gap: 3,
+    backgroundColor: C.accent, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 99,
+  },
+  upgradeTxt: { fontFamily: "Inter_700Bold", fontSize: 12, color: C.onAccent },
 
   fab: { position: "absolute", right: 20, width: 56, height: 56, borderRadius: 18, backgroundColor: C.accent, alignItems: "center", justifyContent: "center", shadowColor: C.accent, shadowOpacity: 0.45, shadowRadius: 18, shadowOffset: { width: 0, height: 6 }, elevation: 10 },
 });

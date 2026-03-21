@@ -155,6 +155,32 @@ export default function Paywall() {
           );
         })}
 
+        {/* ── How We Compare ── */}
+        <View style={styles.compareSec}>
+          <Text style={styles.compareTitle}>HOW WE COMPARE</Text>
+          <View style={styles.compareCard}>
+            <View style={styles.compareHeaderRow}>
+              <View style={{ flex: 2 }} />
+              <Text style={[styles.compareColHead, { flex: 1 }]}>Them</Text>
+              <Text style={[styles.compareColHead, styles.compareUs, { flex: 1 }]}>Us</Text>
+            </View>
+            {([
+              { feature: "Virtual numbers",     them: "1",          us: "Up to 10"      },
+              { feature: "Countries",            them: "3–5",       us: "100+"           },
+              { feature: "SMS & Calls",          them: "Limited",   us: "Unlimited"      },
+              { feature: "Spam blocking",        them: "❌",        us: "✅"             },
+              { feature: "Ghost Mode",           them: "❌",        us: "✅"             },
+              { feature: "Price",                them: "$7.99/mo",  us: "$1.99/mo"       },
+            ] as const).map((row, i) => (
+              <View key={i} style={[styles.compareRow, i % 2 === 0 && { backgroundColor: C.raised }]}>
+                <Text style={[styles.compareFeature, { flex: 2 }]}>{row.feature}</Text>
+                <Text style={[styles.compareThem, { flex: 1 }]}>{row.them}</Text>
+                <Text style={[styles.compareUsVal, { flex: 1 }]}>{row.us}</Text>
+              </View>
+            ))}
+          </View>
+        </View>
+
         {/* Trial note */}
         <View style={styles.trialNote}>
           <Feather name="gift" size={14} color={C.accent} />
@@ -267,4 +293,36 @@ const styles = StyleSheet.create({
   },
   btnTxt: { fontFamily: "Inter_700Bold", fontSize: 16, color: C.onAccent },
   legal: { textAlign: "center", fontFamily: "Inter_400Regular", fontSize: 11, color: C.textMuted },
+
+  compareSec: { marginTop: 8, marginBottom: 12 },
+  compareTitle: {
+    fontFamily: "Inter_700Bold", fontSize: 10, color: C.textMuted,
+    letterSpacing: 1.4, marginBottom: 10,
+  },
+  compareCard: {
+    backgroundColor: C.surface, borderRadius: 14, borderWidth: 1,
+    borderColor: C.border, overflow: "hidden",
+  },
+  compareHeaderRow: {
+    flexDirection: "row", alignItems: "center", paddingHorizontal: 14,
+    paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: C.border,
+  },
+  compareColHead: {
+    fontFamily: "Inter_700Bold", fontSize: 11, color: C.textMuted,
+    textAlign: "center", letterSpacing: 0.5,
+  },
+  compareUs: { color: C.accent },
+  compareRow: {
+    flexDirection: "row", alignItems: "center", paddingHorizontal: 14,
+    paddingVertical: 11,
+  },
+  compareFeature: { fontFamily: "Inter_500Medium", fontSize: 12.5, color: C.text },
+  compareThem: {
+    fontFamily: "Inter_400Regular", fontSize: 12, color: C.textMuted,
+    textAlign: "center",
+  },
+  compareUsVal: {
+    fontFamily: "Inter_700Bold", fontSize: 12, color: C.accent,
+    textAlign: "center",
+  },
 });
