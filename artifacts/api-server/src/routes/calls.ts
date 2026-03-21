@@ -31,7 +31,7 @@ router.post("/calls/initiate", async (req, res) => {
   }
 
   try {
-    const call = await telnyx.calls.create({
+    const call = await telnyx.calls.dial({
       connection_id: process.env.TELNYX_CONNECTION_ID!,
       to: to_number,
       from: from_number,

@@ -67,6 +67,12 @@ Expo React Native app for iOS App Store and Google Play. Testable via Expo Go QR
 - **Bundle IDs**: iOS `com.dialglobal.app`, Android `com.dialglobal.app`
 - **Schema fields**: VirtualNumber uses `phone_number`, `call_count`, `sms_count`, `missed_count` (not `number`/`calls`/`sms`/`missedCalls`)
 - **T003 COMPLETE**: All real auth/data wired, 5 new screens built, all schema bugs fixed
+- **Dialer COMPLETE**: `app/dialer.tsx` — full phone keypad, virtual number selector, outbound call via Telnyx, in-call timer + mute/speaker, hang-up flow
+- **Upgrade screen COMPLETE**: `app/upgrade.tsx` — in-app plan upgrade with billing toggle, plan cards, saves to Supabase
+- **Number deletion COMPLETE**: `DELETE /numbers/:id` now releases number from Telnyx via `telnyx.phoneNumbers.delete()` before removing from DB
+- **Trial expiry COMPLETE**: `GET /numbers` runs `cleanupExpiredNumbers()` which marks expired trial numbers as "expired" and releases from Telnyx; `POST /numbers/provision` accepts `trial_days` param to set `expires_at`
+- **Calls route fix**: `telnyx.calls.dial()` (not `.create()`) — SDK v6.22.0 pattern
+- **Picker key fix**: picker.tsx uses `${num}-${idx}` key to prevent duplicate key warning
 
 ## Backend Integration (COMPLETE)
 

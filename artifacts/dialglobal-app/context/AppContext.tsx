@@ -68,7 +68,7 @@ type AppCtx = {
   pendingPlan: string;
   selectPlan: (planId: string) => void;
   billing: "monthly" | "yearly";
-  upgradePlan: (planId: string, cycle?: "monthly" | "yearly") => void;
+  upgradePlan: (planId: string, cycle?: "monthly" | "yearly") => Promise<void>;
 
   isInTrial: boolean;
   trialEnds: Date | null;
@@ -291,7 +291,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setPendingPlan(planId);
   }, []);
 
-  const upgradePlan = (planId: string, cycle: "monthly" | "yearly" = "monthly") => {
+  const upgradePlan = async (planId: string, cycle: "monthly" | "yearly" = "monthly") => {
     setCurrentPlan(planId);
     setTrialPlan(planId);
     setBilling(cycle);
@@ -299,7 +299,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setTrialExpired(false);
     setTrialEnds(new Date(Date.now() + 3 * 86400000));
     if (user) {
-      supabase.from("profiles").update({ plan: planId }).eq("id", user.id);
+      await supabase.from("profiles").update({ plan: planId }).eq("id", user.id);
     }
   };
 

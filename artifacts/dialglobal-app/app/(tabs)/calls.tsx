@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { View, Text, StyleSheet, FlatList, Pressable, Platform, ScrollView } from "react-native";
+import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import C from "@/constants/colors";
@@ -174,10 +175,15 @@ export default function Calls() {
       <View style={styles.headerWrap}>
         <View style={styles.headerTopRow}>
           <Text style={styles.title}>Calls</Text>
-          <Pressable style={styles.simCallBtn} onPress={simulateIncomingCall}>
-            <View style={styles.simDot} />
-            <Text style={styles.simCallTxt}>Simulate Call</Text>
-          </Pressable>
+          <View style={{ flexDirection: "row", gap: 8 }}>
+            <Pressable style={styles.dialBtn} onPress={() => router.push("/dialer")}>
+              <Feather name="phone-outgoing" size={14} color={C.onAccent} />
+              <Text style={styles.dialBtnTxt}>New Call</Text>
+            </Pressable>
+            <Pressable style={styles.simCallBtn} onPress={simulateIncomingCall}>
+              <View style={styles.simDot} />
+            </Pressable>
+          </View>
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 7, paddingBottom: 2 }}>
           {FILTERS.map(f => (
@@ -234,9 +240,10 @@ const styles = StyleSheet.create({
   headerWrap: { backgroundColor: C.surface, paddingHorizontal: 20, paddingTop: 10, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: C.border },
   headerTopRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
   title: { fontFamily: "Inter_700Bold", fontSize: 20, color: C.text, letterSpacing: -0.4 },
-  simCallBtn: { flexDirection: "row", alignItems: "center", gap: 6, height: 32, paddingHorizontal: 12, backgroundColor: C.greenDim, borderWidth: 1, borderColor: "rgba(22,163,74,0.2)", borderRadius: 99 },
-  simDot: { width: 7, height: 7, borderRadius: 3.5, backgroundColor: C.green },
-  simCallTxt: { fontFamily: "Inter_700Bold", fontSize: 11.5, color: C.green },
+  dialBtn: { flexDirection: "row", alignItems: "center", gap: 5, height: 32, paddingHorizontal: 13, backgroundColor: C.accent, borderRadius: 99 },
+  dialBtnTxt: { fontFamily: "Inter_700Bold", fontSize: 12, color: C.onAccent },
+  simCallBtn: { width: 32, height: 32, alignItems: "center", justifyContent: "center", backgroundColor: C.greenDim, borderWidth: 1, borderColor: "rgba(22,163,74,0.2)", borderRadius: 99 },
+  simDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: C.green },
 
   filterChip: { height: 28, paddingHorizontal: 12, borderRadius: 99, borderWidth: 1.5, borderColor: C.border, alignItems: "center", justifyContent: "center", flexDirection: "row", gap: 5 },
   filterChipActive: { borderColor: C.accent, backgroundColor: C.accentDim },

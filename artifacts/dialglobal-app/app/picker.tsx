@@ -133,11 +133,11 @@ export default function Picker() {
         ) : (
           <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}>
             <Text style={styles.groupHeader}>AVAILABLE NUMBERS</Text>
-            {availableNumbers.map(num => {
+            {availableNumbers.map((num, idx) => {
               const isLoading = provisioning === num;
               return (
                 <Pressable
-                  key={num}
+                  key={`${num}-${idx}`}
                   style={({ pressed }) => [styles.numberItem, { opacity: pressed ? 0.8 : 1 }]}
                   onPress={() => handleProvision(num)}
                   disabled={provisioning !== null}

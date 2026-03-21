@@ -253,7 +253,7 @@ export default function NumbersScreen() {
                 </View>
               </View>
             </View>
-            <Pressable onPress={() => router.push("/paywall")} style={styles.trialUpgradeBtn}>
+            <Pressable onPress={() => router.push("/upgrade")} style={styles.trialUpgradeBtn}>
               <Text style={styles.trialUpgradeTxt}>Upgrade to unlock full plan →</Text>
             </Pressable>
           </View>
