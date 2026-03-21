@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import {
-  View, Text, StyleSheet, ScrollView, Pressable, Switch, Alert, Clipboard, Platform,
+  View, Text, StyleSheet, ScrollView, Pressable, Switch, Alert, Clipboard, TextInput, Platform,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -11,13 +11,17 @@ import { useApp } from "@/context/AppContext";
 export default function NumberDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const insets = useSafeAreaInsets();
-  const { numbers, removeNumber, calls } = useApp();
+  const {
+    numbers, removeNumber, calls,
+    recordings, toggleRecording,
+    forwarding, toggleForwarding,
+    forwardingNums, setForwardingNum,
+    showToast,
+  } = useApp();
   const num = numbers.find(n => n.id === id);
 
-  const [forwarding, setForwarding]   = useState(false);
-  const [voicemail,  setVoicemail]    = useState(true);
-  const [recording,  setRecording]    = useState(false);
-  const [fwdNumber,  setFwdNumber]    = useState("");
+  const [voicemail, setVoicemail] = useState(true);
+  const [fwdInput, setFwdInput] = useState(forwardingNums[id ?? ""] ?? "");
 
   if (!num) {
     return (
@@ -51,7 +55,7 @@ export default function NumberDetail() {
 
   const copyNumber = () => {
     Clipboard.setString(num.phone_number);
-    Alert.alert("Copied!", `${num.phone_number} copied to clipboard.`);
+    showToast(`${num.phone_number} copied!`, "success");
   };
 
   function timeAgo(dateStr: string) {
@@ -63,8 +67,8 @@ export default function NumberDetail() {
   }
 
   const CALL_META: Record<string, { color: string; label: string; icon: string }> = {
-    missed:    { color: C.red,   label: "Missed",    icon: "phone-missed" },
-    completed: { color: C.green, label: "Completed", icon: "phone-call"   },
+    missed:    { color: C.red,   label: "Missed",    icon: "phone-missed"   },
+    completed: { color: C.green, label: "Completed", icon: "phone-call"     },
     initiated: { color: C.blue,  label: "Outgoing",  icon: "phone-outgoing" },
     ringing:   { color: C.blue,  label: "Ringing",   icon: "phone-incoming" },
   };
@@ -72,6 +76,24 @@ export default function NumberDetail() {
   const typeLabel = num.type === "permanent" ? "Permanent" : "Temporary";
   const typeColor = num.type === "permanent" ? C.accent : C.green;
   const typeBg    = num.type === "permanent" ? C.accentDim : C.greenDim;
+
+  const isRecording = recordings[num.id] ?? false;
+  const isForwarding = forwarding[num.id] ?? false;
+
+  const handleToggleRecording = (v: boolean) => {
+    toggleRecording(num.id);
+    showToast(v ? "Recording enabled" : "Recording disabled", v ? "success" : "info");
+  };
+
+  const handleToggleForwarding = (v: boolean) => {
+    toggleForwarding(num.id);
+    showToast(v ? "Forwarding enabled" : "Forwarding disabled", v ? "success" : "info");
+  };
+
+  const handleSaveFwdNum = () => {
+    setForwardingNum(num.id, fwdInput);
+    showToast("Forwarding number saved", "success");
+  };
 
   return (
     <View style={[styles.root, { paddingTop: insets.top + 8 }]}>
@@ -129,9 +151,9 @@ export default function NumberDetail() {
         {/* ── Quick actions ── */}
         <View style={styles.quickRow}>
           {[
-            { icon: "phone",         label: "Call",    onPress: () => {} },
-            { icon: "message-square",label: "Message", onPress: () => router.push("/(tabs)/inbox") },
-            { icon: "copy",          label: "Copy",    onPress: copyNumber },
+            { icon: "phone",          label: "Call",    onPress: () => {} },
+            { icon: "message-square", label: "Message", onPress: () => router.push("/(tabs)/inbox") },
+            { icon: "copy",           label: "Copy",    onPress: copyNumber },
           ].map(q => (
             <Pressable
               key={q.label}
@@ -144,35 +166,53 @@ export default function NumberDetail() {
           ))}
         </View>
 
-        {/* ── Settings ── */}
-        <Text style={styles.secTitle}>SETTINGS</Text>
+        {/* ── Call Settings ── */}
+        <Text style={styles.secTitle}>CALL SETTINGS</Text>
         <View style={styles.card}>
           <SettingRow
             icon="voicemail"
             label="Voicemail"
+            sublabel="Receive voicemail when unavailable"
             val={voicemail}
             onToggle={setVoicemail}
           />
           <View style={styles.div} />
           <SettingRow
-            icon="disc"
+            icon="mic"
             label="Call Recording"
-            val={recording}
-            onToggle={setRecording}
+            sublabel="Auto-save all calls for this number"
+            val={isRecording}
+            onToggle={handleToggleRecording}
           />
           <View style={styles.div} />
           <SettingRow
             icon="phone-forwarded"
             label="Call Forwarding"
-            val={forwarding}
-            onToggle={v => { setForwarding(v); }}
+            sublabel="Route calls to another number"
+            val={isForwarding}
+            onToggle={handleToggleForwarding}
           />
+          {isForwarding && (
+            <View style={styles.fwdInputWrap}>
+              <TextInput
+                style={styles.fwdInput}
+                placeholder="+1 (555) 000-0000"
+                placeholderTextColor={C.textMuted}
+                value={fwdInput}
+                onChangeText={setFwdInput}
+                keyboardType="phone-pad"
+              />
+              <Pressable style={styles.fwdSaveBtn} onPress={handleSaveFwdNum}>
+                <Text style={styles.fwdSaveTxt}>Save</Text>
+              </Pressable>
+            </View>
+          )}
         </View>
 
         {/* ── Manage ── */}
         <Text style={styles.secTitle}>MANAGE</Text>
         <View style={styles.card}>
-          <SettingRow icon="edit-3"        label="Rename Number"          onPress={() => {}} />
+          <SettingRow icon="edit-3"         label="Rename Number"         onPress={() => {}} />
           <View style={styles.div} />
           <SettingRow icon="message-circle" label="Auto-Reply Scheduler"  onPress={() => router.push("/autoreply")} />
           <View style={styles.div} />
@@ -229,18 +269,24 @@ export default function NumberDetail() {
 }
 
 function SettingRow({
-  icon, label, val, onToggle, onPress,
+  icon, label, sublabel, val, onToggle, onPress,
 }: {
   icon: string;
   label: string;
+  sublabel?: string;
   val?: boolean;
   onToggle?: (v: boolean) => void;
   onPress?: () => void;
 }) {
   return (
     <Pressable style={styles.settingRow} onPress={onPress} disabled={!onPress && onToggle !== undefined}>
-      <Feather name={icon as any} size={15} color={C.accent} />
-      <Text style={styles.settingLabel}>{label}</Text>
+      <View style={styles.settingIconBox}>
+        <Feather name={icon as any} size={14} color={C.accent} />
+      </View>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.settingLabel}>{label}</Text>
+        {sublabel && <Text style={styles.settingSub}>{sublabel}</Text>}
+      </View>
       {onToggle !== undefined ? (
         <Switch
           value={val}
@@ -310,12 +356,28 @@ const styles = StyleSheet.create({
     marginHorizontal: 16, marginBottom: 20, backgroundColor: C.surface,
     borderRadius: 14, borderWidth: 1, borderColor: C.border, overflow: "hidden",
   },
-  div: { height: 1, backgroundColor: C.border, marginLeft: 44 },
+  div: { height: 1, backgroundColor: C.border, marginLeft: 54 },
 
   settingRow: {
-    flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 14, gap: 12,
+    flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 12, gap: 12,
   },
-  settingLabel: { flex: 1, fontFamily: "Inter_500Medium", fontSize: 14, color: C.text },
+  settingIconBox: { width: 32, height: 32, borderRadius: 8, backgroundColor: C.accentDim, alignItems: "center", justifyContent: "center", flexShrink: 0 },
+  settingLabel: { fontFamily: "Inter_500Medium", fontSize: 13.5, color: C.text },
+  settingSub: { fontFamily: "Inter_400Regular", fontSize: 11, color: C.textMuted, marginTop: 1 },
+
+  fwdInputWrap: {
+    flexDirection: "row", alignItems: "center", gap: 8,
+    marginHorizontal: 14, marginBottom: 12, marginTop: 4,
+  },
+  fwdInput: {
+    flex: 1, height: 44, backgroundColor: C.input, borderRadius: 10, borderWidth: 1, borderColor: C.border,
+    paddingHorizontal: 14, fontFamily: "Inter_400Regular", fontSize: 14, color: C.text,
+  },
+  fwdSaveBtn: {
+    height: 44, paddingHorizontal: 18, backgroundColor: C.accent, borderRadius: 10,
+    alignItems: "center", justifyContent: "center",
+  },
+  fwdSaveTxt: { fontFamily: "Inter_700Bold", fontSize: 13, color: C.onAccent },
 
   callRow: { flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 12, gap: 12 },
   callIcon: { width: 36, height: 36, borderRadius: 10, alignItems: "center", justifyContent: "center", flexShrink: 0 },

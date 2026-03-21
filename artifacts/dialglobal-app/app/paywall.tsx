@@ -7,37 +7,66 @@ import C from "@/constants/colors";
 import { PLANS } from "@/data/mockData";
 import { useApp } from "@/context/AppContext";
 
+const PLAN_ICONS: Record<string, string> = {
+  free: "🎯", starter: "⚡", pro: "🔥", global: "🌍",
+};
+
 const PLAN_COLORS: Record<string, { main: string; dim: string }> = {
-  basic:     { main: C.textSec,  dim: C.raised },
-  unlimited: { main: C.accent,   dim: C.accentDim },
-  global:    { main: "#B794F4",  dim: "rgba(183,148,244,0.12)" },
+  free:    { main: C.textSec,  dim: C.raised },
+  starter: { main: C.accent,   dim: C.accentDim },
+  pro:     { main: C.green,    dim: C.greenDim },
+  global:  { main: C.purple,   dim: C.purpleDim },
 };
 
-const CREDITS_BONUS: Record<string, { amount: string; label: string }> = {
-  basic:     { amount: "+200 ⭐", label: "credits included" },
-  unlimited: { amount: "+1,000 ⭐", label: "credits included" },
-  global:    { amount: "+5,000 ⭐", label: "credits included" },
-};
-
-const BENEFITS = [
-  { icon: "globe",          text: "Virtual number in 100+ countries"     },
-  { icon: "message-square", text: "Unlimited texts & calls"               },
-  { icon: "slash",          text: "Spam & robocall blocker built-in"      },
-  { icon: "shield",         text: "Your real number always stays hidden"  },
-  { icon: "zap",            text: "Instant number activation"             },
-  { icon: "x-circle",       text: "No contracts, cancel anytime"          },
-];
+const COMPARE_ROWS = [
+  { feature: "Virtual numbers",  them: "1",         us: "Up to 15"   },
+  { feature: "Countries",        them: "3–5",        us: "100+"        },
+  { feature: "SMS & Calls",      them: "Limited",    us: "Unlimited"   },
+  { feature: "Call recording",   them: "❌",         us: "✅"          },
+  { feature: "Spam blocking",    them: "❌",         us: "✅"          },
+  { feature: "Price",            them: "$7.99/mo",   us: "From free"   },
+] as const;
 
 export default function Paywall() {
   const insets = useSafeAreaInsets();
   const { currentPlan, billing, upgradePlan } = useApp();
-  const [cycle,    setCycle]    = useState<"monthly" | "yearly">(billing);
-  const [selected, setSelected] = useState(currentPlan);
+  const [cycle, setCycle]     = useState<"monthly" | "yearly">(billing);
+  const [selected, setSelected] = useState(currentPlan === "free" ? "starter" : currentPlan);
+  const [loading, setLoading] = useState(false);
+  const [step, setStep]       = useState<"plans" | "success">("plans");
 
-  const handleSelect = () => {
-    upgradePlan(selected, cycle);
-    router.back();
+  const activePlan = PLANS.find(p => p.id === selected) ?? PLANS[1];
+  const price = cycle === "yearly" ? activePlan.yearlyPrice : activePlan.monthlyPrice;
+  const annualSave = ((activePlan.monthlyPrice - activePlan.yearlyPrice) * 12).toFixed(2);
+
+  const handleSubscribe = () => {
+    if (selected === "free" || selected === currentPlan) {
+      router.back();
+      return;
+    }
+    setLoading(true);
+    setTimeout(() => {
+      upgradePlan(selected, cycle);
+      setLoading(false);
+      setStep("success");
+    }, 1200);
   };
+
+  if (step === "success") {
+    return (
+      <View style={[styles.root, styles.successRoot, { paddingTop: insets.top + 40 }]}>
+        <Text style={styles.successEmoji}>🎉</Text>
+        <Text style={styles.successTitle}>You're on {activePlan.name}!</Text>
+        <Text style={styles.successSub}>
+          Your plan is now active. Enjoy {activePlan.numberLimit} numbers in{" "}
+          {typeof activePlan.countries === "string" ? activePlan.countries : "3"}+ countries.
+        </Text>
+        <Pressable style={styles.successBtn} onPress={() => { setStep("plans"); router.back(); }}>
+          <Text style={styles.btnTxt}>Start Exploring →</Text>
+        </Pressable>
+      </View>
+    );
+  }
 
   return (
     <View style={[styles.root, { paddingTop: insets.top + 6 }]}>
@@ -56,23 +85,11 @@ export default function Paywall() {
         contentContainerStyle={{ paddingHorizontal: 16, paddingBottom: insets.bottom + 110 }}
       >
 
-        {/* ── Crown hero ── */}
+        {/* ── Hero ── */}
         <View style={styles.hero}>
-          <Text style={styles.crown}>👑</Text>
-          <Text style={styles.heroTitle}>Go Premium</Text>
-          <Text style={styles.heroSub}>Everything you need for a global presence</Text>
-        </View>
-
-        {/* ── Benefits checklist ── */}
-        <View style={styles.benefitsCard}>
-          {BENEFITS.map(b => (
-            <View key={b.text} style={styles.benefitRow}>
-              <View style={styles.benefitCheck}>
-                <Feather name="check" size={12} color={C.onAccent} />
-              </View>
-              <Text style={styles.benefitTxt}>{b.text}</Text>
-            </View>
-          ))}
+          <Text style={styles.crown}>✨</Text>
+          <Text style={styles.heroTitle}>Choose your plan</Text>
+          <Text style={styles.heroSub}>Powered by Telnyx · Global coverage · Instant setup</Text>
         </View>
 
         {/* ── Billing toggle ── */}
@@ -84,11 +101,11 @@ export default function Paywall() {
               onPress={() => setCycle(c)}
             >
               <Text style={[styles.cycleTxt, cycle === c && styles.cycleTxtOn]}>
-                {c === "monthly" ? "Monthly" : "Yearly"}
+                {c === "monthly" ? "Monthly" : "Annual"}
               </Text>
               {c === "yearly" && (
                 <View style={styles.savePill}>
-                  <Text style={styles.savePillTxt}>Save 20%</Text>
+                  <Text style={styles.savePillTxt}>-20%</Text>
                 </View>
               )}
             </Pressable>
@@ -96,61 +113,85 @@ export default function Paywall() {
         </View>
 
         {/* ── Plan cards ── */}
-        {PLANS.map(plan => {
-          const col    = PLAN_COLORS[plan.id];
-          const price  = cycle === "yearly" ? plan.yearlyPrice : plan.monthlyPrice;
-          const isOn   = selected === plan.id;
-          const credit = CREDITS_BONUS[plan.id];
+        {PLANS.map((plan, i) => {
+          const col   = PLAN_COLORS[plan.id];
+          const dp    = cycle === "yearly" ? plan.yearlyPrice : plan.monthlyPrice;
+          const isSel = selected === plan.id;
+          const isCur = currentPlan === plan.id;
+
           return (
             <Pressable
               key={plan.id}
               style={[
                 styles.planCard,
-                { borderColor: isOn ? col.main : C.border, backgroundColor: isOn ? col.dim : C.surface },
+                { borderColor: isSel ? col.main : C.border, backgroundColor: isSel ? col.dim : C.surface },
               ]}
               onPress={() => setSelected(plan.id)}
             >
-              {/* Radio + name row */}
-              <View style={styles.planHead}>
-                <View style={[styles.radio, isOn && { borderColor: col.main, backgroundColor: col.main }]}>
-                  {isOn && <View style={styles.radioDot} />}
-                </View>
-                <View style={{ flex: 1 }}>
-                  <View style={styles.nameRow}>
-                    <Text style={[styles.planName, { color: col.main }]}>{plan.name}</Text>
-                    {!isOn && plan.id === "unlimited" && (
-                      <View style={styles.popularBadge}><Text style={styles.popularTxt}>POPULAR</Text></View>
-                    )}
-                  </View>
-                  <View style={styles.priceRow}>
-                    <Text style={styles.price}>${price}</Text>
-                    <Text style={styles.perMo}>/ mo</Text>
-                    {cycle === "yearly" && (
-                      <View style={styles.offBadge}><Text style={styles.offTxt}>20% OFF</Text></View>
-                    )}
-                  </View>
-                </View>
-              </View>
-
-              {/* Credits bonus */}
-              {credit && (
-                <View style={[styles.creditRow, { borderColor: col.main + "33" }]}>
-                  <Text style={[styles.creditAmt, { color: col.main }]}>{credit.amount}</Text>
-                  <Text style={styles.creditLbl}>{credit.label}</Text>
+              {/* Tag bar */}
+              {plan.tag && (
+                <View style={[styles.tagBar, { backgroundColor: plan.tagColor ?? C.accent }]}>
+                  <Text style={styles.tagTxt}>{plan.tag}</Text>
                 </View>
               )}
 
-              {/* Feature list — shown when selected */}
-              {isOn && (
-                <View style={styles.ftList}>
-                  {plan.features.map(f => (
-                    <View key={f} style={styles.ftRow}>
-                      <Feather name="check" size={13} color={col.main} />
-                      <Text style={styles.ftTxt}>{f}</Text>
+              <View style={{ padding: 14 }}>
+                {/* Plan header */}
+                <View style={styles.planHead}>
+                  <View style={[styles.planIconBox, { backgroundColor: isSel ? col.dim : C.raised }]}>
+                    <Text style={{ fontSize: 20 }}>{PLAN_ICONS[plan.id]}</Text>
+                  </View>
+                  <View style={{ flex: 1 }}>
+                    <View style={styles.nameRow}>
+                      <Text style={[styles.planName, { color: col.main }]}>{plan.name}</Text>
+                      {isCur && (
+                        <View style={styles.currentBadge}>
+                          <Text style={styles.currentTxt}>CURRENT</Text>
+                        </View>
+                      )}
                     </View>
-                  ))}
+                    <View style={styles.priceRow}>
+                      {dp === 0 ? (
+                        <Text style={styles.freePrice}>Free forever</Text>
+                      ) : (
+                        <>
+                          <Text style={styles.price}>${dp}</Text>
+                          <Text style={styles.perMo}>/ mo</Text>
+                          {cycle === "yearly" && (
+                            <View style={styles.offBadge}><Text style={styles.offTxt}>20% OFF</Text></View>
+                          )}
+                        </>
+                      )}
+                    </View>
+                  </View>
+                  <View style={[styles.radio, isSel && { borderColor: col.main, backgroundColor: col.main }]}>
+                    {isSel && <View style={styles.radioDot} />}
+                  </View>
                 </View>
-              )}
+
+                {/* Feature list — shown when selected */}
+                {isSel && (
+                  <View style={styles.ftList}>
+                    {plan.features.map(f => (
+                      <View key={f} style={styles.ftRow}>
+                        <Feather name="check" size={13} color={col.main} />
+                        <Text style={styles.ftTxt}>{f}</Text>
+                      </View>
+                    ))}
+                    {plan.notIncluded.length > 0 && (
+                      <>
+                        <View style={{ height: 8 }} />
+                        {plan.notIncluded.map(f => (
+                          <View key={f} style={styles.ftRow}>
+                            <Feather name="x" size={13} color={C.textMuted} />
+                            <Text style={[styles.ftTxt, { color: C.textMuted }]}>{f}</Text>
+                          </View>
+                        ))}
+                      </>
+                    )}
+                  </View>
+                )}
+              </View>
             </Pressable>
           );
         })}
@@ -164,14 +205,7 @@ export default function Paywall() {
               <Text style={[styles.compareColHead, { flex: 1 }]}>Them</Text>
               <Text style={[styles.compareColHead, styles.compareUs, { flex: 1 }]}>Us</Text>
             </View>
-            {([
-              { feature: "Virtual numbers",     them: "1",          us: "Up to 10"      },
-              { feature: "Countries",            them: "3–5",       us: "100+"           },
-              { feature: "SMS & Calls",          them: "Limited",   us: "Unlimited"      },
-              { feature: "Spam blocking",        them: "❌",        us: "✅"             },
-              { feature: "Ghost Mode",           them: "❌",        us: "✅"             },
-              { feature: "Price",                them: "$7.99/mo",  us: "$1.99/mo"       },
-            ] as const).map((row, i) => (
+            {COMPARE_ROWS.map((row, i) => (
               <View key={i} style={[styles.compareRow, i % 2 === 0 && { backgroundColor: C.raised }]}>
                 <Text style={[styles.compareFeature, { flex: 2 }]}>{row.feature}</Text>
                 <Text style={[styles.compareThem, { flex: 1 }]}>{row.them}</Text>
@@ -185,7 +219,7 @@ export default function Paywall() {
         <View style={styles.trialNote}>
           <Feather name="gift" size={14} color={C.accent} />
           <Text style={styles.trialTxt}>
-            7-day free trial on all plans · Cancel anytime · No credit card required
+            7-day free trial on all paid plans · Cancel anytime · No credit card required
           </Text>
         </View>
 
@@ -193,20 +227,21 @@ export default function Paywall() {
 
       {/* ── Footer CTA ── */}
       <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
-        {cycle === "yearly" && (
+        {cycle === "yearly" && selected !== "free" && Number(annualSave) > 0 && (
           <View style={styles.savingsBanner}>
             <Feather name="tag" size={13} color={C.green} />
             <Text style={styles.savingsTxt}>
-              You save ${((PLANS.find(p => p.id === selected)?.monthlyPrice ?? 0) * 12 * 0.2).toFixed(2)} per year
+              You save ${annualSave} per year
             </Text>
           </View>
         )}
         <Pressable
-          style={({ pressed }) => [styles.btn, { opacity: pressed ? 0.88 : 1 }]}
-          onPress={handleSelect}
+          style={({ pressed }) => [styles.btn, { opacity: pressed || loading ? 0.88 : 1 }]}
+          onPress={handleSubscribe}
+          disabled={loading}
         >
           <Text style={styles.btnTxt}>
-            {selected === currentPlan ? "Confirm Plan" : "Start Free Trial →"}
+            {loading ? "Processing..." : selected === "free" ? "Continue with Free" : selected === currentPlan ? "Confirm Plan" : "Start Free Trial →"}
           </Text>
         </Pressable>
         <Text style={styles.legal}>
@@ -219,26 +254,20 @@ export default function Paywall() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: C.bg },
+  successRoot: { alignItems: "center", justifyContent: "center", paddingHorizontal: 32, gap: 14 },
+  successEmoji: { fontSize: 72 },
+  successTitle: { fontFamily: "Inter_700Bold", fontSize: 26, color: C.text, textAlign: "center", letterSpacing: -0.5 },
+  successSub: { fontFamily: "Inter_400Regular", fontSize: 13.5, color: C.textMuted, textAlign: "center", lineHeight: 22, marginBottom: 16 },
+  successBtn: { width: "100%", height: 54, backgroundColor: C.accent, borderRadius: 16, alignItems: "center", justifyContent: "center", shadowColor: C.accent, shadowOpacity: 0.4, shadowRadius: 16, shadowOffset: { width: 0, height: 4 }, elevation: 8 } as any,
 
   topRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, paddingBottom: 12 },
   closeBtn: { width: 40, height: 40, borderRadius: 10, backgroundColor: C.raised, alignItems: "center", justifyContent: "center" },
   topTitle: { fontFamily: "Inter_700Bold", fontSize: 17, color: C.text },
 
   hero: { alignItems: "center", paddingTop: 8, paddingBottom: 20, gap: 6 },
-  crown: { fontSize: 56 },
-  heroTitle: { fontFamily: "Inter_700Bold", fontSize: 26, color: C.text, letterSpacing: -0.5 },
-  heroSub: { fontFamily: "Inter_400Regular", fontSize: 13.5, color: C.textMuted, textAlign: "center" },
-
-  benefitsCard: {
-    backgroundColor: C.surface, borderRadius: 16, borderWidth: 1, borderColor: C.border,
-    padding: 16, gap: 12, marginBottom: 18,
-  },
-  benefitRow: { flexDirection: "row", alignItems: "center", gap: 12 },
-  benefitCheck: {
-    width: 22, height: 22, borderRadius: 11, backgroundColor: C.accent,
-    alignItems: "center", justifyContent: "center", flexShrink: 0,
-  },
-  benefitTxt: { fontFamily: "Inter_400Regular", fontSize: 13.5, color: C.text, flex: 1 },
+  crown: { fontSize: 42 },
+  heroTitle: { fontFamily: "Inter_700Bold", fontSize: 22, color: C.text, letterSpacing: -0.5 },
+  heroSub: { fontFamily: "Inter_400Regular", fontSize: 12.5, color: C.textMuted, textAlign: "center" },
 
   cycleRow: { flexDirection: "row", backgroundColor: C.raised, borderRadius: 12, padding: 4, gap: 4, marginBottom: 16 },
   cycleBtn: { flex: 1, height: 38, borderRadius: 9, alignItems: "center", justifyContent: "center", flexDirection: "row", gap: 6 },
@@ -248,31 +277,27 @@ const styles = StyleSheet.create({
   savePill: { backgroundColor: C.greenDim, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 99 },
   savePillTxt: { fontFamily: "Inter_700Bold", fontSize: 9.5, color: C.green },
 
-  planCard: { borderRadius: 18, borderWidth: 1.5, padding: 16, marginBottom: 12, gap: 12 },
-  planHead: { flexDirection: "row", alignItems: "flex-start", gap: 12 },
-  radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: C.borderStrong, alignItems: "center", justifyContent: "center", marginTop: 2, flexShrink: 0 },
-  radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: "#fff" },
-  nameRow: { flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 4 },
-  planName: { fontFamily: "Inter_700Bold", fontSize: 18, letterSpacing: -0.3 },
-  popularBadge: { backgroundColor: C.accentDim, paddingHorizontal: 9, paddingVertical: 3, borderRadius: 99 },
-  popularTxt: { fontFamily: "Inter_700Bold", fontSize: 9, color: C.accent, letterSpacing: 0.8 },
+  planCard: { borderRadius: 18, borderWidth: 1.5, marginBottom: 10, overflow: "hidden" },
+  tagBar: { height: 24, alignItems: "center", justifyContent: "center" },
+  tagTxt: { fontFamily: "Inter_700Bold", fontSize: 9.5, color: "#fff", letterSpacing: 1.6 },
+  planHead: { flexDirection: "row", alignItems: "flex-start", gap: 12, marginBottom: 4 },
+  planIconBox: { width: 40, height: 40, borderRadius: 12, alignItems: "center", justifyContent: "center", flexShrink: 0 },
+  nameRow: { flexDirection: "row", alignItems: "center", gap: 6, marginBottom: 4 },
+  planName: { fontFamily: "Inter_700Bold", fontSize: 17, letterSpacing: -0.2 },
+  currentBadge: { backgroundColor: C.greenDim, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 99 },
+  currentTxt: { fontFamily: "Inter_700Bold", fontSize: 9, color: C.green, letterSpacing: 0.5 },
   priceRow: { flexDirection: "row", alignItems: "baseline", gap: 4, flexWrap: "wrap" },
+  freePrice: { fontFamily: "Inter_700Bold", fontSize: 15, color: C.textSec },
   price: { fontFamily: "Inter_700Bold", fontSize: 28, color: C.text, letterSpacing: -1 },
   perMo: { fontFamily: "Inter_400Regular", fontSize: 13, color: C.textMuted },
   offBadge: { backgroundColor: C.greenDim, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 99 },
   offTxt: { fontFamily: "Inter_700Bold", fontSize: 9.5, color: C.green, letterSpacing: 0.5 },
+  radio: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, borderColor: C.borderStrong, alignItems: "center", justifyContent: "center", marginTop: 2, flexShrink: 0 },
+  radioDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: "#fff" },
 
-  creditRow: {
-    flexDirection: "row", alignItems: "center", gap: 8,
-    backgroundColor: "rgba(0,0,0,0.03)", borderRadius: 10, padding: 10,
-    borderWidth: 1,
-  },
-  creditAmt: { fontFamily: "Inter_700Bold", fontSize: 14 },
-  creditLbl: { fontFamily: "Inter_400Regular", fontSize: 12.5, color: C.textMuted },
-
-  ftList: { gap: 9 },
+  ftList: { gap: 9, marginTop: 14, paddingTop: 12, borderTopWidth: 1, borderTopColor: C.border },
   ftRow: { flexDirection: "row", alignItems: "center", gap: 9 },
-  ftTxt: { fontFamily: "Inter_400Regular", fontSize: 13.5, color: C.textSec, flex: 1 },
+  ftTxt: { fontFamily: "Inter_400Regular", fontSize: 13, color: C.textSec, flex: 1 },
 
   trialNote: {
     flexDirection: "row", alignItems: "flex-start", gap: 10, marginTop: 4, marginBottom: 8,
@@ -295,34 +320,13 @@ const styles = StyleSheet.create({
   legal: { textAlign: "center", fontFamily: "Inter_400Regular", fontSize: 11, color: C.textMuted },
 
   compareSec: { marginTop: 8, marginBottom: 12 },
-  compareTitle: {
-    fontFamily: "Inter_700Bold", fontSize: 10, color: C.textMuted,
-    letterSpacing: 1.4, marginBottom: 10,
-  },
-  compareCard: {
-    backgroundColor: C.surface, borderRadius: 14, borderWidth: 1,
-    borderColor: C.border, overflow: "hidden",
-  },
-  compareHeaderRow: {
-    flexDirection: "row", alignItems: "center", paddingHorizontal: 14,
-    paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: C.border,
-  },
-  compareColHead: {
-    fontFamily: "Inter_700Bold", fontSize: 11, color: C.textMuted,
-    textAlign: "center", letterSpacing: 0.5,
-  },
+  compareTitle: { fontFamily: "Inter_700Bold", fontSize: 10, color: C.textMuted, letterSpacing: 1.4, marginBottom: 10 },
+  compareCard: { backgroundColor: C.surface, borderRadius: 14, borderWidth: 1, borderColor: C.border, overflow: "hidden" },
+  compareHeaderRow: { flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 10, borderBottomWidth: 1, borderBottomColor: C.border },
+  compareColHead: { fontFamily: "Inter_700Bold", fontSize: 11, color: C.textMuted, textAlign: "center", letterSpacing: 0.5 },
   compareUs: { color: C.accent },
-  compareRow: {
-    flexDirection: "row", alignItems: "center", paddingHorizontal: 14,
-    paddingVertical: 11,
-  },
+  compareRow: { flexDirection: "row", alignItems: "center", paddingHorizontal: 14, paddingVertical: 11 },
   compareFeature: { fontFamily: "Inter_500Medium", fontSize: 12.5, color: C.text },
-  compareThem: {
-    fontFamily: "Inter_400Regular", fontSize: 12, color: C.textMuted,
-    textAlign: "center",
-  },
-  compareUsVal: {
-    fontFamily: "Inter_700Bold", fontSize: 12, color: C.accent,
-    textAlign: "center",
-  },
+  compareThem: { fontFamily: "Inter_400Regular", fontSize: 12, color: C.textMuted, textAlign: "center" },
+  compareUsVal: { fontFamily: "Inter_700Bold", fontSize: 12, color: C.accent, textAlign: "center" },
 });

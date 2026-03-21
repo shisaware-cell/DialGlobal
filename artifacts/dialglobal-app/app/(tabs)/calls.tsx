@@ -4,15 +4,18 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import C from "@/constants/colors";
 import { useApp } from "@/context/AppContext";
+import { MOCK_CALLS } from "@/data/mockData";
 
 const TYPE_META: Record<string, { color: string; bg: string; label: string; icon: string }> = {
-  completed: { color: C.green,    bg: C.greenDim, label: "Completed", icon: "phone-incoming" },
-  initiated: { color: C.blue,     bg: C.blueDim,  label: "Dialing",   icon: "phone-outgoing" },
-  ringing:   { color: C.blue,     bg: C.blueDim,  label: "Ringing",   icon: "phone" },
-  missed:    { color: C.red,      bg: C.redDim,   label: "Missed",    icon: "phone-missed" },
-  inbound:   { color: C.green,    bg: C.greenDim, label: "Incoming",  icon: "phone-incoming" },
-  outbound:  { color: C.blue,     bg: C.blueDim,  label: "Outgoing",  icon: "phone-outgoing" },
-  voicemail: { color: "#7C3AED",  bg: "rgba(124,58,237,0.09)", label: "Voicemail", icon: "voicemail" },
+  completed: { color: C.green,    bg: C.greenDim,   label: "Completed", icon: "phone-incoming" },
+  initiated: { color: C.blue,     bg: C.blueDim,    label: "Dialing",   icon: "phone-outgoing" },
+  ringing:   { color: C.blue,     bg: C.blueDim,    label: "Ringing",   icon: "phone"          },
+  missed:    { color: C.red,      bg: C.redDim,     label: "Missed",    icon: "phone-missed"   },
+  inbound:   { color: C.green,    bg: C.greenDim,   label: "Incoming",  icon: "phone-incoming" },
+  outbound:  { color: C.blue,     bg: C.blueDim,    label: "Outgoing",  icon: "phone-outgoing" },
+  incoming:  { color: C.green,    bg: C.greenDim,   label: "Incoming",  icon: "phone-incoming" },
+  outgoing:  { color: C.blue,     bg: C.blueDim,    label: "Outgoing",  icon: "phone-outgoing" },
+  voicemail: { color: C.purple,   bg: C.purpleDim,  label: "Voicemail", icon: "voicemail"      },
 };
 
 const FILTERS = [
@@ -33,9 +36,115 @@ function timeAgo(dateStr: string) {
   return `${Math.floor(diff / 86400)}d ago`;
 }
 
+type CallItem = {
+  id: string;
+  name?: string;
+  from_number?: string;
+  to_number?: string;
+  number?: string;
+  direction?: string;
+  status?: string;
+  type?: string;
+  duration?: number | string;
+  time?: string;
+  created_at?: string;
+  flag?: string;
+};
+
+function CallRow({ item }: { item: CallItem }) {
+  const [expanded, setExpanded] = useState(false);
+  const [playing, setPlaying] = useState(false);
+
+  const statusKey = item.type ?? (item.status === "voicemail" ? "voicemail" : item.status === "missed" ? "missed" : (item.direction ?? item.status ?? "completed"));
+  const m = TYPE_META[statusKey] ?? TYPE_META.completed;
+  const isVoicemail = statusKey === "voicemail";
+  const isMissed = statusKey === "missed";
+
+  const contactNumber = item.number ?? (item.direction === "inbound" ? item.from_number : item.to_number) ?? "";
+  const displayName = item.name ?? contactNumber;
+
+  const durationStr = typeof item.duration === "number"
+    ? (item.duration > 0 ? `${Math.floor(item.duration / 60)}:${(item.duration % 60).toString().padStart(2, "0")}` : "")
+    : (item.duration ?? "");
+
+  const timeStr = item.time ?? (item.created_at ? timeAgo(item.created_at) : "");
+  const flagStr = item.flag ?? "📞";
+
+  return (
+    <View>
+      <Pressable
+        style={({ pressed }) => [styles.row, { backgroundColor: pressed ? C.raised : C.bg }]}
+        onPress={() => setExpanded(e => !e)}
+      >
+        <View style={[styles.iconWrap, { backgroundColor: m.bg }]}>
+          {item.flag ? (
+            <Text style={{ fontSize: 20 }}>{flagStr}</Text>
+          ) : (
+            <Feather name={m.icon as any} size={17} color={m.color} />
+          )}
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={[styles.name, isMissed && { color: C.red }]} numberOfLines={1}>
+            {displayName}
+          </Text>
+          <Text style={styles.num} numberOfLines={1}>
+            {contactNumber}{durationStr ? ` · ${durationStr}` : ""}
+          </Text>
+        </View>
+        <View style={{ alignItems: "flex-end", gap: 5 }}>
+          <Text style={styles.time}>{timeStr}</Text>
+          <View style={[styles.typePill, { backgroundColor: m.bg }]}>
+            <Text style={[styles.typeTxt, { color: m.color }]}>{m.label}</Text>
+          </View>
+        </View>
+      </Pressable>
+
+      {/* Expanded actions */}
+      {expanded && (
+        <View style={[styles.expandedRow, { backgroundColor: C.raised }]}>
+          {isVoicemail ? (
+            <View style={styles.voicemailRow}>
+              <Pressable
+                style={[styles.playBtn, { backgroundColor: C.purpleDim, borderColor: "rgba(124,58,237,0.2)" }]}
+                onPress={() => setPlaying(p => !p)}
+              >
+                <Feather name={playing ? "pause" : "play"} size={13} color={C.purple} />
+                <Text style={[styles.playTxt, { color: C.purple }]}>{playing ? "Pause" : "Play Voicemail"}</Text>
+              </Pressable>
+              {playing && (
+                <View style={styles.progressBar}>
+                  <View style={[styles.progressFill, { backgroundColor: C.purple }]} />
+                </View>
+              )}
+              {durationStr ? <Text style={styles.vmDuration}>{durationStr}</Text> : null}
+            </View>
+          ) : (
+            <View style={styles.actionsRow}>
+              <Pressable style={[styles.actionBtn, { backgroundColor: C.accent }]}>
+                <Feather name="phone" size={12} color={C.onAccent} />
+                <Text style={[styles.actionTxt, { color: C.onAccent }]}>Call Back</Text>
+              </Pressable>
+              <Pressable style={styles.actionBtn}>
+                <Feather name="message-square" size={12} color={C.textSec} />
+                <Text style={styles.actionTxt}>Message</Text>
+              </Pressable>
+              <Pressable style={styles.actionBtn}>
+                <Feather name="share" size={12} color={C.textSec} />
+                <Text style={styles.actionTxt}>Forward</Text>
+              </Pressable>
+            </View>
+          )}
+        </View>
+      )}
+
+      <View style={styles.sep} />
+    </View>
+  );
+}
+
 export default function Calls() {
   const insets = useSafeAreaInsets();
-  const { calls, refreshCalls } = useApp();
+  const { calls, refreshCalls, simulateIncomingCall } = useApp();
   const [filter, setFilter] = useState("all");
   const isWeb = Platform.OS === "web";
 
@@ -43,19 +152,33 @@ export default function Calls() {
     refreshCalls();
   }, []);
 
-  const filtered = calls.filter(c => {
+  const missedCount = calls.filter(c => c.status === "missed").length + MOCK_CALLS.filter(c => c.type === "missed").length;
+
+  const allItems: CallItem[] = [
+    ...calls,
+    ...(calls.length === 0 ? MOCK_CALLS : []),
+  ];
+
+  const filtered = allItems.filter(c => {
     if (filter === "all") return true;
-    if (filter === "missed") return c.status === "missed";
-    if (filter === "inbound") return c.direction === "inbound";
-    if (filter === "outbound") return c.direction === "outbound";
-    if (filter === "voicemail") return c.status === "voicemail";
+    if (filter === "missed") return (c as any).status === "missed" || (c as any).type === "missed";
+    if (filter === "inbound") return (c as any).direction === "inbound" || (c as any).type === "incoming";
+    if (filter === "outbound") return (c as any).direction === "outbound" || (c as any).type === "outgoing";
+    if (filter === "voicemail") return (c as any).status === "voicemail" || (c as any).type === "voicemail";
     return true;
   });
 
   return (
     <View style={[styles.root, { paddingTop: insets.top + (isWeb ? 67 : 0) }]}>
+      {/* Header */}
       <View style={styles.headerWrap}>
-        <Text style={styles.title}>Calls</Text>
+        <View style={styles.headerTopRow}>
+          <Text style={styles.title}>Calls</Text>
+          <Pressable style={styles.simCallBtn} onPress={simulateIncomingCall}>
+            <View style={styles.simDot} />
+            <Text style={styles.simCallTxt}>Simulate Call</Text>
+          </Pressable>
+        </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 7, paddingBottom: 2 }}>
           {FILTERS.map(f => (
             <Pressable
@@ -64,6 +187,11 @@ export default function Calls() {
               onPress={() => setFilter(f.id)}
             >
               <Text style={[styles.filterTxt, filter === f.id && styles.filterTxtActive]}>{f.label}</Text>
+              {f.id === "missed" && missedCount > 0 && (
+                <View style={styles.missedBadge}>
+                  <Text style={styles.missedBadgeTxt}>{missedCount}</Text>
+                </View>
+              )}
             </Pressable>
           ))}
         </ScrollView>
@@ -71,10 +199,18 @@ export default function Calls() {
 
       <FlatList
         data={filtered}
-        keyExtractor={c => c.id}
+        keyExtractor={(c, i) => (c as any).id ?? String(i)}
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingBottom: (isWeb ? 84 : 66) + (insets.bottom > 0 ? insets.bottom : 16) }}
-        ItemSeparatorComponent={() => <View style={styles.sep} />}
+        ListHeaderComponent={
+          <View style={styles.recordingNotice}>
+            <Feather name="mic" size={14} color={C.accent} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.recordingTitle}>Call Recording Available</Text>
+              <Text style={styles.recordingSub}>Enable per-number in your number settings</Text>
+            </View>
+          </View>
+        }
         ListEmptyComponent={
           <View style={{ alignItems: "center", paddingTop: 80 }}>
             <Feather name="phone" size={40} color={C.textMuted} />
@@ -86,35 +222,7 @@ export default function Calls() {
             </Text>
           </View>
         }
-        renderItem={({ item }) => {
-          const statusKey = item.status === "voicemail" ? "voicemail" : item.status === "missed" ? "missed" : item.direction;
-          const m = TYPE_META[statusKey] ?? TYPE_META.completed;
-          const contactNumber = item.direction === "inbound" ? item.from_number : item.to_number;
-          const durationStr = item.duration > 0
-            ? `${Math.floor(item.duration / 60)}:${(item.duration % 60).toString().padStart(2, "0")}`
-            : "";
-          return (
-            <Pressable style={({ pressed }) => [styles.row, { backgroundColor: pressed ? C.surface : C.bg }]}>
-              <View style={[styles.iconWrap, { backgroundColor: m.bg }]}>
-                <Feather name={m.icon as any} size={17} color={m.color} />
-              </View>
-              <View style={{ flex: 1 }}>
-                <Text style={[styles.name, item.status === "missed" && { color: C.red }]}>
-                  {contactNumber}
-                </Text>
-                <Text style={styles.num}>
-                  📱 {contactNumber}{durationStr ? ` · ${durationStr}` : ""}
-                </Text>
-              </View>
-              <View style={{ alignItems: "flex-end", gap: 5 }}>
-                <Text style={styles.time}>{timeAgo(item.created_at)}</Text>
-                <View style={[styles.typePill, { backgroundColor: m.bg }]}>
-                  <Text style={[styles.typeTxt, { color: m.color }]}>{m.label}</Text>
-                </View>
-              </View>
-            </Pressable>
-          );
-        }}
+        renderItem={({ item }) => <CallRow item={item as CallItem} />}
       />
     </View>
   );
@@ -122,12 +230,28 @@ export default function Calls() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: C.bg },
+
   headerWrap: { backgroundColor: C.surface, paddingHorizontal: 20, paddingTop: 10, paddingBottom: 12, borderBottomWidth: 1, borderBottomColor: C.border },
-  title: { fontFamily: "Inter_700Bold", fontSize: 20, color: C.text, letterSpacing: -0.4, marginBottom: 12 },
-  filterChip: { height: 28, paddingHorizontal: 12, borderRadius: 99, borderWidth: 1.5, borderColor: C.border, alignItems: "center", justifyContent: "center" },
+  headerTopRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 12 },
+  title: { fontFamily: "Inter_700Bold", fontSize: 20, color: C.text, letterSpacing: -0.4 },
+  simCallBtn: { flexDirection: "row", alignItems: "center", gap: 6, height: 32, paddingHorizontal: 12, backgroundColor: C.greenDim, borderWidth: 1, borderColor: "rgba(22,163,74,0.2)", borderRadius: 99 },
+  simDot: { width: 7, height: 7, borderRadius: 3.5, backgroundColor: C.green },
+  simCallTxt: { fontFamily: "Inter_700Bold", fontSize: 11.5, color: C.green },
+
+  filterChip: { height: 28, paddingHorizontal: 12, borderRadius: 99, borderWidth: 1.5, borderColor: C.border, alignItems: "center", justifyContent: "center", flexDirection: "row", gap: 5 },
   filterChipActive: { borderColor: C.accent, backgroundColor: C.accentDim },
   filterTxt: { fontFamily: "Inter_600SemiBold", fontSize: 11.5, color: C.textMuted },
   filterTxtActive: { color: C.accent },
+  missedBadge: { width: 16, height: 16, borderRadius: 8, backgroundColor: C.red, alignItems: "center", justifyContent: "center" },
+  missedBadgeTxt: { fontFamily: "Inter_700Bold", fontSize: 9, color: "#fff" },
+
+  recordingNotice: {
+    flexDirection: "row", alignItems: "center", gap: 10,
+    margin: 12, padding: 12, backgroundColor: C.accentDim, borderRadius: 12,
+  },
+  recordingTitle: { fontFamily: "Inter_700Bold", fontSize: 12.5, color: C.accent },
+  recordingSub: { fontFamily: "Inter_400Regular", fontSize: 11, color: C.textSec, marginTop: 1 },
+
   row: { flexDirection: "row", alignItems: "center", paddingHorizontal: 18, paddingVertical: 13, gap: 11 },
   iconWrap: { width: 46, height: 46, borderRadius: 14, alignItems: "center", justifyContent: "center", flexShrink: 0 },
   name: { fontFamily: "Inter_600SemiBold", fontSize: 13.5, color: C.text, marginBottom: 2 },
@@ -136,4 +260,20 @@ const styles = StyleSheet.create({
   typePill: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 99 },
   typeTxt: { fontFamily: "Inter_700Bold", fontSize: 9 },
   sep: { height: 1, backgroundColor: C.border },
+
+  expandedRow: { paddingHorizontal: 18, paddingVertical: 10, borderTopWidth: 1, borderTopColor: C.border },
+  voicemailRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  playBtn: { flexDirection: "row", alignItems: "center", gap: 7, height: 36, paddingHorizontal: 14, borderRadius: 99, borderWidth: 1 },
+  playTxt: { fontFamily: "Inter_700Bold", fontSize: 12.5 },
+  progressBar: { flex: 1, height: 4, borderRadius: 2, backgroundColor: C.raised, overflow: "hidden" },
+  progressFill: { width: "35%", height: "100%", borderRadius: 2 },
+  vmDuration: { fontFamily: "Inter_400Regular", fontSize: 11, color: C.textMuted },
+
+  actionsRow: { flexDirection: "row", gap: 8 },
+  actionBtn: {
+    flex: 1, height: 36, borderRadius: 8, backgroundColor: C.surface, borderWidth: 1, borderColor: C.border,
+    flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 5,
+    shadowColor: C.accent, shadowOpacity: 0, shadowRadius: 0,
+  },
+  actionTxt: { fontFamily: "Inter_700Bold", fontSize: 11, color: C.textSec },
 });

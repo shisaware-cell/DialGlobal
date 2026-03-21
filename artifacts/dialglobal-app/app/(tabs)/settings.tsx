@@ -52,15 +52,17 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 export default function Settings() {
   const insets = useSafeAreaInsets();
-  const { currentPlan, billing, profile, signOut: doSignOut, ghostMode, setGhostMode, credits } = useApp();
-  const [notifs, setNotifs]       = useState(true);
+  const {
+    currentPlan, billing, profile, signOut: doSignOut,
+    ghostMode, setGhostMode, credits,
+    notifications, setNotifications,
+  } = useApp();
   const [biometric, setBiometric] = useState(false);
-  const [forwarding, setForwarding] = useState(true);
   const isWeb = Platform.OS === "web";
   const plan = PLANS.find(p => p.id === currentPlan);
   const price = billing === "yearly" ? plan?.yearlyPrice : plan?.monthlyPrice;
 
-  const userName  = profile?.name  || "User";
+  const userName  = profile?.name  || profile?.email?.split("@")[0] || "User";
   const userEmail = profile?.email || "user@dialglobal.io";
 
   const signOut = () => {
@@ -91,7 +93,7 @@ export default function Settings() {
             <Text style={styles.profileEmail}>{userEmail}</Text>
             <View style={styles.planTag}>
               <Ionicons name="star" size={11} color={C.accent} />
-              <Text style={styles.planTagTxt}>{plan?.name} Plan</Text>
+              <Text style={styles.planTagTxt}>{plan?.name ?? "Free"} Plan</Text>
               {credits > 0 && <Text style={styles.creditsTag}>⭐ {credits.toLocaleString()} credits</Text>}
             </View>
           </View>
@@ -99,11 +101,15 @@ export default function Settings() {
         </Pressable>
 
         <Section title="PREFERENCES">
-          <Row icon="bell" label="Notifications" sublabel="Calls, messages & alerts" value={notifs} onToggle={setNotifs} />
+          <Row
+            icon="bell"
+            label="Push Notifications"
+            sublabel="Calls, messages & alerts"
+            value={notifications}
+            onToggle={setNotifications}
+          />
           <View style={styles.divider} />
           <Row icon="shield" label="Biometric Lock" sublabel="Face ID / Fingerprint" value={biometric} onToggle={setBiometric} />
-          <View style={styles.divider} />
-          <Row icon="phone-forwarded" label="Call Forwarding" sublabel="Route calls to another number" value={forwarding} onToggle={setForwarding} />
           <View style={styles.divider} />
           <Row icon="eye-off" label="Ghost Mode" sublabel="Silence all numbers, hide badges" value={ghostMode} onToggle={setGhostMode} />
         </Section>
@@ -115,13 +121,18 @@ export default function Settings() {
           <View style={styles.divider} />
           <Row icon="users" label="Import Contacts" sublabel="Sync from phone or CSV" onPress={() => router.push("/contacts")} />
           <View style={styles.divider} />
-          <Row icon="wifi" label="eSIM" sublabel="Stay connected while travelling" onPress={() => router.push("/esim")} />
+          <Row icon="wifi" label="eSIM Data Plans" sublabel="Stay connected while travelling" onPress={() => router.push("/esim")} />
         </Section>
 
         <Section title="ACCOUNT">
           <Row icon="user" label="Personal Info" sublabel="Name, email, password" onPress={() => router.push("/profile")} />
           <View style={styles.divider} />
-          <Row icon="credit-card" label="Billing & Plan" sublabel={`${plan?.name} · $${price}/mo`} onPress={() => router.push("/paywall")} />
+          <Row
+            icon="credit-card"
+            label="Billing & Plan"
+            sublabel={plan?.monthlyPrice === 0 ? "Free Plan · Upgrade to unlock more" : `${plan?.name} · $${price}/mo`}
+            onPress={() => router.push("/paywall")}
+          />
           <View style={styles.divider} />
           <Row
             icon="star"
@@ -143,7 +154,7 @@ export default function Settings() {
           <Row icon="trash-2" label="Delete Account" sublabel="Cannot be undone" danger onPress={deleteAccount} />
         </Section>
 
-        <Text style={styles.version}>DialGlobal v2.0.0 · Powered by Telnyx</Text>
+        <Text style={styles.version}>DialGlobal v2.1.0 · Powered by Telnyx</Text>
       </ScrollView>
     </View>
   );

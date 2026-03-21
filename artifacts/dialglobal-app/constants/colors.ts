@@ -10,6 +10,9 @@ const C = {
   blue:     "#2563EB",
   blueDim:  "rgba(37,99,235,0.09)",
 
+  purple:    "#7C3AED",
+  purpleDim: "rgba(124,58,237,0.09)",
+
   bg:           "#F5F3EF",
   surface:      "#FFFFFF",
   raised:       "#EEECE8",

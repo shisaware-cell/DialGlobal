@@ -1,5 +1,4 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import { api } from "@/lib/api";
@@ -54,6 +53,10 @@ type Profile = {
 
 export type Contact = { name: string; phone: string; initials: string };
 
+export type ToastType = "info" | "success" | "warning" | "error";
+export type Toast = { message: string; type: ToastType } | null;
+export type IncomingCall = { caller: string; number: string } | null;
+
 type AppCtx = {
   isAuthed: boolean;
   session: Session | null;
@@ -85,6 +88,22 @@ type AppCtx = {
   importContacts: (newContacts: Contact[]) => void;
   credits: number;
   addCredits: (amount: number) => void;
+  recordings: Record<string, boolean>;
+  toggleRecording: (id: string) => void;
+  forwarding: Record<string, boolean>;
+  toggleForwarding: (id: string) => void;
+  forwardingNums: Record<string, string>;
+  setForwardingNum: (id: string, num: string) => void;
+  notifications: boolean;
+  setNotifications: (v: boolean) => void;
+  toast: Toast;
+  showToast: (message: string, type?: ToastType) => void;
+  dismissToast: () => void;
+  incomingCall: IncomingCall;
+  simulateIncomingCall: () => void;
+  dismissIncomingCall: () => void;
+  activeEsim: string | null;
+  activateEsim: (planId: string) => void;
 };
 
 const Ctx = createContext<AppCtx | null>(null);
@@ -94,7 +113,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isAuthed, setAuthedState] = useState(false);
-  const [currentPlan, setCurrentPlan] = useState("basic");
+  const [currentPlan, setCurrentPlan] = useState("free");
   const [billing, setBilling] = useState<"monthly" | "yearly">("monthly");
   const [numbers, setNumbers] = useState<VirtualNumber[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
@@ -106,6 +125,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [autoReplies, setAutoReplies] = useState<Record<string, string>>({});
   const [contacts, setContacts] = useState<Contact[]>([]);
   const [credits, setCredits] = useState(0);
+  const [recordings, setRecordings] = useState<Record<string, boolean>>({});
+  const [forwarding, setForwarding] = useState<Record<string, boolean>>({});
+  const [forwardingNums, setForwardingNums] = useState<Record<string, string>>({});
+  const [notifications, setNotificationsState] = useState(true);
+  const [toast, setToast] = useState<Toast>(null);
+  const [incomingCall, setIncomingCall] = useState<IncomingCall>(null);
+  const [activeEsim, setActiveEsimState] = useState<string | null>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session: s } }) => {
@@ -148,7 +174,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       .single();
     if (data) {
       setProfile(data as Profile);
-      setCurrentPlan(data.plan || "basic");
+      setCurrentPlan(data.plan || "free");
     }
   };
 
@@ -191,9 +217,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const setAuthed = (v: boolean) => {
     setAuthedState(v);
-    if (!v) {
-      supabase.auth.signOut();
-    }
+    if (!v) supabase.auth.signOut();
   };
 
   const upgradePlan = (planId: string, cycle: "monthly" | "yearly" = "monthly") => {
@@ -220,6 +244,26 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const setAutoReply = (id: string, text: string) => setAutoReplies(prev => ({ ...prev, [id]: text }));
   const importContacts = (newContacts: Contact[]) => setContacts(prev => [...prev, ...newContacts.filter(nc => !prev.some(c => c.phone === nc.phone))]);
   const addCredits = (amount: number) => setCredits(prev => prev + amount);
+
+  const toggleRecording = (id: string) => setRecordings(prev => ({ ...prev, [id]: !prev[id] }));
+  const toggleForwarding = (id: string) => setForwarding(prev => ({ ...prev, [id]: !prev[id] }));
+  const setForwardingNum = (id: string, num: string) => setForwardingNums(prev => ({ ...prev, [id]: num }));
+  const setNotifications = (v: boolean) => setNotificationsState(v);
+
+  const showToast = useCallback((message: string, type: ToastType = "info") => {
+    setToast({ message, type });
+    setTimeout(() => setToast(null), 3500);
+  }, []);
+
+  const dismissToast = useCallback(() => setToast(null), []);
+
+  const simulateIncomingCall = useCallback(() => {
+    setIncomingCall({ caller: "Marcus Webb", number: "+1 917 555 0134" });
+  }, []);
+
+  const dismissIncomingCall = useCallback(() => setIncomingCall(null), []);
+
+  const activateEsim = useCallback((planId: string) => setActiveEsimState(planId), []);
 
   const signOut = async () => {
     await supabase.auth.signOut();
@@ -266,6 +310,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         importContacts,
         credits,
         addCredits,
+        recordings,
+        toggleRecording,
+        forwarding,
+        toggleForwarding,
+        forwardingNums,
+        setForwardingNum,
+        notifications,
+        setNotifications,
+        toast,
+        showToast,
+        dismissToast,
+        incomingCall,
+        simulateIncomingCall,
+        dismissIncomingCall,
+        activeEsim,
+        activateEsim,
       }}
     >
       {children}
