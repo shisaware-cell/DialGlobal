@@ -1,9 +1,8 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
   View, Text, StyleSheet, FlatList, Pressable, TextInput,
   ActivityIndicator, Alert, ScrollView,
 } from "react-native";
-
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -12,232 +11,273 @@ import { COUNTRIES, PLANS } from "@/data/mockData";
 import { useApp } from "@/context/AppContext";
 import { api } from "@/lib/api";
 
-function formatNumber(raw: string): string {
-  if (!raw) return raw;
-  return raw.replace(/-+$/, (dashes) => "•".repeat(dashes.length));
-}
+const POPULAR = COUNTRIES.filter(c => c.popular);
 
-type Step = "countries" | "numbers";
+type Country = typeof COUNTRIES[0];
 
 export default function Picker() {
   const insets = useSafeAreaInsets();
   const { numbers, currentPlan, refreshNumbers } = useApp();
   const [search, setSearch] = useState("");
-  const [step, setStep] = useState<Step>("countries");
-  const [selectedCountry, setSelectedCountry] = useState<typeof COUNTRIES[0] | null>(null);
-  const [availableNumbers, setAvailableNumbers] = useState<string[]>([]);
-  const [searching, setSearching] = useState(false);
-  const [provisioning, setProvisioning] = useState<string | null>(null);
+  const [selected, setSelected] = useState<Country | null>(null);
+  const [availableNums, setAvailableNums] = useState<string[]>([]);
+  const [numIdx, setNumIdx] = useState(0);
+  const [fetchingNums, setFetchingNums] = useState(false);
+  const [provisioning, setProvisioning] = useState(false);
 
   const plan = PLANS.find(p => p.id === currentPlan) ?? PLANS[0];
   const canAdd = numbers.length < plan.numberLimit;
 
-  const filtered = COUNTRIES.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
-  const popular = filtered.filter(c => c.popular);
-  const rest = filtered.filter(c => !c.popular);
+  const filtered = COUNTRIES.filter(c => {
+    const q = search.toLowerCase();
+    return (
+      c.name.toLowerCase().includes(q) ||
+      c.code.toLowerCase().includes(q) ||
+      c.prefix.includes(search)
+    );
+  });
+  const popularFiltered = filtered.filter(c => c.popular);
+  const restFiltered = filtered.filter(c => !c.popular);
 
-  const isAllowed = (_code: string) => true;
+  const currentNumber = availableNums[numIdx] ?? null;
 
-  const handleCountrySelect = async (c: typeof COUNTRIES[0]) => {
+  const handleCountrySelect = async (c: Country) => {
     if (!canAdd) {
-      Alert.alert("Limit Reached", "Upgrade your plan to add more numbers.", [
-        { text: "Upgrade", onPress: () => { router.back(); setTimeout(() => router.push("/paywall"), 300); } },
+      Alert.alert("Limit Reached", `Your ${plan.name} plan allows ${plan.numberLimit} number${plan.numberLimit > 1 ? "s" : ""}. Upgrade to add more.`, [
+        { text: "Upgrade Plan", onPress: () => { router.back(); setTimeout(() => router.push("/paywall"), 200); } },
         { text: "Cancel", style: "cancel" },
       ]);
       return;
     }
-    if (!isAllowed(c.code)) {
-      Alert.alert("Not on this plan", "Upgrade to access this country.");
-      return;
-    }
-    setSelectedCountry(c);
-    setStep("numbers");
-    setSearching(true);
-    setAvailableNumbers([]);
+    setSelected(c);
+    setAvailableNums([]);
+    setNumIdx(0);
+    setFetchingNums(true);
     try {
       const data = await api.searchNumbers(c.code, 6);
-      setAvailableNumbers((data.numbers || []).map((n: any) => n.number));
-    } catch (e: any) {
-      Alert.alert("Error", "Could not find available numbers. Try again.");
-      setStep("countries");
+      const nums = (data.numbers || []).map((n: any) => n.number).filter(Boolean);
+      if (nums.length === 0) throw new Error("No numbers available");
+      setAvailableNums(nums);
+      setNumIdx(0);
+    } catch {
+      Alert.alert("No Numbers Available", "Couldn't find available numbers for this country. Try another.", [
+        { text: "OK", onPress: () => setSelected(null) },
+      ]);
     } finally {
-      setSearching(false);
+      setFetchingNums(false);
     }
   };
 
-  const handleProvision = async (phoneNumber: string) => {
-    if (!selectedCountry) return;
-    setProvisioning(phoneNumber);
+  const handleRefresh = () => {
+    if (availableNums.length > 1) {
+      setNumIdx(i => (i + 1) % availableNums.length);
+    } else if (selected) {
+      setFetchingNums(true);
+      api.searchNumbers(selected.code, 6)
+        .then(data => {
+          const nums = (data.numbers || []).map((n: any) => n.number).filter(Boolean);
+          if (nums.length > 0) { setAvailableNums(nums); setNumIdx(0); }
+        })
+        .catch(() => {})
+        .finally(() => setFetchingNums(false));
+    }
+  };
+
+  const handleProvision = async () => {
+    if (!selected || !currentNumber) return;
+    setProvisioning(true);
     try {
       await api.provisionNumber({
-        phone_number: phoneNumber,
-        country: selectedCountry.name,
-        country_code: selectedCountry.code,
-        flag: selectedCountry.flag,
+        phone_number: currentNumber,
+        country: selected.name,
+        country_code: selected.code,
+        flag: selected.flag,
       });
       await refreshNumbers();
       router.back();
     } catch (e: any) {
       Alert.alert("Error", e.message || "Failed to get this number. Please try again.");
     } finally {
-      setProvisioning(null);
+      setProvisioning(false);
     }
   };
 
-  const CountryItem = ({ c }: { c: typeof COUNTRIES[0] }) => {
-    const allowed = isAllowed(c.code);
+  const CountryRow = ({ c }: { c: Country }) => {
+    const isSel = selected?.code === c.code;
     return (
       <Pressable
-        style={({ pressed }) => [styles.item, { opacity: (!allowed || pressed) ? 0.6 : 1 }]}
+        style={({ pressed }) => [styles.item, isSel && styles.itemSel, { opacity: pressed ? 0.75 : 1 }]}
         onPress={() => handleCountrySelect(c)}
       >
         <Text style={styles.flag}>{c.flag}</Text>
         <View style={{ flex: 1, gap: 2 }}>
-          <Text style={styles.name}>{c.name}</Text>
-          <Text style={styles.prefix}>{c.prefix}{c.instant ? "  ·  Instant" : "  ·  24h setup"}</Text>
+          <Text style={[styles.name, isSel && { color: C.accent }]}>{c.name}</Text>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <Text style={styles.prefix}>{c.prefix}</Text>
+            <View style={c.instant ? styles.instantBadge : styles.delayBadge}>
+              <Text style={c.instant ? styles.instantTxt : styles.delayTxt}>
+                {c.instant ? "⚡ Instant" : "1–2 days"}
+              </Text>
+            </View>
+          </View>
         </View>
         <Text style={styles.price}>${c.price}/mo</Text>
-        {!allowed && (
-          <View style={styles.lock}>
-            <Feather name="lock" size={12} color={C.textMuted} />
+        {isSel ? (
+          <View style={styles.checkCircle}>
+            <Feather name="check" size={12} color={C.onAccent} />
           </View>
+        ) : (
+          <Feather name="chevron-right" size={16} color={C.border} />
         )}
-        <Feather name="chevron-right" size={16} color={C.textMuted} />
       </Pressable>
     );
   };
 
-  if (step === "numbers") {
-    return (
-      <View style={[styles.root, { paddingTop: insets.top + 6 }]}>
-        <View style={styles.topRow}>
-          <Pressable onPress={() => setStep("countries")} hitSlop={14} style={styles.closeBtn}>
-            <Feather name="arrow-left" size={20} color={C.textSec} />
-          </Pressable>
-          <View style={{ flex: 1, alignItems: "center" }}>
-            <Text style={styles.topTitle}>
-              {selectedCountry?.flag} {selectedCountry?.name}
-            </Text>
-            <Text style={styles.topSub}>Choose your number</Text>
-          </View>
-          <View style={{ width: 40 }} />
-        </View>
-
-        {searching ? (
-          <View style={styles.centered}>
-            <ActivityIndicator size="large" color={C.accent} />
-            <Text style={styles.searchingTxt}>Searching available numbers…</Text>
-          </View>
-        ) : availableNumbers.length === 0 ? (
-          <View style={styles.centered}>
-            <Feather name="phone-off" size={40} color={C.textMuted} />
-            <Text style={styles.emptyTxt}>No numbers available{"\n"}in this country right now</Text>
-            <Pressable style={styles.retryBtn} onPress={() => selectedCountry && handleCountrySelect(selectedCountry)}>
-              <Text style={styles.retryTxt}>Try Again</Text>
-            </Pressable>
-          </View>
-        ) : (
-          <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}>
-            <Text style={styles.groupHeader}>AVAILABLE NUMBERS</Text>
-            {availableNumbers.map((num, idx) => {
-              const isLoading = provisioning === num;
-              return (
-                <Pressable
-                  key={`${num}-${idx}`}
-                  style={({ pressed }) => [styles.numberItem, { opacity: pressed ? 0.8 : 1 }]}
-                  onPress={() => handleProvision(num)}
-                  disabled={provisioning !== null}
-                >
-                  <View style={styles.numberLeft}>
-                    <Text style={styles.numberText}>{formatNumber(num)}</Text>
-                    <View style={styles.featureRow}>
-                      <View style={styles.featureBadge}><Text style={styles.featureTxt}>Voice</Text></View>
-                      <View style={styles.featureBadge}><Text style={styles.featureTxt}>SMS</Text></View>
-                      <View style={styles.featureBadge}><Text style={styles.featureTxt}>MMS</Text></View>
-                    </View>
-                  </View>
-                  {isLoading ? (
-                    <ActivityIndicator size="small" color={C.accent} />
-                  ) : (
-                    <View style={[styles.getBtn, provisioning !== null && { opacity: 0.5 }]}>
-                      <Text style={styles.getBtnTxt}>Get</Text>
-                    </View>
-                  )}
-                </Pressable>
-              );
-            })}
-          </ScrollView>
-        )}
-      </View>
-    );
-  }
-
   return (
     <View style={[styles.root, { paddingTop: insets.top + 6 }]}>
-      <View style={styles.topRow}>
-        <Pressable onPress={() => router.back()} hitSlop={14} style={styles.closeBtn}>
+
+      {/* Header */}
+      <View style={styles.header}>
+        <Pressable onPress={() => router.back()} hitSlop={14} style={styles.backBtn}>
           <Feather name="x" size={20} color={C.textSec} />
         </Pressable>
-        <Text style={styles.topTitle}>Add a Number</Text>
-        <View style={{ width: 40 }} />
+        <View style={{ flex: 1, marginLeft: 10 }}>
+          <Text style={styles.headerTitle}>Add a Number</Text>
+          <Text style={styles.headerSub}>
+            {plan.numberLimit - numbers.length} of {plan.numberLimit} remaining on {plan.name}
+          </Text>
+        </View>
       </View>
 
+      {/* Search bar */}
       <View style={styles.searchWrap}>
         <Feather name="search" size={15} color={C.textMuted} />
         <TextInput
           value={search}
           onChangeText={setSearch}
-          placeholder="Search countries…"
+          placeholder="Search country or dial code (+44)…"
           placeholderTextColor={C.textMuted}
           style={styles.searchInput}
+          clearButtonMode="while-editing"
         />
       </View>
 
+      {/* Country list */}
       <FlatList
         data={[
-          ...(popular.length > 0 ? [{ type: "header" as const, title: "Popular", key: "hpop" }] : []),
-          ...popular.map(c => ({ type: "country" as const, ...c, key: c.code + "p" })),
-          ...(rest.length > 0 ? [{ type: "header" as const, title: "All Countries", key: "hall" }] : []),
-          ...rest.map(c => ({ type: "country" as const, ...c, key: c.code })),
+          ...(popularFiltered.length > 0 && !search
+            ? [{ _type: "hdr" as const, title: "POPULAR", key: "hpop" }]
+            : []),
+          ...popularFiltered.map(c => ({ _type: "c" as const, ...c, key: c.code + "p" })),
+          ...(restFiltered.length > 0
+            ? [{ _type: "hdr" as const, title: search ? "RESULTS" : "ALL COUNTRIES", key: "hall" }]
+            : []),
+          ...restFiltered.map(c => ({ _type: "c" as const, ...c, key: c.code })),
         ]}
         keyExtractor={item => item.key}
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: insets.bottom + 24 }}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={{ paddingBottom: selected ? 180 : insets.bottom + 24 }}
         renderItem={({ item }) => {
-          if (item.type === "header") return <Text style={styles.groupHeader}>{item.title}</Text>;
-          return <CountryItem c={item as any} />;
+          if (item._type === "hdr") {
+            return <Text style={styles.groupHeader}>{item.title}</Text>;
+          }
+          return <CountryRow c={item as any} />;
         }}
       />
+
+      {/* Inline number preview + CTA — slides up when country selected */}
+      {selected && (
+        <View style={[styles.bottomSheet, { paddingBottom: insets.bottom + 16 }]}>
+          {fetchingNums ? (
+            <View style={styles.numLoading}>
+              <ActivityIndicator size="small" color={C.accent} />
+              <Text style={styles.numLoadingTxt}>Finding available numbers…</Text>
+            </View>
+          ) : currentNumber ? (
+            <View style={styles.numPreview}>
+              <Text style={{ fontSize: 22, marginRight: 10 }}>{selected.flag}</Text>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.numPreviewNum}>{currentNumber}</Text>
+                <Text style={styles.numPreviewSub}>{selected.name} · {selected.prefix} · ${selected.price}/mo</Text>
+              </View>
+              <Pressable
+                hitSlop={10}
+                onPress={handleRefresh}
+                disabled={fetchingNums}
+                style={styles.refreshBtn}
+              >
+                <Feather name="refresh-cw" size={14} color={C.accent} />
+                <Text style={styles.refreshTxt}>Refresh</Text>
+              </Pressable>
+            </View>
+          ) : null}
+
+          <Pressable
+            style={[styles.getBtn, (provisioning || fetchingNums || !currentNumber) && { opacity: 0.6 }]}
+            onPress={handleProvision}
+            disabled={provisioning || fetchingNums || !currentNumber}
+          >
+            {provisioning ? (
+              <>
+                <ActivityIndicator size="small" color={C.onAccent} />
+                <Text style={styles.getBtnTxt}>Provisioning…</Text>
+              </>
+            ) : (
+              <Text style={styles.getBtnTxt}>Get {selected.name} Number →</Text>
+            )}
+          </Pressable>
+        </View>
+      )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: C.bg },
-  topRow: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingHorizontal: 16, paddingBottom: 12 },
-  closeBtn: { width: 40, height: 40, borderRadius: 10, backgroundColor: C.raised, alignItems: "center", justifyContent: "center" },
-  topTitle: { fontFamily: "Inter_700Bold", fontSize: 17, color: C.text },
-  topSub: { fontFamily: "Inter_400Regular", fontSize: 12, color: C.textMuted, marginTop: 2 },
-  searchWrap: { marginHorizontal: 16, marginBottom: 4, flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: C.raised, borderRadius: 12, borderWidth: 1, borderColor: C.border, height: 44, paddingHorizontal: 12 },
-  searchInput: { flex: 1, fontSize: 14.5, color: C.text, fontFamily: "Inter_400Regular" },
-  groupHeader: { paddingHorizontal: 16, paddingTop: 16, paddingBottom: 8, fontFamily: "Inter_600SemiBold", fontSize: 10, color: C.textMuted, letterSpacing: 1 },
-  item: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 13, gap: 13 },
+
+  header: { flexDirection: "row", alignItems: "flex-start", paddingHorizontal: 16, paddingBottom: 12 },
+  backBtn: { width: 38, height: 38, borderRadius: 10, backgroundColor: C.raised, alignItems: "center", justifyContent: "center", marginTop: 2 },
+  headerTitle: { fontFamily: "Inter_700Bold", fontSize: 20, color: C.text, letterSpacing: -0.5 },
+  headerSub: { fontFamily: "Inter_400Regular", fontSize: 11.5, color: C.textMuted, marginTop: 2 },
+
+  searchWrap: { marginHorizontal: 16, marginBottom: 6, flexDirection: "row", alignItems: "center", gap: 10, backgroundColor: C.raised, borderRadius: 12, borderWidth: 1, borderColor: C.border, height: 44, paddingHorizontal: 12 },
+  searchInput: { flex: 1, fontSize: 14, color: C.text, fontFamily: "Inter_400Regular" },
+
+  groupHeader: { paddingHorizontal: 16, paddingTop: 14, paddingBottom: 7, fontFamily: "Inter_700Bold", fontSize: 10, color: C.textMuted, letterSpacing: 1.4 },
+
+  item: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 13, gap: 12, borderBottomWidth: 1, borderBottomColor: C.border },
+  itemSel: { backgroundColor: C.accentDim },
   flag: { fontSize: 26 },
   name: { fontFamily: "Inter_600SemiBold", fontSize: 14.5, color: C.text },
   prefix: { fontFamily: "Inter_400Regular", fontSize: 12, color: C.textMuted },
+  instantBadge: { backgroundColor: "rgba(22,163,74,0.10)", borderRadius: 99, paddingHorizontal: 7, paddingVertical: 2 },
+  instantTxt: { fontFamily: "Inter_600SemiBold", fontSize: 10, color: C.green },
+  delayBadge: { backgroundColor: C.raised, borderRadius: 99, paddingHorizontal: 7, paddingVertical: 2 },
+  delayTxt: { fontFamily: "Inter_400Regular", fontSize: 10, color: C.textMuted },
   price: { fontFamily: "Inter_600SemiBold", fontSize: 13, color: C.accent },
-  lock: { width: 22, height: 22, borderRadius: 6, backgroundColor: C.raised, alignItems: "center", justifyContent: "center" },
-  centered: { flex: 1, alignItems: "center", justifyContent: "center", gap: 14, padding: 32 },
-  searchingTxt: { fontFamily: "Inter_400Regular", fontSize: 15, color: C.textSec, textAlign: "center" },
-  emptyTxt: { fontFamily: "Inter_400Regular", fontSize: 15, color: C.textSec, textAlign: "center", lineHeight: 24 },
-  retryBtn: { marginTop: 8, paddingHorizontal: 24, paddingVertical: 12, backgroundColor: C.accent, borderRadius: 12 },
-  retryTxt: { fontFamily: "Inter_600SemiBold", fontSize: 14, color: C.onAccent },
-  numberItem: { flexDirection: "row", alignItems: "center", paddingHorizontal: 16, paddingVertical: 16, borderBottomWidth: 1, borderBottomColor: C.border, gap: 12 },
-  numberLeft: { flex: 1, gap: 8 },
-  numberText: { fontFamily: "Inter_600SemiBold", fontSize: 17, color: C.text, letterSpacing: 0.3 },
-  featureRow: { flexDirection: "row", gap: 6 },
-  featureBadge: { paddingHorizontal: 8, paddingVertical: 3, backgroundColor: C.raised, borderRadius: 6, borderWidth: 1, borderColor: C.border },
-  featureTxt: { fontFamily: "Inter_500Medium", fontSize: 11, color: C.textSec },
-  getBtn: { paddingHorizontal: 18, paddingVertical: 10, backgroundColor: C.accent, borderRadius: 12 },
-  getBtnTxt: { fontFamily: "Inter_700Bold", fontSize: 14, color: C.onAccent },
+  checkCircle: { width: 22, height: 22, borderRadius: 11, backgroundColor: C.accent, alignItems: "center", justifyContent: "center" },
+
+  bottomSheet: {
+    position: "absolute", bottom: 0, left: 0, right: 0,
+    backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border,
+    paddingHorizontal: 16, paddingTop: 14,
+    shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 16,
+    shadowOffset: { width: 0, height: -4 }, elevation: 12,
+  },
+  numLoading: { flexDirection: "row", alignItems: "center", gap: 10, marginBottom: 12, paddingVertical: 6 },
+  numLoadingTxt: { fontFamily: "Inter_400Regular", fontSize: 13, color: C.textSec },
+  numPreview: { flexDirection: "row", alignItems: "center", backgroundColor: C.raised, borderRadius: 12, padding: 12, marginBottom: 12 },
+  numPreviewNum: { fontFamily: "Inter_600SemiBold", fontSize: 15, color: C.text, letterSpacing: 0.2 },
+  numPreviewSub: { fontFamily: "Inter_400Regular", fontSize: 11, color: C.textMuted, marginTop: 2 },
+  refreshBtn: { flexDirection: "row", alignItems: "center", gap: 4, paddingLeft: 10 },
+  refreshTxt: { fontFamily: "Inter_700Bold", fontSize: 12, color: C.accent },
+
+  getBtn: {
+    height: 54, backgroundColor: C.accent, borderRadius: 16,
+    flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 8,
+    shadowColor: C.accent, shadowOpacity: 0.35, shadowRadius: 14,
+    shadowOffset: { width: 0, height: 4 }, elevation: 8,
+  },
+  getBtnTxt: { fontFamily: "Inter_700Bold", fontSize: 16, color: C.onAccent, letterSpacing: -0.2 },
 });
