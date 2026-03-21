@@ -151,7 +151,7 @@ export default function NumbersScreen() {
   const insets = useSafeAreaInsets();
   const {
     numbers, messages, removeNumber, refreshNumbers,
-    profile, simulateIncomingCall,
+    profile,
     isInTrial, trialEnds, trialMinsUsed, trialSmsUsed, trialExpired,
   } = useApp();
   const isWeb = Platform.OS === "web";
@@ -193,10 +193,6 @@ export default function NumbersScreen() {
             <Text style={styles.headerTitle}>{userName} 👋</Text>
           </View>
           <View style={styles.headerRight}>
-            <Pressable style={styles.simCallBtn} onPress={simulateIncomingCall}>
-              <Feather name="phone-incoming" size={16} color={C.green} />
-              <View style={styles.simCallDot} />
-            </Pressable>
             <Pressable onPress={() => router.push("/profile")}>
               <View style={styles.avatar}>
                 <Text style={styles.avatarTxt}>{userName.charAt(0).toUpperCase()}</Text>
@@ -312,15 +308,6 @@ const styles = StyleSheet.create({
   greeting: { fontSize: 10, fontFamily: "Inter_700Bold", color: C.textMuted, letterSpacing: 1.5 },
   headerTitle: { fontSize: 24, fontFamily: "Inter_700Bold", color: C.text, letterSpacing: -0.5, marginTop: 3 },
   headerRight: { flexDirection: "row", alignItems: "center", gap: 9 },
-  simCallBtn: {
-    width: 40, height: 40, borderRadius: 12, backgroundColor: C.greenDim,
-    borderWidth: 1, borderColor: "rgba(22,163,74,0.2)",
-    alignItems: "center", justifyContent: "center", position: "relative",
-  },
-  simCallDot: {
-    position: "absolute", top: 8, right: 8, width: 7, height: 7,
-    borderRadius: 3.5, backgroundColor: C.green, borderWidth: 1.5, borderColor: C.surface,
-  },
   avatar: {
     width: 40, height: 40, borderRadius: 12, backgroundColor: C.accent,
     alignItems: "center", justifyContent: "center",

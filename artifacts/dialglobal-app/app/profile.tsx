@@ -8,11 +8,10 @@ import { Feather, Ionicons } from "@expo/vector-icons";
 import C from "@/constants/colors";
 import { useApp } from "@/context/AppContext";
 import { PLANS } from "@/data/mockData";
-import { supabase } from "@/lib/supabase";
 
 export default function Profile() {
   const insets = useSafeAreaInsets();
-  const { profile, numbers, currentPlan, signOut } = useApp();
+  const { profile, numbers, currentPlan, signOut, updateProfile } = useApp();
   const plan = PLANS.find(p => p.id === currentPlan) ?? PLANS[0];
 
   const [name,    setName]    = useState(profile?.name  ?? "");
@@ -43,11 +42,7 @@ export default function Profile() {
     setSaving(true);
     setSaved(false);
     try {
-      const { error } = await supabase
-        .from("profiles")
-        .update({ name })
-        .eq("id", profile.id);
-      if (error) throw error;
+      await updateProfile({ name });
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch (err: any) {

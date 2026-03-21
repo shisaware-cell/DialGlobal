@@ -102,4 +102,13 @@ export const api = {
       method: "POST",
       body: JSON.stringify({ from_number, to_number }),
     }),
+
+  orderEsim: (plan: { plan_id: string; region: string; data_gb: string; days: number; price: number }) =>
+    apiFetch("/esim/order", {
+      method: "POST",
+      body: JSON.stringify(plan),
+    }),
+
+  getEsimCode: (simCardId: string) =>
+    apiFetch(`/esim/${simCardId}/code`),
 };

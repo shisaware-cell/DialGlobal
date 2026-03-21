@@ -114,16 +114,6 @@ export default function Settings() {
           <Row icon="eye-off" label="Ghost Mode" sublabel="Silence all numbers, hide badges" value={ghostMode} onToggle={setGhostMode} />
         </Section>
 
-        <Section title="FEATURES">
-          <Row icon="message-circle" label="Auto-Reply" sublabel="Set away messages per number" onPress={() => router.push("/autoreply")} />
-          <View style={styles.divider} />
-          <Row icon="slash" label="Spam & Robocall Blocker" sublabel="Block unwanted calls per number" onPress={() => router.push("/spamblocker")} />
-          <View style={styles.divider} />
-          <Row icon="users" label="Import Contacts" sublabel="Sync from phone or CSV" onPress={() => router.push("/contacts")} />
-          <View style={styles.divider} />
-          <Row icon="wifi" label="eSIM Data Plans" sublabel="Stay connected while travelling" onPress={() => router.push("/esim")} />
-        </Section>
-
         <Section title="ACCOUNT">
           <Row icon="user" label="Personal Info" sublabel="Name, email, password" onPress={() => router.push("/profile")} />
           <View style={styles.divider} />

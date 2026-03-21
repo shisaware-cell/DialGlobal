@@ -87,6 +87,7 @@ type AppCtx = {
   refreshNumbers: () => Promise<void>;
   refreshMessages: () => Promise<void>;
   refreshCalls: () => Promise<void>;
+  updateProfile: (fields: { name?: string }) => Promise<void>;
   loading: boolean;
   signOut: () => Promise<void>;
 
@@ -191,6 +192,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (callsRes.status === "fulfilled") setCalls(callsRes.value.calls || []);
     } catch {}
   };
+
+  const updateProfile = useCallback(async (fields: { name?: string }) => {
+    if (!user) return;
+    await supabase.from("profiles").update(fields).eq("id", user.id);
+    setProfile(prev => prev ? { ...prev, ...fields } : prev);
+  }, [user]);
 
   const refreshNumbers = useCallback(async () => {
     try {
@@ -368,7 +375,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       isInTrial, trialEnds, trialPlan, trialExpired, trialMinsUsed, trialSmsUsed,
       expireTrial, fullPlanActivate,
       numbers, messages, calls, addNumber, removeNumber,
-      refreshNumbers, refreshMessages, refreshCalls,
+      refreshNumbers, refreshMessages, refreshCalls, updateProfile,
       loading, signOut,
       ghostMode, setGhostMode,
       dndNumbers, toggleDnd, spamEnabled, toggleSpam,

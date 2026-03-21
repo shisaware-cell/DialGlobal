@@ -7,6 +7,7 @@ import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import C from "@/constants/colors";
+import { api } from "@/lib/api";
 
 const ESIM_PLANS = [
   { id: "e1", region: "🌍 Africa & Middle East", data: "1 GB", days: 7,  price: 4.99 },
@@ -20,36 +21,77 @@ type Step = "plans" | "scan" | "manual" | "done";
 
 export default function ESim() {
   const insets = useSafeAreaInsets();
-  const [step, setStep]         = useState<Step>("plans");
-  const [selected, setSelected] = useState<typeof ESIM_PLANS[0] | null>(null);
-  const [loading, setLoading]   = useState(false);
-  const [qrInput, setQrInput]   = useState("");
+  const [step, setStep]               = useState<Step>("plans");
+  const [selected, setSelected]       = useState<typeof ESIM_PLANS[0] | null>(null);
+  const [loading, setLoading]         = useState(false);
+  const [qrInput, setQrInput]         = useState("");
+  const [activationCode, setActivationCode] = useState<string | null>(null);
+  const [orderId, setOrderId]         = useState<string | null>(null);
 
-  const activate = () => {
+  const activate = async () => {
+    if (!selected) return;
     setLoading(true);
-    setTimeout(() => { setLoading(false); setStep("done"); }, 2200);
+    try {
+      const res = await api.orderEsim({
+        plan_id: selected.id,
+        region: selected.region,
+        data_gb: selected.data,
+        days: selected.days,
+        price: selected.price,
+      });
+      setOrderId(res.order_id || null);
+      setActivationCode(res.activation_code || null);
+      setStep("done");
+    } catch (err: any) {
+      Alert.alert("eSIM Order Failed", err.message || "Could not place eSIM order. Please ensure your Telnyx account has sufficient credits.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (step === "done") {
     return (
-      <View style={[styles.root, { paddingTop: insets.top + 6 }, styles.centered]}>
-        <Text style={{ fontSize: 64, marginBottom: 16 }}>📶</Text>
-        <Text style={styles.doneTitle}>eSIM Activated!</Text>
-        <Text style={styles.doneSub}>
-          Your eSIM is ready. Stay connected while travelling with your virtual number.
-        </Text>
-        <View style={styles.doneCard}>
-          <Text style={styles.doneMuted}>Active eSIM Plan</Text>
-          <Text style={styles.doneRegion}>{selected?.region}</Text>
-          <Text style={styles.doneDetail}>{selected?.data} · {selected?.days} days</Text>
-          <View style={styles.activePill}>
-            <View style={styles.activeDot} />
-            <Text style={styles.activeTxt}>Active</Text>
+      <View style={[styles.root, { paddingTop: insets.top + 6 }]}>
+        <ScrollView contentContainerStyle={[styles.centered, { padding: 24, paddingBottom: insets.bottom + 40 }]}>
+          <Text style={{ fontSize: 64, marginBottom: 16 }}>📶</Text>
+          <Text style={styles.doneTitle}>eSIM Ordered!</Text>
+          <Text style={styles.doneSub}>
+            Your eSIM order is being processed. Install the activation code below on your device.
+          </Text>
+          <View style={styles.doneCard}>
+            <Text style={styles.doneMuted}>Plan</Text>
+            <Text style={styles.doneRegion}>{selected?.region}</Text>
+            <Text style={styles.doneDetail}>{selected?.data} · {selected?.days} days</Text>
+            {orderId && (
+              <Text style={[styles.doneMuted, { marginTop: 8 }]}>Order ID: {orderId}</Text>
+            )}
+            <View style={styles.activePill}>
+              <View style={styles.activeDot} />
+              <Text style={styles.activeTxt}>Processing</Text>
+            </View>
           </View>
-        </View>
-        <Pressable style={styles.primaryBtn} onPress={() => router.back()}>
-          <Text style={styles.primaryBtnTxt}>Done</Text>
-        </Pressable>
+
+          {activationCode ? (
+            <View style={styles.codeCard}>
+              <Text style={styles.codeLabel}>ACTIVATION CODE</Text>
+              <Text style={styles.codeTxt} selectable>{activationCode}</Text>
+              <Text style={styles.codeHint}>
+                Go to Settings → Mobile Data → Add eSIM → Enter code manually on your device.
+              </Text>
+            </View>
+          ) : (
+            <View style={styles.codeCard}>
+              <Feather name="info" size={16} color={C.accent} />
+              <Text style={styles.codeHint}>
+                Your activation code will be emailed once the order is confirmed by Telnyx (usually within a few minutes).
+              </Text>
+            </View>
+          )}
+
+          <Pressable style={[styles.primaryBtn, { width: "100%", marginTop: 8 }]} onPress={() => router.back()}>
+            <Text style={styles.primaryBtnTxt}>Done</Text>
+          </Pressable>
+        </ScrollView>
       </View>
     );
   }
@@ -222,4 +264,14 @@ const styles = StyleSheet.create({
   footerPrice: { fontFamily: "Inter_700Bold", fontSize: 18, color: C.accent },
   primaryBtn: { width: "100%", height: 52, backgroundColor: C.accent, borderRadius: 14, alignItems: "center", justifyContent: "center", shadowColor: C.accent, shadowOpacity: 0.4, shadowRadius: 16, shadowOffset: { width: 0, height: 4 }, elevation: 8 },
   primaryBtnTxt: { fontFamily: "Inter_700Bold", fontSize: 15, color: C.onAccent },
+  codeCard: {
+    width: "100%", backgroundColor: C.raised, borderRadius: 14, borderWidth: 1,
+    borderColor: C.border, padding: 16, gap: 8, alignItems: "center",
+  },
+  codeLabel: { fontFamily: "Inter_700Bold", fontSize: 10, color: C.textMuted, letterSpacing: 1.4 },
+  codeTxt: {
+    fontFamily: "Inter_400Regular", fontSize: 12, color: C.text,
+    textAlign: "center", lineHeight: 18,
+  },
+  codeHint: { fontFamily: "Inter_400Regular", fontSize: 12, color: C.textMuted, textAlign: "center", lineHeight: 18 },
 });
