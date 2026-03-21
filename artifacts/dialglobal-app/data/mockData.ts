@@ -132,13 +132,65 @@ export const TRIAL_LIMITS = {
   canPickCountry:  true,
 };
 
+export const CREDIT_PACKS = [
+  {
+    id: "c1", label: "Starter", price: 2.99,
+    credits: 2.54,
+    bonusLabel: null as string | null,
+    popular: false,
+    equiv: "~127 minutes of calls or 127 SMS",
+    approxMins: 127,
+  },
+  {
+    id: "c2", label: "Standard", price: 6.99,
+    credits: 6.50,
+    bonusLabel: "+$0.56 bonus" as string | null,
+    popular: true,
+    equiv: "~325 minutes of calls or 325 SMS",
+    approxMins: 325,
+  },
+  {
+    id: "c3", label: "Value", price: 12.99,
+    credits: 12.50,
+    bonusLabel: "+$1.46 bonus" as string | null,
+    popular: false,
+    equiv: "~625 minutes of calls or 625 SMS",
+    approxMins: 625,
+  },
+  {
+    id: "c4", label: "Power", price: 24.99,
+    credits: 24.00,
+    bonusLabel: "+$2.76 bonus" as string | null,
+    popular: false,
+    equiv: "~1,200 minutes of calls or 1,200 SMS",
+    approxMins: 1200,
+  },
+];
+
 export const CREDIT_RATES = {
   outboundCallPerMin:  0.020,
   inboundCallPerMin:   0.015,
-  smsOutbound:         0.020,
+  smsPerMessage:       0.020,
   recordingPerMin:     0.005,
   extraNumberPerMonth: 1.990,
 };
+
+export const STORE_PRODUCT_IDS = {
+  traveller_monthly:    "com.dialglobal.traveller.monthly",
+  traveller_yearly:     "com.dialglobal.traveller.yearly",
+  professional_monthly: "com.dialglobal.professional.monthly",
+  professional_yearly:  "com.dialglobal.professional.yearly",
+  business_monthly:     "com.dialglobal.business.monthly",
+  business_yearly:      "com.dialglobal.business.yearly",
+  credits_starter:      "com.dialglobal.credits.starter",
+  credits_standard:     "com.dialglobal.credits.standard",
+  credits_value:        "com.dialglobal.credits.value",
+  credits_power:        "com.dialglobal.credits.power",
+};
+
+export function getPlanProductId(planId: string, billing: string): string | null {
+  return (STORE_PRODUCT_IDS as Record<string, string>)[`${planId}_${billing}`] || null;
+}
 
 export const ESIM_PLANS = [
   {
