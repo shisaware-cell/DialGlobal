@@ -94,7 +94,7 @@ export default function Settings() {
             <View style={styles.planTag}>
               <Ionicons name="star" size={11} color={C.accent} />
               <Text style={styles.planTagTxt}>{plan?.name ?? "Free"} Plan</Text>
-              {credits > 0 && <Text style={styles.creditsTag}>⭐ {credits.toLocaleString()} credits</Text>}
+              {credits > 0 && <Text style={styles.creditsTag}>💳 ${credits.toFixed(2)}</Text>}
             </View>
           </View>
           <Feather name="chevron-right" size={16} color={C.textMuted} />
@@ -127,7 +127,7 @@ export default function Settings() {
           <Row
             icon="star"
             label="Credits"
-            sublabel={credits > 0 ? `${credits.toLocaleString()} credits available` : "Pay-as-you-go"}
+            sublabel={credits > 0 ? `$${credits.toFixed(2)} wallet balance` : "Top up for extra usage"}
             onPress={() => router.push("/credits")}
           />
         </Section>

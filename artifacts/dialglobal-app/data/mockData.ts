@@ -132,6 +132,14 @@ export const TRIAL_LIMITS = {
   canPickCountry:  true,
 };
 
+export const CREDIT_RATES = {
+  outboundCallPerMin:  0.020,
+  inboundCallPerMin:   0.015,
+  smsOutbound:         0.020,
+  recordingPerMin:     0.005,
+  extraNumberPerMonth: 1.990,
+};
+
 export const ESIM_PLANS = [
   {
     id:"e1", region:"Africa & Middle East", emoji:"🌍",

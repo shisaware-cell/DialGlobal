@@ -19,7 +19,7 @@ export default function Paywall() {
   const insets = useSafeAreaInsets();
   const { selectPlan, pendingPlan } = useApp();
   const [selected, setSelected] = useState(pendingPlan || "professional");
-  const [cycle, setCycle] = useState<"monthly" | "yearly">("yearly");
+  const [cycle, setCycle] = useState<"monthly" | "yearly">("monthly");
 
   const activePlan = PLANS.find(p => p.id === selected) ?? PLANS[1];
   const price = cycle === "yearly" ? activePlan.yearlyPrice : activePlan.monthlyPrice;

@@ -6,28 +6,30 @@ import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import C from "@/constants/colors";
+import { CREDIT_RATES } from "@/data/mockData";
 import { useApp } from "@/context/AppContext";
 
 const PACKS = [
-  { id: "c1", credits: 500,   price: 2.99,  bonus: null,         tag: null         },
-  { id: "c2", credits: 1000,  price: 4.99,  bonus: "+100 free",  tag: "POPULAR"    },
-  { id: "c3", credits: 2500,  price: 9.99,  bonus: "+500 free",  tag: "BEST VALUE" },
-  { id: "c4", credits: 10000, price: 29.99, bonus: "+2000 free", tag: "PRO"        },
+  { id: "c1", dollars: 5.00,  bonus: 0,    price: 4.99,  tag: null         },
+  { id: "c2", dollars: 10.00, bonus: 1.00, price: 9.99,  tag: "POPULAR"    },
+  { id: "c3", dollars: 25.00, bonus: 3.00, price: 24.99, tag: "BEST VALUE" },
+  { id: "c4", dollars: 50.00, bonus: 8.00, price: 49.99, tag: "PRO"        },
 ];
 
 const RATES = [
-  { type: "SMS outbound",           credits: 1, icon: "💬", free: false },
-  { type: "SMS inbound",            credits: 0, icon: "💬", free: true },
-  { type: "Call (per min)",         credits: 2, icon: "📞", free: false },
-  { type: "MMS (send)",             credits: 3, icon: "📷", free: false },
-  { type: "Voicemail transcription",credits: 5, icon: "🎤", free: false },
+  { type: "Outbound call",          rate: `$${CREDIT_RATES.outboundCallPerMin.toFixed(3)}/min`, icon: "📞", free: false },
+  { type: "Inbound call",           rate: `$${CREDIT_RATES.inboundCallPerMin.toFixed(3)}/min`,  icon: "📞", free: false },
+  { type: "SMS sent",               rate: `$${CREDIT_RATES.smsOutbound.toFixed(3)}/msg`,        icon: "💬", free: false },
+  { type: "SMS received",           rate: null,                                                  icon: "💬", free: true  },
+  { type: "Call recording",         rate: `$${CREDIT_RATES.recordingPerMin.toFixed(3)}/min`,    icon: "🎤", free: false },
+  { type: "Extra number",           rate: `$${CREDIT_RATES.extraNumberPerMonth.toFixed(2)}/mo`, icon: "📱", free: false },
 ];
 
 export default function Credits() {
   const insets = useSafeAreaInsets();
   const { credits, addCredits } = useApp();
-  const [selected, setSelected]   = useState("c2");
-  const [loading, setLoading]     = useState(false);
+  const [selected, setSelected] = useState("c2");
+  const [loading, setLoading]   = useState(false);
   const [showRates, setShowRates] = useState(false);
 
   const pack = PACKS.find(p => p.id === selected)!;
@@ -35,11 +37,12 @@ export default function Credits() {
   const purchase = () => {
     setLoading(true);
     setTimeout(() => {
-      const bonus = pack.bonus ? parseInt(pack.bonus) : 0;
-      addCredits(pack.credits + bonus);
+      addCredits(pack.dollars + pack.bonus);
       setLoading(false);
     }, 1600);
   };
+
+  const totalAdded = pack.dollars + pack.bonus;
 
   return (
     <View style={[styles.root, { paddingTop: insets.top + 6 }]}>
@@ -48,23 +51,32 @@ export default function Credits() {
           <Feather name="arrow-left" size={20} color={C.textSec} />
         </Pressable>
         <View>
-          <Text style={styles.headerTitle}>Credits</Text>
+          <Text style={styles.headerTitle}>Credit Wallet</Text>
           <Text style={styles.headerSub}>Pay-as-you-go for calls & messages</Text>
         </View>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ padding: 16, paddingBottom: insets.bottom + 100 }}>
+
         {/* Balance card */}
         <View style={styles.balanceCard}>
-          <Text style={{ fontSize: 42, marginBottom: 4 }}>⭐</Text>
-          <Text style={styles.balanceNum}>{credits.toLocaleString()}</Text>
-          <Text style={styles.balanceLabel}>Available Credits</Text>
+          <Text style={{ fontSize: 36, marginBottom: 6 }}>💳</Text>
+          <Text style={styles.balanceNum}>${credits.toFixed(2)}</Text>
+          <Text style={styles.balanceLabel}>Wallet Balance</Text>
+          {credits > 0 && (
+            <View style={styles.balanceMeta}>
+              <Text style={styles.balanceMetaTxt}>
+                ~{Math.floor(credits / CREDIT_RATES.outboundCallPerMin)} min calls  ·  ~{Math.floor(credits / CREDIT_RATES.smsOutbound)} SMS
+              </Text>
+            </View>
+          )}
         </View>
 
-        <Text style={styles.sectionLabel}>BUY CREDITS</Text>
+        <Text style={styles.sectionLabel}>TOP UP WALLET</Text>
 
-        {PACKS.map((p, i) => {
+        {PACKS.map((p) => {
           const isSel = selected === p.id;
+          const total = p.dollars + p.bonus;
           return (
             <Pressable
               key={p.id}
@@ -81,28 +93,27 @@ export default function Credits() {
               </View>
               <View style={{ flex: 1 }}>
                 <View style={{ flexDirection: "row", alignItems: "center", gap: 8, marginBottom: 3 }}>
-                  <Text style={[styles.packCredits, isSel && { color: C.accent }]}>
-                    {p.credits.toLocaleString()}
+                  <Text style={[styles.packAmount, isSel && { color: C.accent }]}>
+                    ${total.toFixed(2)}
                   </Text>
-                  <Text style={styles.packCreditsSub}>credits</Text>
-                  {p.bonus && (
+                  {p.bonus > 0 && (
                     <View style={styles.bonusBadge}>
-                      <Text style={styles.bonusTxt}>{p.bonus}</Text>
+                      <Text style={styles.bonusTxt}>+${p.bonus.toFixed(2)} free</Text>
                     </View>
                   )}
                 </View>
                 <Text style={styles.packMeta}>
-                  ~{Math.round(p.credits / 2)} min calls · {p.credits} SMS
+                  ~{Math.floor(total / CREDIT_RATES.outboundCallPerMin)} min calls · ~{Math.floor(total / CREDIT_RATES.smsOutbound)} SMS
                 </Text>
               </View>
-              <Text style={[styles.packPrice, isSel && { color: C.accent }]}>${p.price}</Text>
+              <Text style={[styles.packPrice, isSel && { color: C.accent }]}>${p.price.toFixed(2)}</Text>
             </Pressable>
           );
         })}
 
         {/* Rates toggle */}
         <Pressable style={styles.ratesToggle} onPress={() => setShowRates(s => !s)}>
-          <Text style={styles.ratesTxt}>View credit rates</Text>
+          <Text style={styles.ratesTxt}>View usage rates</Text>
           <Feather name={showRates ? "chevron-up" : "chevron-down"} size={14} color={C.textMuted} />
         </Pressable>
 
@@ -117,10 +128,13 @@ export default function Credits() {
                     <Text style={styles.freeTxt}>FREE</Text>
                   </View>
                 ) : (
-                  <Text style={styles.rateCr}>{r.credits} cr</Text>
+                  <Text style={styles.rateCr}>{r.rate}</Text>
                 )}
               </View>
             ))}
+            <View style={styles.ratesNote}>
+              <Text style={styles.ratesNoteTxt}>Included plan minutes & SMS are used first. Wallet balance covers overages.</Text>
+            </View>
           </View>
         )}
       </ScrollView>
@@ -135,10 +149,10 @@ export default function Credits() {
           {loading
             ? <ActivityIndicator color={C.onAccent} />
             : <Text style={styles.buyBtnTxt}>
-                Buy {pack.credits.toLocaleString()} Credits — ${pack.price} →
+                Add ${totalAdded.toFixed(2)} to Wallet — ${pack.price.toFixed(2)} →
               </Text>}
         </Pressable>
-        <Text style={styles.footerNote}>Credits never expire · Secure payment via Stripe</Text>
+        <Text style={styles.footerNote}>Wallet balance never expires · Secure payment via Stripe</Text>
       </View>
     </View>
   );
@@ -151,8 +165,10 @@ const styles = StyleSheet.create({
   headerTitle: { fontFamily: "Inter_700Bold", fontSize: 18, color: C.text },
   headerSub: { fontFamily: "Inter_400Regular", fontSize: 11, color: C.textMuted, marginTop: 1 },
   balanceCard: { borderRadius: 20, padding: 20, marginBottom: 20, alignItems: "center", backgroundColor: C.accent, shadowColor: C.accent, shadowOpacity: 0.4, shadowRadius: 20, shadowOffset: { width: 0, height: 6 }, elevation: 10 },
-  balanceNum: { fontFamily: "Inter_700Bold", fontSize: 42, color: C.onAccent, letterSpacing: -1, lineHeight: 48 },
+  balanceNum: { fontFamily: "Inter_700Bold", fontSize: 44, color: C.onAccent, letterSpacing: -1, lineHeight: 50 },
   balanceLabel: { fontFamily: "Inter_600SemiBold", fontSize: 13, color: "rgba(26,23,20,0.65)", marginTop: 4 },
+  balanceMeta: { marginTop: 10, backgroundColor: "rgba(26,23,20,0.12)", borderRadius: 99, paddingHorizontal: 12, paddingVertical: 5 },
+  balanceMetaTxt: { fontFamily: "Inter_500Medium", fontSize: 11.5, color: C.onAccent },
   sectionLabel: { fontFamily: "Inter_700Bold", fontSize: 10, color: C.textMuted, letterSpacing: 1.4, marginBottom: 10 },
   packCard: { flexDirection: "row", alignItems: "center", backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.border, borderRadius: 12, padding: 14, marginBottom: 8, overflow: "hidden" },
   packCardSel: { backgroundColor: C.accentDim, borderColor: C.accent },
@@ -161,8 +177,7 @@ const styles = StyleSheet.create({
   radio: { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: C.borderStrong, marginRight: 12, alignItems: "center", justifyContent: "center" },
   radioSel: { borderColor: C.accent },
   radioDot: { width: 7, height: 7, borderRadius: 3.5, backgroundColor: C.accent },
-  packCredits: { fontFamily: "Inter_700Bold", fontSize: 20, color: C.text, letterSpacing: -0.5 },
-  packCreditsSub: { fontFamily: "Inter_400Regular", fontSize: 12, color: C.textSec },
+  packAmount: { fontFamily: "Inter_700Bold", fontSize: 20, color: C.text, letterSpacing: -0.5 },
   bonusBadge: { backgroundColor: C.greenDim, paddingHorizontal: 7, paddingVertical: 2, borderRadius: 99 },
   bonusTxt: { fontFamily: "Inter_700Bold", fontSize: 10, color: C.green },
   packMeta: { fontFamily: "Inter_400Regular", fontSize: 11, color: C.textMuted },
@@ -176,6 +191,8 @@ const styles = StyleSheet.create({
   freeBadge: { backgroundColor: C.greenDim, paddingHorizontal: 8, paddingVertical: 2, borderRadius: 99 },
   freeTxt: { fontFamily: "Inter_700Bold", fontSize: 11, color: C.green },
   rateCr: { fontFamily: "Inter_700Bold", fontSize: 12, color: C.accent },
+  ratesNote: { padding: 12, paddingHorizontal: 14, backgroundColor: C.raised },
+  ratesNoteTxt: { fontFamily: "Inter_400Regular", fontSize: 11, color: C.textMuted, lineHeight: 16 },
   footer: { backgroundColor: C.surface, borderTopWidth: 1, borderTopColor: C.border, padding: 14 },
   buyBtn: { height: 52, backgroundColor: C.accent, borderRadius: 14, alignItems: "center", justifyContent: "center", shadowColor: C.accent, shadowOpacity: 0.4, shadowRadius: 16, shadowOffset: { width: 0, height: 4 }, elevation: 8 },
   buyBtnTxt: { fontFamily: "Inter_700Bold", fontSize: 15, color: C.onAccent },
