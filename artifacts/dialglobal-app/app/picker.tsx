@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, FlatList, Pressable, TextInput,
   ActivityIndicator, Alert, ScrollView,
 } from "react-native";
+
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -10,6 +11,11 @@ import C from "@/constants/colors";
 import { COUNTRIES, PLANS } from "@/data/mockData";
 import { useApp } from "@/context/AppContext";
 import { api } from "@/lib/api";
+
+function formatNumber(raw: string): string {
+  if (!raw) return raw;
+  return raw.replace(/-+$/, (dashes) => "•".repeat(dashes.length));
+}
 
 type Step = "countries" | "numbers";
 
@@ -143,7 +149,7 @@ export default function Picker() {
                   disabled={provisioning !== null}
                 >
                   <View style={styles.numberLeft}>
-                    <Text style={styles.numberText}>{num}</Text>
+                    <Text style={styles.numberText}>{formatNumber(num)}</Text>
                     <View style={styles.featureRow}>
                       <View style={styles.featureBadge}><Text style={styles.featureTxt}>Voice</Text></View>
                       <View style={styles.featureBadge}><Text style={styles.featureTxt}>SMS</Text></View>

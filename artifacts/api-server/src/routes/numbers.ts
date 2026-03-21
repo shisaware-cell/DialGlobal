@@ -92,22 +92,28 @@ router.post("/numbers/provision", async (req, res) => {
     : null;
 
   try {
-    const order = await telnyx.phoneNumberOrders.create({
+    const order = await telnyx.numberOrders.create({
       phone_numbers: [{ phone_number }],
       connection_id: process.env.TELNYX_CONNECTION_ID || undefined,
       messaging_profile_id: messagingProfileId,
-    });
+    } as any);
+
+    const orderData = order.data as any;
+    const orderId = orderData?.id || null;
+    const fullPhoneNumber =
+      orderData?.phone_numbers?.[0]?.phone_number ||
+      phone_number;
 
     const { data, error } = await supabaseAdmin
       .from("virtual_numbers")
       .insert({
         user_id: user.id,
-        phone_number,
+        phone_number: fullPhoneNumber,
         country: country || "United States",
         country_code: country_code || "US",
         flag: flag || "🇺🇸",
         type: expiresAt ? "trial" : "permanent",
-        telnyx_order_id: (order.data as any)?.id || null,
+        telnyx_order_id: orderId,
         status: "active",
         expires_at: expiresAt,
       })

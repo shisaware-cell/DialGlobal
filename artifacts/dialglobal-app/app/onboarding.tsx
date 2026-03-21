@@ -169,7 +169,7 @@ export default function Onboarding() {
           onPress={next}
         >
           <Text style={styles.btnTxt}>
-            {idx === SLIDES.length - 1 ? "Choose a Plan →" : "Continue"}
+            {idx === SLIDES.length - 1 ? "Start for free →" : "Continue"}
           </Text>
         </Pressable>
 

@@ -11,6 +11,15 @@ import { COUNTRIES, PLANS, TRIAL_LIMITS, genNumber } from "@/data/mockData";
 import { useApp } from "@/context/AppContext";
 import { api } from "@/lib/api";
 
+function formatNumber(raw: string): string {
+  if (!raw) return raw;
+  return raw.replace(/-+$/, (dashes) => "•".repeat(dashes.length));
+}
+
+function isMasked(num: string): boolean {
+  return num.includes("-");
+}
+
 const POPULAR = COUNTRIES.filter(c => c.popular);
 
 type Step = "country" | "confirm" | "activating";
@@ -220,8 +229,14 @@ export default function NumberAssignment() {
             <View style={cnf.flagWrap}>
               <Text style={cnf.flag}>{country.flag}</Text>
             </View>
-            <Text style={cnf.numberTxt}>{number}</Text>
+            <Text style={cnf.numberTxt}>{formatNumber(number)}</Text>
             <Text style={cnf.countryTxt}>{country.name}</Text>
+            {isMasked(number) && (
+              <View style={cnf.maskedNote}>
+                <Feather name="lock" size={11} color={C.textMuted} />
+                <Text style={cnf.maskedNoteTxt}>Full number revealed after activation</Text>
+              </View>
+            )}
             <Pressable onPress={refreshNumber} style={cnf.refreshBtn} disabled={searching || numberOptions.length <= 1}>
               <Feather name="refresh-cw" size={13} color={searching || numberOptions.length <= 1 ? C.textMuted : C.accent} />
               <Text style={[cnf.refreshTxt, (searching || numberOptions.length <= 1) && { color: C.textMuted }]}>Try a different number</Text>
@@ -394,7 +409,7 @@ export default function NumberAssignment() {
               {searching ? (
                 <ActivityIndicator size="small" color={C.accent} style={{ alignSelf: "flex-start", marginTop: 2 }} />
               ) : (
-                <Text style={styles.numPreviewNum}>{number}</Text>
+                <Text style={styles.numPreviewNum}>{formatNumber(number)}</Text>
               )}
             </View>
             <Pressable onPress={refreshNumber} hitSlop={8} disabled={searching || numberOptions.length <= 1}>
@@ -498,7 +513,9 @@ const cnf = StyleSheet.create({
   },
   flag: { fontSize: 40 },
   numberTxt: { fontFamily: "Inter_700Bold", fontSize: 22, color: C.text, letterSpacing: -0.5, marginBottom: 4 },
-  countryTxt: { fontFamily: "Inter_400Regular", fontSize: 13, color: C.textMuted, marginBottom: 12 },
+  countryTxt: { fontFamily: "Inter_400Regular", fontSize: 13, color: C.textMuted, marginBottom: 8 },
+  maskedNote: { flexDirection: "row", alignItems: "center", gap: 4, marginBottom: 10 },
+  maskedNoteTxt: { fontFamily: "Inter_400Regular", fontSize: 11, color: C.textMuted, letterSpacing: 0.1 },
   refreshBtn: { flexDirection: "row", alignItems: "center", gap: 5 },
   refreshTxt: { fontFamily: "Inter_600SemiBold", fontSize: 12.5, color: C.accent },
 
