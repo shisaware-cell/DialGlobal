@@ -51,6 +51,8 @@ type Profile = {
   avatar_url?: string;
 };
 
+export type Contact = { name: string; phone: string; initials: string };
+
 type AppCtx = {
   isAuthed: boolean;
   session: Session | null;
@@ -70,6 +72,18 @@ type AppCtx = {
   refreshCalls: () => Promise<void>;
   loading: boolean;
   signOut: () => Promise<void>;
+  ghostMode: boolean;
+  setGhostMode: (v: boolean) => void;
+  dndNumbers: Record<string, boolean>;
+  toggleDnd: (id: string) => void;
+  spamEnabled: Record<string, boolean>;
+  toggleSpam: (id: string) => void;
+  autoReplies: Record<string, string>;
+  setAutoReply: (id: string, text: string) => void;
+  contacts: Contact[];
+  importContacts: (newContacts: Contact[]) => void;
+  credits: number;
+  addCredits: (amount: number) => void;
 };
 
 const Ctx = createContext<AppCtx | null>(null);
@@ -85,6 +99,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [calls, setCalls] = useState<Call[]>([]);
   const [loading, setLoading] = useState(true);
+  const [ghostMode, setGhostMode] = useState(false);
+  const [dndNumbers, setDndNumbers] = useState<Record<string, boolean>>({});
+  const [spamEnabled, setSpamEnabled] = useState<Record<string, boolean>>({});
+  const [autoReplies, setAutoReplies] = useState<Record<string, string>>({});
+  const [contacts, setContacts] = useState<Contact[]>([]);
+  const [credits, setCredits] = useState(0);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session: s } }) => {
@@ -194,6 +214,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const toggleDnd = (id: string) => setDndNumbers(prev => ({ ...prev, [id]: !prev[id] }));
+  const toggleSpam = (id: string) => setSpamEnabled(prev => ({ ...prev, [id]: !prev[id] }));
+  const setAutoReply = (id: string, text: string) => setAutoReplies(prev => ({ ...prev, [id]: text }));
+  const importContacts = (newContacts: Contact[]) => setContacts(prev => [...prev, ...newContacts.filter(nc => !prev.some(c => c.phone === nc.phone))]);
+  const addCredits = (amount: number) => setCredits(prev => prev + amount);
+
   const signOut = async () => {
     await supabase.auth.signOut();
     setAuthedState(false);
@@ -226,6 +252,18 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         refreshCalls,
         loading,
         signOut,
+        ghostMode,
+        setGhostMode,
+        dndNumbers,
+        toggleDnd,
+        spamEnabled,
+        toggleSpam,
+        autoReplies,
+        setAutoReply,
+        contacts,
+        importContacts,
+        credits,
+        addCredits,
       }}
     >
       {children}

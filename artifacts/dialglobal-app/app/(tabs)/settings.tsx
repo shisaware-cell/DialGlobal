@@ -7,18 +7,29 @@ import C from "@/constants/colors";
 import { useApp } from "@/context/AppContext";
 import { PLANS } from "@/data/mockData";
 
-function Row({ icon, label, sublabel, value, onToggle, onPress, danger = false }: {
+function Row({ icon, label, sublabel, value, onToggle, onPress, danger = false, badge }: {
   icon: string; label: string; sublabel?: string;
   value?: boolean; onToggle?: (v: boolean) => void;
-  onPress?: () => void; danger?: boolean;
+  onPress?: () => void; danger?: boolean; badge?: string;
 }) {
   return (
-    <Pressable style={({ pressed }) => [styles.row, { backgroundColor: pressed && onPress ? C.hover : "transparent" }]} onPress={onPress}>
+    <Pressable
+      style={({ pressed }) => [styles.row, { backgroundColor: pressed && onPress ? C.hover : "transparent" }]}
+      onPress={onPress}
+      disabled={!onPress && onToggle === undefined}
+    >
       <View style={[styles.iconBox, { backgroundColor: danger ? C.redDim : C.raised }]}>
         <Feather name={icon as any} size={15} color={danger ? C.red : C.accent} />
       </View>
       <View style={{ flex: 1, gap: 2 }}>
-        <Text style={[styles.rowLabel, danger && { color: C.red }]}>{label}</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+          <Text style={[styles.rowLabel, danger && { color: C.red }]}>{label}</Text>
+          {badge && (
+            <View style={styles.badge}>
+              <Text style={styles.badgeTxt}>{badge}</Text>
+            </View>
+          )}
+        </View>
         {sublabel && <Text style={styles.rowSub}>{sublabel}</Text>}
       </View>
       {onToggle !== undefined ? (
@@ -41,15 +52,15 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 
 export default function Settings() {
   const insets = useSafeAreaInsets();
-  const { currentPlan, billing, profile, signOut: doSignOut } = useApp();
-  const [notifs, setNotifs] = useState(true);
+  const { currentPlan, billing, profile, signOut: doSignOut, ghostMode, setGhostMode, credits } = useApp();
+  const [notifs, setNotifs]       = useState(true);
   const [biometric, setBiometric] = useState(false);
   const [forwarding, setForwarding] = useState(true);
   const isWeb = Platform.OS === "web";
   const plan = PLANS.find(p => p.id === currentPlan);
   const price = billing === "yearly" ? plan?.yearlyPrice : plan?.monthlyPrice;
 
-  const userName = profile?.name || "User";
+  const userName  = profile?.name  || "User";
   const userEmail = profile?.email || "user@dialglobal.io";
 
   const signOut = () => {
@@ -60,7 +71,7 @@ export default function Settings() {
   };
 
   const deleteAccount = () => {
-    Alert.alert("Delete Account?", "All your numbers and data will be permanently deleted. This cannot be undone.", [
+    Alert.alert("Delete Account?", "All your numbers and data will be permanently deleted.", [
       { text: "Cancel", style: "cancel" },
       { text: "Delete", style: "destructive", onPress: async () => { await doSignOut(); router.replace("/auth"); } },
     ]);
@@ -69,21 +80,23 @@ export default function Settings() {
   return (
     <View style={[styles.root, { paddingTop: insets.top + (isWeb ? 67 : 0) }]}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: (isWeb ? 84 : 66) + (insets.bottom > 0 ? insets.bottom : 16) }}>
-        {/* Profile header card */}
-        <View style={styles.profileCard}>
-          <View style={styles.profileAvatar}><Text style={styles.avatarTxt}>{userName.charAt(0).toUpperCase()}</Text></View>
+
+        {/* Profile header */}
+        <Pressable style={styles.profileCard} onPress={() => router.push("/profile")}>
+          <View style={styles.profileAvatar}>
+            <Text style={styles.avatarTxt}>{userName.charAt(0).toUpperCase()}</Text>
+          </View>
           <View style={{ flex: 1, gap: 3 }}>
             <Text style={styles.profileName}>{userName}</Text>
             <Text style={styles.profileEmail}>{userEmail}</Text>
             <View style={styles.planTag}>
               <Ionicons name="star" size={11} color={C.accent} />
               <Text style={styles.planTagTxt}>{plan?.name} Plan</Text>
+              {credits > 0 && <Text style={styles.creditsTag}>⭐ {credits.toLocaleString()} credits</Text>}
             </View>
           </View>
-          <Pressable style={styles.editBtn} onPress={() => router.push("/profile")}>
-            <Text style={styles.editBtnTxt}>Edit</Text>
-          </Pressable>
-        </View>
+          <Feather name="chevron-right" size={16} color={C.textMuted} />
+        </Pressable>
 
         <Section title="PREFERENCES">
           <Row icon="bell" label="Notifications" sublabel="Calls, messages & alerts" value={notifs} onToggle={setNotifs} />
@@ -91,6 +104,18 @@ export default function Settings() {
           <Row icon="shield" label="Biometric Lock" sublabel="Face ID / Fingerprint" value={biometric} onToggle={setBiometric} />
           <View style={styles.divider} />
           <Row icon="phone-forwarded" label="Call Forwarding" sublabel="Route calls to another number" value={forwarding} onToggle={setForwarding} />
+          <View style={styles.divider} />
+          <Row icon="eye-off" label="Ghost Mode" sublabel="Silence all numbers, hide badges" value={ghostMode} onToggle={setGhostMode} />
+        </Section>
+
+        <Section title="FEATURES">
+          <Row icon="message-circle" label="Auto-Reply" sublabel="Set away messages per number" onPress={() => router.push("/autoreply")} />
+          <View style={styles.divider} />
+          <Row icon="slash" label="Spam & Robocall Blocker" sublabel="Block unwanted calls per number" onPress={() => router.push("/spamblocker")} />
+          <View style={styles.divider} />
+          <Row icon="users" label="Import Contacts" sublabel="Sync from phone or CSV" onPress={() => router.push("/contacts")} />
+          <View style={styles.divider} />
+          <Row icon="wifi" label="eSIM" sublabel="Stay connected while travelling" onPress={() => router.push("/esim")} />
         </Section>
 
         <Section title="ACCOUNT">
@@ -98,7 +123,12 @@ export default function Settings() {
           <View style={styles.divider} />
           <Row icon="credit-card" label="Billing & Plan" sublabel={`${plan?.name} · $${price}/mo`} onPress={() => router.push("/paywall")} />
           <View style={styles.divider} />
-          <Row icon="bar-chart-2" label="Usage & Stats" sublabel="Calls, SMS this month" onPress={() => router.push("/profile")} />
+          <Row
+            icon="star"
+            label="Credits"
+            sublabel={credits > 0 ? `${credits.toLocaleString()} credits available` : "Pay-as-you-go"}
+            onPress={() => router.push("/credits")}
+          />
         </Section>
 
         <Section title="SUPPORT">
@@ -113,7 +143,7 @@ export default function Settings() {
           <Row icon="trash-2" label="Delete Account" sublabel="Cannot be undone" danger onPress={deleteAccount} />
         </Section>
 
-        <Text style={styles.version}>DialGlobal v1.0.0 · Built with Telnyx</Text>
+        <Text style={styles.version}>DialGlobal v2.0.0 · Powered by Telnyx</Text>
       </ScrollView>
     </View>
   );
@@ -122,14 +152,13 @@ export default function Settings() {
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: C.bg },
   profileCard: { backgroundColor: C.surface, padding: 16, paddingHorizontal: 20, flexDirection: "row", alignItems: "center", gap: 14, borderBottomWidth: 1, borderBottomColor: C.border, marginBottom: 20 },
-  profileAvatar: { width: 56, height: 56, borderRadius: 14, backgroundColor: C.accent, alignItems: "center", justifyContent: "center", shadowColor: C.accent, shadowOpacity: 0.3, shadowRadius: 12, shadowOffset: { width:0, height:4 }, elevation: 6 },
+  profileAvatar: { width: 56, height: 56, borderRadius: 14, backgroundColor: C.accent, alignItems: "center", justifyContent: "center", shadowColor: C.accent, shadowOpacity: 0.3, shadowRadius: 12, shadowOffset: { width: 0, height: 4 }, elevation: 6 },
   avatarTxt: { fontFamily: "Inter_700Bold", fontSize: 20, color: C.onAccent },
   profileName: { fontFamily: "Inter_700Bold", fontSize: 18, color: C.text, letterSpacing: -0.3 },
   profileEmail: { fontFamily: "Inter_400Regular", fontSize: 12, color: C.textMuted, marginTop: 2 },
-  planTag: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 6 },
+  planTag: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 6, flexWrap: "wrap" },
   planTagTxt: { fontFamily: "Inter_700Bold", fontSize: 11, color: C.accent },
-  editBtn: { backgroundColor: C.accentDim, paddingHorizontal: 14, paddingVertical: 7, borderRadius: 8 },
-  editBtnTxt: { fontFamily: "Inter_600SemiBold", fontSize: 12, color: C.accent },
+  creditsTag: { fontFamily: "Inter_600SemiBold", fontSize: 10, color: C.accent, marginLeft: 4 },
   section: { marginHorizontal: 16, marginBottom: 20 },
   secTitle: { fontFamily: "Inter_700Bold", fontSize: 10, color: C.textMuted, letterSpacing: 1.4, marginBottom: 8, paddingLeft: 4 },
   secCard: { backgroundColor: C.surface, borderRadius: 20, borderWidth: 1, borderColor: C.border, overflow: "hidden" },
@@ -137,6 +166,8 @@ const styles = StyleSheet.create({
   iconBox: { width: 34, height: 34, borderRadius: 8, alignItems: "center", justifyContent: "center" },
   rowLabel: { fontFamily: "Inter_500Medium", fontSize: 13.5, color: C.text },
   rowSub: { fontFamily: "Inter_400Regular", fontSize: 11, color: C.textMuted },
+  badge: { backgroundColor: C.red, paddingHorizontal: 6, paddingVertical: 1, borderRadius: 99 },
+  badgeTxt: { fontFamily: "Inter_700Bold", fontSize: 9, color: "#fff" },
   divider: { height: 1, backgroundColor: C.border },
   version: { textAlign: "center", fontFamily: "Inter_400Regular", fontSize: 11, color: C.textMuted, paddingVertical: 4, paddingBottom: 20 },
 });

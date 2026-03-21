@@ -25,6 +25,11 @@ function RootLayoutNav() {
       <Stack.Screen name="picker" options={{ animation: "slide_from_bottom", presentation: "modal" }} />
       <Stack.Screen name="profile" />
       <Stack.Screen name="number/[id]" />
+      <Stack.Screen name="esim" options={{ animation: "slide_from_bottom", presentation: "modal" }} />
+      <Stack.Screen name="autoreply" options={{ animation: "slide_from_bottom", presentation: "modal" }} />
+      <Stack.Screen name="spamblocker" options={{ animation: "slide_from_bottom", presentation: "modal" }} />
+      <Stack.Screen name="contacts" options={{ animation: "slide_from_bottom", presentation: "modal" }} />
+      <Stack.Screen name="credits" options={{ animation: "slide_from_bottom", presentation: "modal" }} />
     </Stack>
   );
 }

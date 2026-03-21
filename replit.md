@@ -57,7 +57,9 @@ Full React + Vite product web app. Light theme — cream bg `#FAFAF9`, white sur
 Expo React Native app for iOS App Store and Google Play. Testable via Expo Go QR code.
 - **Theme**: Light cream/amber — exactly matches reference design: bg `#F5F3EF`, surface `#FFFFFF`, raised `#EEECE8`, text `#1A1714`, textSec `#6B6560`, accent `#E8A020`
 - **Navigation**: Expo Router file-based + NativeTabs (liquid glass on iOS 26+) / BlurView (light tint) fallback
-- **4 Tabs**: Numbers (Dashboard with stats strip + flat expandable rows), Inbox (Messages + Call Log tabs), Calls (log), Settings
+- **4 Tabs**: Numbers (Dashboard with stats strip + flat expandable rows), Inbox (Messages + Call Log tabs), Calls (log with All/Missed/Incoming/Outgoing filter chips), Settings
+- **New screens (from Settings navigation)**: AutoReply (per-number away messages with templates), SpamBlocker (Ghost Mode + per-number DND & spam toggles + Robocall/Unknown/Intl blocking), Contacts (import from phone or CSV, selectable list), Credits (pay-as-you-go packs + rates table), ESim (regional plans + QR/manual activation flow)
+- **AppContext features**: `ghostMode`, `dndNumbers`, `spamEnabled`, `autoReplies`, `contacts`, `credits` — all with handlers (setGhostMode, toggleDnd, toggleSpam, setAutoReply, importContacts, addCredits)
 - **Stack screens**: Onboarding (3-slide: globe+flags, dashboard mockup, lock+privacy badges), Auth, Paywall, Country Picker, Profile, NumberDetail
 - **State**: React Context + AsyncStorage (`context/AppContext.tsx`) — currently mock data, pending Supabase
 - **Data**: Mock data in `data/mockData.ts`
