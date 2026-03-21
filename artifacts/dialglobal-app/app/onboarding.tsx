@@ -1,167 +1,180 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import {
-  View, Text, StyleSheet, Pressable, Platform,
+  View, Text, StyleSheet, Pressable, Animated, Dimensions,
 } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { Feather } from "@expo/vector-icons";
 import C from "@/constants/colors";
 
+const { width: SW } = Dimensions.get("window");
+
 /* ── Slide visuals ── */
-function GlobeVisual() {
-  const flags = [
-    { flag: "🇺🇸", top: 5,  left: -5 },
-    { flag: "🇬🇧", top: 0,  right: 0 },
-    { flag: "🇯🇵", bottom: 40, left: 5 },
-    { flag: "🇦🇺", bottom: 10, right: 10 },
+function GlobalVisual() {
+  const FLAGS = [
+    { e: "🇺🇸", top: 18,  left: 20  },
+    { e: "🇬🇧", top: 10,  right: 18 },
+    { e: "🇯🇵", top: 72,  left: 8   },
+    { e: "🇧🇷", top: 64,  right: 10 },
+    { e: "🇩🇪", bottom: 16, left: 38 },
+    { e: "🇦🇺", bottom: 8,  right: 32 },
   ];
   return (
-    <View style={{ width: 250, height: 220, alignSelf: "center", position: "relative", alignItems: "center", justifyContent: "center" }}>
-      {/* Globe ring */}
+    <View style={vis.container}>
       <View style={vis.globe}>
-        {[30, 50, 70].map((top, i) => (
-          <View key={`h${i}`} style={[vis.gridLine, { top: `${top}%` as any, left: "10%", right: "10%", height: 1 }]} />
-        ))}
-        {[35, 55, 75].map((left, i) => (
-          <View key={`v${i}`} style={[vis.gridLine, { left: `${left}%` as any, top: "10%", bottom: "10%", width: 1 }]} />
-        ))}
+        <Text style={vis.globeEmoji}>🌍</Text>
       </View>
-      {/* Flag chips */}
-      {flags.map((f, i) => (
-        <View key={i} style={[vis.flagChip, f as any]}>
-          <Text style={{ fontSize: 18 }}>{f.flag}</Text>
+      {FLAGS.map((f, i) => (
+        <View key={i} style={[vis.chip, f as any]}>
+          <Text style={vis.chipEmoji}>{f.e}</Text>
         </View>
       ))}
     </View>
   );
 }
 
-function DashboardVisual() {
-  const rows = [
-    { n: "🇺🇸  +1 (415) 823-4921", active: true },
-    { n: "🇬🇧  +44 7700 123 456",  active: false },
-    { n: "🇦🇺  +61 4 1234 5678",   active: false },
+function InstantVisual() {
+  const ROWS = [
+    { flag: "🇺🇸", num: "+1 (415) 823-4921", active: true  },
+    { flag: "🇬🇧", num: "+44 7700 123 456",  active: false },
+    { flag: "🇦🇺", num: "+61 4 1234 5678",   active: false },
   ];
   return (
-    <View style={vis.dashCard}>
-      <View style={vis.dashHeader}>
-        <Text style={vis.dashHeaderTxt}>DIALGLOBAL</Text>
-      </View>
-      {rows.map((row, i) => (
-        <View key={i} style={[vis.dashRow, row.active && vis.dashRowActive]}>
-          <Text style={[vis.dashRowTxt, row.active && { color: C.accent }]}>{row.n}</Text>
+    <View style={vis.phoneWrap}>
+      <View style={vis.phone}>
+        <View style={vis.phoneHeader}>
+          <Text style={vis.phoneHeaderTxt}>📱  DialGlobal</Text>
         </View>
-      ))}
-      <View style={vis.dashStatus}>
-        <View style={vis.dashPulse} />
-        <Text style={vis.dashStatusTxt}>3 active numbers</Text>
+        {ROWS.map((r, i) => (
+          <View key={i} style={[vis.phoneRow, r.active && vis.phoneRowActive]}>
+            <Text style={vis.phoneFlag}>{r.flag}</Text>
+            <Text style={[vis.phoneNum, r.active && { color: C.accent }]} numberOfLines={1}>
+              {r.num}
+            </Text>
+            {r.active && <View style={vis.activeDot} />}
+          </View>
+        ))}
+        <View style={vis.phonePulse}>
+          <View style={vis.phonePulseDot} />
+          <Text style={vis.phonePulseTxt}>3 numbers active</Text>
+        </View>
+      </View>
+      {/* floating badges */}
+      <View style={[vis.floatBadge, { top: -8, right: -12, backgroundColor: "#D4F4E8" }]}>
+        <Text style={[vis.floatTxt, { color: "#2D9966" }]}>✓ Verified</Text>
+      </View>
+      <View style={[vis.floatBadge, { bottom: 12, left: -14, backgroundColor: "#FFF3D4" }]}>
+        <Text style={[vis.floatTxt, { color: C.accent }]}>⚡ Instant</Text>
       </View>
     </View>
   );
 }
 
-function PrivacyVisual() {
-  const badges = [
-    { txt: "🔒 Encrypted", color: C.accent,   top: 20,     left: 5 },
-    { txt: "✓ Verified",   color: C.green,    top: 60,     right: 0 },
-    { txt: "🚫 No spam",   color: C.red,      bottom: 36,  left: 10 },
-    { txt: "👁 Private",   color: C.blue,     bottom: 10,  right: 10 },
+function PrivateVisual() {
+  const BADGES = [
+    { txt: "🔒 Encrypted",  bg: "#D4E8FF", clr: "#2D60C8", top: 8,     left: 12  },
+    { txt: "✅ Verified",    bg: "#D4F4E8", clr: "#2D9966", top: 50,    right: 0  },
+    { txt: "🚫 No Spam",    bg: "#FFD4D4", clr: "#C83030", bottom: 42, left: 0   },
+    { txt: "👁 Private",    bg: "#E8D4FF", clr: "#7830C8", bottom: 4,  right: 8  },
   ];
   return (
-    <View style={{ width: 220, height: 200, alignSelf: "center", position: "relative", alignItems: "center", justifyContent: "center" }}>
-      <View style={vis.lockCircle}>
-        <Feather name="lock" size={48} color={C.blue} strokeWidth={1.3} />
+    <View style={vis.container}>
+      <View style={vis.crownWrap}>
+        <Text style={vis.crownBig}>👑</Text>
+        <Text style={vis.shieldEmoji}>🛡️</Text>
       </View>
-      {badges.map((b, i) => (
-        <View key={i} style={[vis.badge, b as any]}>
-          <Text style={[vis.badgeTxt, { color: b.color }]}>{b.txt}</Text>
+      {BADGES.map((b, i) => (
+        <View key={i} style={[vis.chip, b as any, { backgroundColor: b.bg }]}>
+          <Text style={[vis.chipEmoji, { color: b.clr, fontSize: 11 }]}>{b.txt}</Text>
         </View>
       ))}
     </View>
   );
 }
 
+/* ── Slide data ── */
 const SLIDES = [
   {
-    key: "1",
-    tag: "100+ COUNTRIES",
-    title: "Your number,\nanywhere.",
-    sub: "Real local phone numbers in over 100 countries. Receive calls and texts like a local.",
-    bgColor: "#FDE9C0",
-    Visual: GlobeVisual,
+    key: "global",
+    bigWord: "Global.",
+    sub: "Real local phone numbers in 100+ countries. Receive calls and texts like a local.",
+    bg: "#D4E6FF",
+    Visual: GlobalVisual,
   },
   {
-    key: "2",
-    tag: "ALL IN ONE PLACE",
-    title: "One app.\nEvery number.",
-    sub: "Manage virtual numbers, calls, and messages in a single clean dashboard.",
-    bgColor: "#C8EDD8",
-    Visual: DashboardVisual,
+    key: "instant",
+    bigWord: "Instant.",
+    sub: "Get a number in seconds. Manage calls, texts, and voicemail from one clean dashboard.",
+    bg: "#D4F0E4",
+    Visual: InstantVisual,
   },
   {
-    key: "3",
-    tag: "PRIVACY FIRST",
-    title: "Private,\nsecure, yours.",
-    sub: "Your real number stays hidden. Every call encrypted. Identity verified on your terms.",
-    bgColor: "#DDEAFC",
-    Visual: PrivacyVisual,
+    key: "private",
+    bigWord: "Private.",
+    sub: "Your real number stays hidden. Every call encrypted. Your identity, on your terms.",
+    bg: "#EDD4FF",
+    Visual: PrivateVisual,
   },
 ];
 
 export default function Onboarding() {
   const insets = useSafeAreaInsets();
   const [idx, setIdx] = useState(0);
+  const fadeAnim = useRef(new Animated.Value(1)).current;
   const sl = SLIDES[idx];
 
+  const goTo = (next: number) => {
+    Animated.timing(fadeAnim, { toValue: 0, duration: 120, useNativeDriver: true }).start(() => {
+      setIdx(next);
+      Animated.timing(fadeAnim, { toValue: 1, duration: 200, useNativeDriver: true }).start();
+    });
+  };
+
   const next = () => {
-    if (idx < SLIDES.length - 1) setIdx(i => i + 1);
+    if (idx < SLIDES.length - 1) goTo(idx + 1);
     else router.replace("/auth");
   };
 
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
-      {/* Gradient-like top with visual */}
-      <View style={[styles.topArea, { backgroundColor: sl.bgColor }]}>
-        {/* Skip */}
+
+      {/* ── Coloured top area ── */}
+      <Animated.View style={[styles.top, { backgroundColor: sl.bg, opacity: fadeAnim }]}>
         {idx < SLIDES.length - 1 && (
-          <Pressable style={styles.skipBtn} onPress={() => router.replace("/auth")}>
-            <Text style={styles.skip}>Skip</Text>
+          <Pressable style={styles.skip} onPress={() => router.replace("/auth")}>
+            <Text style={styles.skipTxt}>Skip</Text>
           </Pressable>
         )}
-        {/* Visual */}
-        <View style={styles.visualWrap}>
-          <sl.Visual />
-        </View>
-      </View>
+        <sl.Visual />
+      </Animated.View>
 
-      {/* Bottom card */}
-      <View style={[styles.bottomCard, { paddingBottom: insets.bottom + 20 }]}>
-        {/* Tag */}
-        <View style={styles.tag}><Text style={styles.tagTxt}>{sl.tag}</Text></View>
+      {/* ── White bottom sheet ── */}
+      <View style={[styles.sheet, { paddingBottom: insets.bottom + 24 }]}>
 
-        {/* Text */}
-        <Text style={styles.title}>{sl.title}</Text>
-        <Text style={styles.sub}>{sl.sub}</Text>
+        {/* Big single-word title */}
+        <Animated.Text style={[styles.bigWord, { opacity: fadeAnim }]}>{sl.bigWord}</Animated.Text>
+        <Animated.Text style={[styles.sub, { opacity: fadeAnim }]}>{sl.sub}</Animated.Text>
 
-        {/* Dots */}
+        {/* Pill progress dots */}
         <View style={styles.dots}>
           {SLIDES.map((_, i) => (
-            <View key={i} style={[styles.dot, {
-              backgroundColor: i === idx ? C.accent : C.hover,
-              width: i === idx ? 24 : 7,
-            }]} />
+            <Pressable key={i} onPress={() => goTo(i)}>
+              <View style={[styles.dot, { width: i === idx ? 28 : 8, backgroundColor: i === idx ? C.accent : C.border }]} />
+            </Pressable>
           ))}
         </View>
 
-        {/* CTA */}
-        <Pressable style={({ pressed }) => [styles.btn, { opacity: pressed ? 0.88 : 1 }]} onPress={next}>
+        {/* Pill CTA button */}
+        <Pressable
+          style={({ pressed }) => [styles.btn, { opacity: pressed ? 0.88 : 1 }]}
+          onPress={next}
+        >
           <Text style={styles.btnTxt}>
-            {idx === SLIDES.length - 1 ? "Get Started — It's Free →" : "Continue →"}
+            {idx === SLIDES.length - 1 ? "Get Started — It's Free" : "Continue"}
           </Text>
         </Pressable>
 
         {idx === 0 && (
-          <Pressable onPress={() => router.replace("/auth")} hitSlop={10}>
+          <Pressable onPress={() => router.replace("/auth")} hitSlop={10} style={{ marginTop: 8 }}>
             <Text style={styles.logIn}>Already have an account · Log in</Text>
           </Pressable>
         )}
@@ -171,40 +184,80 @@ export default function Onboarding() {
 }
 
 const styles = StyleSheet.create({
-  root: { flex: 1, backgroundColor: C.bg },
-  topArea: { flex: 1, position: "relative" },
-  skipBtn: { position: "absolute", top: 0, right: 22, zIndex: 10, padding: 4 },
-  skip: { fontFamily: "Inter_500Medium", fontSize: 13, color: C.textMuted },
-  visualWrap: { flex: 1, alignItems: "center", justifyContent: "center", padding: 24 },
-  bottomCard: { backgroundColor: C.surface, borderTopLeftRadius: 28, borderTopRightRadius: 28, borderTopWidth: 1, borderTopColor: C.border, padding: 26 },
-  tag: { alignSelf: "flex-start", backgroundColor: C.accentDim, borderRadius: 99, paddingHorizontal: 11, paddingVertical: 4, marginBottom: 14 },
-  tagTxt: { fontFamily: "Inter_700Bold", fontSize: 9.5, color: C.accent, letterSpacing: 1.6 },
-  title: { fontFamily: "Inter_700Bold", fontSize: 30, color: C.text, lineHeight: 36, letterSpacing: -0.6, marginBottom: 10 },
-  sub: { fontFamily: "Inter_400Regular", fontSize: 13.5, color: C.textSec, lineHeight: 22, marginBottom: 28 },
-  dots: { flexDirection: "row", gap: 5, marginBottom: 20, alignItems: "center" },
-  dot: { height: 3, borderRadius: 99 },
-  btn: { height: 54, backgroundColor: C.accent, borderRadius: 14, alignItems: "center", justifyContent: "center", shadowColor: C.accent, shadowOpacity: 0.4, shadowRadius: 16, shadowOffset: { width: 0, height: 4 }, elevation: 8 },
-  btnTxt: { fontFamily: "Inter_700Bold", fontSize: 15, color: C.onAccent },
-  logIn: { fontFamily: "Inter_400Regular", fontSize: 13, color: C.textMuted, textAlign: "center", marginTop: 4 },
+  root: { flex: 1, backgroundColor: "#fff" },
+
+  top: { flex: 1, position: "relative", alignItems: "center", justifyContent: "center" },
+  skip: { position: "absolute", top: 8, right: 22, padding: 4, zIndex: 10 },
+  skipTxt: { fontFamily: "Inter_500Medium", fontSize: 13.5, color: "rgba(0,0,0,0.45)" },
+
+  sheet: {
+    backgroundColor: "#fff", borderTopLeftRadius: 32, borderTopRightRadius: 32,
+    paddingHorizontal: 28, paddingTop: 28,
+    shadowColor: "#000", shadowOpacity: 0.06, shadowRadius: 20,
+    shadowOffset: { width: 0, height: -4 }, elevation: 12,
+  },
+  bigWord: {
+    fontFamily: "Inter_700Bold", fontSize: 40, color: C.text,
+    letterSpacing: -1.2, marginBottom: 10,
+  },
+  sub: {
+    fontFamily: "Inter_400Regular", fontSize: 14, color: C.textSec,
+    lineHeight: 22, marginBottom: 28,
+  },
+  dots: { flexDirection: "row", gap: 6, marginBottom: 22, alignItems: "center" },
+  dot: { height: 8, borderRadius: 99 },
+
+  btn: {
+    height: 56, backgroundColor: C.accent, borderRadius: 99,
+    alignItems: "center", justifyContent: "center",
+    shadowColor: C.accent, shadowOpacity: 0.38, shadowRadius: 16,
+    shadowOffset: { width: 0, height: 4 }, elevation: 8,
+  },
+  btnTxt: { fontFamily: "Inter_700Bold", fontSize: 16, color: C.onAccent },
+  logIn: { fontFamily: "Inter_400Regular", fontSize: 13, color: C.textMuted, textAlign: "center" },
 });
 
-/* ── Visual sub-styles ── */
 const vis = StyleSheet.create({
-  globe: { width: 160, height: 160, borderRadius: 80, borderWidth: 1.5, borderColor: "rgba(232,160,32,0.3)", backgroundColor: "rgba(232,160,32,0.06)", alignItems: "center", justifyContent: "center", position: "relative", overflow: "hidden" },
-  gridLine: { position: "absolute", backgroundColor: "rgba(232,160,32,0.2)" },
-  flagChip: { position: "absolute", backgroundColor: C.raised, borderWidth: 1, borderColor: C.borderStrong, borderRadius: 14, paddingHorizontal: 10, paddingVertical: 5 },
+  container: { width: 260, height: 220, position: "relative", alignItems: "center", justifyContent: "center" },
+  globe: {
+    width: 120, height: 120, borderRadius: 60, backgroundColor: "rgba(255,255,255,0.55)",
+    alignItems: "center", justifyContent: "center",
+    shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 16, shadowOffset: { width: 0, height: 4 }, elevation: 4,
+  },
+  globeEmoji: { fontSize: 72 },
+  chip: {
+    position: "absolute", backgroundColor: "rgba(255,255,255,0.85)",
+    borderRadius: 20, paddingHorizontal: 10, paddingVertical: 6,
+    shadowColor: "#000", shadowOpacity: 0.10, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 3,
+  },
+  chipEmoji: { fontSize: 18, fontFamily: "Inter_600SemiBold" },
 
-  dashCard: { width: 200, alignSelf: "center", backgroundColor: C.surface, borderRadius: 20, borderWidth: 1, borderColor: C.borderStrong, overflow: "hidden" },
-  dashHeader: { height: 30, backgroundColor: C.accent, alignItems: "center", justifyContent: "center" },
-  dashHeaderTxt: { fontFamily: "Inter_700Bold", fontSize: 9, letterSpacing: 2, color: C.onAccent },
-  dashRow: { margin: 6, marginBottom: 0, padding: 9, paddingHorizontal: 10, backgroundColor: C.raised, borderRadius: 9 },
-  dashRowActive: { backgroundColor: C.accentDim, borderLeftWidth: 2.5, borderLeftColor: C.accent },
-  dashRowTxt: { fontFamily: "Inter_600SemiBold", fontSize: 9, color: C.textSec },
-  dashStatus: { margin: 8, marginTop: 6, padding: 7, paddingHorizontal: 10, backgroundColor: C.greenDim, borderRadius: 9, flexDirection: "row", alignItems: "center", gap: 5 },
-  dashPulse: { width: 6, height: 6, borderRadius: 3, backgroundColor: C.green },
-  dashStatusTxt: { fontFamily: "Inter_700Bold", fontSize: 8.5, color: C.green },
+  phoneWrap: { position: "relative", alignItems: "center" },
+  phone: {
+    width: 200, backgroundColor: "#fff", borderRadius: 20, overflow: "hidden",
+    shadowColor: "#000", shadowOpacity: 0.14, shadowRadius: 20, shadowOffset: { width: 0, height: 6 }, elevation: 8,
+    borderWidth: 1, borderColor: "rgba(0,0,0,0.06)",
+  },
+  phoneHeader: { backgroundColor: C.accent, paddingVertical: 10, paddingHorizontal: 14 },
+  phoneHeaderTxt: { fontFamily: "Inter_700Bold", fontSize: 11, color: C.onAccent, letterSpacing: 0.5 },
+  phoneRow: { flexDirection: "row", alignItems: "center", paddingHorizontal: 12, paddingVertical: 9, gap: 8 },
+  phoneRowActive: { backgroundColor: "#FFF8EC", borderLeftWidth: 2.5, borderLeftColor: C.accent },
+  phoneFlag: { fontSize: 16 },
+  phoneNum: { fontFamily: "Inter_500Medium", fontSize: 11, color: C.textSec, flex: 1 },
+  activeDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: C.green },
+  phonePulse: {
+    flexDirection: "row", alignItems: "center", gap: 6,
+    margin: 8, backgroundColor: "#D4F4E8", borderRadius: 8, paddingVertical: 7, paddingHorizontal: 10,
+  },
+  phonePulseDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: C.green },
+  phonePulseTxt: { fontFamily: "Inter_700Bold", fontSize: 9, color: "#2D9966" },
+  floatBadge: {
+    position: "absolute", borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5,
+    shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 3,
+  },
+  floatTxt: { fontFamily: "Inter_700Bold", fontSize: 11 },
 
-  lockCircle: { width: 130, height: 130, borderRadius: 65, backgroundColor: C.surface, borderWidth: 1.5, borderColor: C.borderStrong, alignItems: "center", justifyContent: "center" },
-  badge: { position: "absolute", backgroundColor: C.raised, borderWidth: 1, borderColor: C.borderStrong, borderRadius: 14, paddingHorizontal: 10, paddingVertical: 5 },
-  badgeTxt: { fontFamily: "Inter_700Bold", fontSize: 9.5 },
+  crownWrap: { alignItems: "center", justifyContent: "center", gap: -8 },
+  crownBig: { fontSize: 72 },
+  shieldEmoji: { fontSize: 44, marginTop: -12 },
 });
