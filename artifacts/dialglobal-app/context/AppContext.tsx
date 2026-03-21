@@ -1,9 +1,12 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { router } from "expo-router";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "@/lib/supabase";
 import { api } from "@/lib/api";
 import { PLANS } from "@/data/mockData";
 import type { Session, User } from "@supabase/supabase-js";
+
+const CREDITS_KEY = "@dialglobal_credits";
 
 export type VirtualNumber = {
   id: string;
@@ -178,6 +181,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       const validPlan = PLANS.find(p => p.id === normalized) ? normalized : "traveller";
       setCurrentPlan(validPlan);
     }
+    try {
+      const stored = await AsyncStorage.getItem(`${CREDITS_KEY}_${userId}`);
+      if (stored !== null) setCredits(parseFloat(stored));
+    } catch {}
   };
 
   const loadData = async () => {
@@ -336,7 +343,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const setAutoReply = (id: string, text: string) => setAutoReplies(prev => ({ ...prev, [id]: text }));
   const importContacts = (newContacts: Contact[]) =>
     setContacts(prev => [...prev, ...newContacts.filter(nc => !prev.some(c => c.phone === nc.phone))]);
-  const addCredits = (amount: number) => setCredits(prev => prev + amount);
+  const addCredits = (amount: number) => {
+    setCredits(prev => {
+      const next = parseFloat((prev + amount).toFixed(2));
+      if (user) {
+        AsyncStorage.setItem(`${CREDITS_KEY}_${user.id}`, String(next)).catch(() => {});
+      }
+      return next;
+    });
+  };
   const toggleRecording = (id: string) => setRecordings(prev => ({ ...prev, [id]: !prev[id] }));
   const toggleForwarding = (id: string) => setForwarding(prev => ({ ...prev, [id]: !prev[id] }));
   const setForwardingNum = (id: string, num: string) => setForwardingNums(prev => ({ ...prev, [id]: num }));
@@ -355,6 +370,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const activateEsim = useCallback((planId: string) => setActiveEsimState(planId), []);
 
   const signOut = async () => {
+    if (user) {
+      AsyncStorage.removeItem(`${CREDITS_KEY}_${user.id}`).catch(() => {});
+    }
     await supabase.auth.signOut();
     setAuthedState(false);
     setSession(null);
@@ -363,6 +381,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setNumbers([]);
     setMessages([]);
     setCalls([]);
+    setCredits(0);
     setIsInTrial(false);
     setTrialExpired(false);
     router.replace("/onboarding");

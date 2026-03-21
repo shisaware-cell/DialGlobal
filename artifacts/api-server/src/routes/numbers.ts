@@ -127,7 +127,15 @@ router.post("/numbers/provision", async (req, res) => {
 
     res.json({ number: data });
   } catch (err: any) {
-    res.status(500).json({ error: err.message || "Failed to provision number" });
+    const raw = err?.raw || err?.response?.data;
+    const telnyxDetail = raw?.errors?.[0]?.detail || raw?.errors?.[0]?.title;
+    const msg = telnyxDetail || err.message || "Failed to provision number";
+    const isPayment = msg.toLowerCase().includes("funds") || msg.toLowerCase().includes("payment") || err?.status === 402;
+    res.status(isPayment ? 402 : 500).json({
+      error: isPayment
+        ? "Insufficient Telnyx account balance. Please top up at portal.telnyx.com to provision numbers."
+        : msg,
+    });
   }
 });
 

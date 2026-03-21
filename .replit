@@ -1,4 +1,4 @@
-modules = ["nodejs-24"]
+modules = ["nodejs-24", "postgresql-16"]
 
 [[artifacts]]
 id = "artifacts/api-server"
@@ -31,3 +31,6 @@ timeoutMs = 20000
 SUPABASE_URL = "https://kcsldwhpwakeszbxjoaq.supabase.co"
 TELNYX_MESSAGING_PROFILE_ID = "40019d0c-8e22-4320-800d-81c7936a477e"
 TELNYX_CONNECTION_ID = "2919998242340996968"
+
+[nix]
+channel = "stable-25_05"
