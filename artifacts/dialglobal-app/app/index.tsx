@@ -1,11 +1,11 @@
 import { useEffect } from "react";
 import { router } from "expo-router";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+import { supabase } from "@/lib/supabase";
 
 export default function Index() {
   useEffect(() => {
-    AsyncStorage.getItem("dialglobal_auth").then(v => {
-      if (v === "true") {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
         router.replace("/(tabs)");
       } else {
         router.replace("/onboarding");

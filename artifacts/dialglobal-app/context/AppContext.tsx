@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { router } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import { api } from "@/lib/api";
 import { PLANS } from "@/data/mockData";
@@ -229,6 +230,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setNumbers([]);
     setMessages([]);
     setCalls([]);
+    router.replace("/onboarding");
   };
 
   return (

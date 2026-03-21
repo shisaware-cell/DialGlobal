@@ -75,7 +75,11 @@ export default function Auth() {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        <Pressable style={styles.back} onPress={() => router.back()} hitSlop={12}>
+        <Pressable
+          style={styles.back}
+          onPress={() => router.canGoBack() ? router.back() : router.replace("/onboarding")}
+          hitSlop={12}
+        >
           <Feather name="arrow-left" size={22} color={C.text} />
         </Pressable>
 

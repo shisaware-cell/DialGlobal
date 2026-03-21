@@ -25,11 +25,27 @@ async function getAuthHeaders() {
 
 async function apiFetch(path: string, options: RequestInit = {}) {
   const headers = await getAuthHeaders();
-  const res = await fetch(`${API_BASE}${path}`, {
-    ...options,
-    headers: { ...headers, ...(options.headers || {}) },
-  });
-  const data = await res.json();
+  let res: Response;
+  try {
+    res = await fetch(`${API_BASE}${path}`, {
+      ...options,
+      headers: { ...headers, ...(options.headers || {}) },
+    });
+  } catch (networkErr: any) {
+    throw new Error(`Network error: could not reach server. Make sure you are connected to the internet.`);
+  }
+
+  const text = await res.text();
+  let data: any;
+  try {
+    data = JSON.parse(text);
+  } catch {
+    if (!res.ok) {
+      throw new Error(`Server error (${res.status}). Please try again.`);
+    }
+    throw new Error(`Unexpected response from server. Please try again.`);
+  }
+
   if (!res.ok) throw new Error(data.error || "Request failed");
   return data;
 }
