@@ -131,7 +131,7 @@ export default function Onboarding() {
 
   const next = () => {
     if (idx < SLIDES.length - 1) goTo(idx + 1);
-    else router.replace("/auth");
+    else router.replace("/paywall");
   };
 
   return (
@@ -140,7 +140,7 @@ export default function Onboarding() {
       {/* ── Coloured top area ── */}
       <Animated.View style={[styles.top, { backgroundColor: sl.bg, opacity: fadeAnim }]}>
         {idx < SLIDES.length - 1 && (
-          <Pressable style={styles.skip} onPress={() => router.replace("/auth")}>
+          <Pressable style={styles.skip} onPress={() => router.replace("/paywall")}>
             <Text style={styles.skipTxt}>Skip</Text>
           </Pressable>
         )}
@@ -169,7 +169,7 @@ export default function Onboarding() {
           onPress={next}
         >
           <Text style={styles.btnTxt}>
-            {idx === SLIDES.length - 1 ? "Get Started — It's Free" : "Continue"}
+            {idx === SLIDES.length - 1 ? "Choose a Plan →" : "Continue"}
           </Text>
         </Pressable>
 
@@ -178,6 +178,7 @@ export default function Onboarding() {
             <Text style={styles.logIn}>Already have an account · Log in</Text>
           </Pressable>
         )}
+
       </View>
     </View>
   );

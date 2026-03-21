@@ -44,7 +44,7 @@ export default function Auth() {
         }
         await new Promise(resolve => setTimeout(resolve, 300));
         setAuthed(true);
-        router.replace("/(tabs)");
+        router.replace("/number-assignment");
       } else {
         const { error } = await supabase.auth.signInWithPassword({
           email: email.trim().toLowerCase(),

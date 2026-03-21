@@ -68,19 +68,38 @@ Expo React Native app for iOS App Store and Google Play. Testable via Expo Go QR
 - **Schema fields**: VirtualNumber uses `phone_number`, `call_count`, `sms_count`, `missed_count` (not `number`/`calls`/`sms`/`missedCalls`)
 - **T003 COMPLETE**: All real auth/data wired, 5 new screens built, all schema bugs fixed
 
-## Integration Roadmap
+## Backend Integration (COMPLETE)
 
-### Phase 2: Supabase (need credentials)
-- Schema: `profiles`, `virtual_numbers`, `messages`, `calls` tables
-- Auth: Supabase Auth (email/password + session management)
-- Real-time: Supabase Realtime for inbound SMS/call events
-- Env vars needed: `SUPABASE_ANON_KEY`, `SUPABASE_SERVICE_ROLE_KEY`
+### Supabase
+- **URL**: `https://kcsldwhpwakeszbxjoaq.supabase.co`
+- **Tables**: `profiles`, `virtual_numbers`, `messages`, `calls` — all exist with RLS policies
+- **RPCs**: `increment_sms`, `increment_calls`, `increment_missed` — all deployed
+- **Auth**: Real Supabase Auth (email/password). New users get `plan: "traveller"` profile on signup
+- **Realtime**: AppContext subscribes to all 3 tables on login, unsubscribes on logout
+- **Test user**: `test@dialglobal.io` / `TestPass123!`
 
-### Phase 3: Telnyx (need credentials)
-- Number search + provisioning (Telnyx Numbers API)
-- SMS send/receive (Telnyx Messaging API + webhooks)
-- VoIP calls (Telnyx WebRTC SDK — `@telnyx/webrtc`)
-- Env vars needed: `TELNYX_API_KEY`, `TELNYX_MESSAGING_PROFILE_ID`, `TELNYX_CONNECTION_ID`
+### Telnyx
+- **Connection ID**: `2919998242340996968`
+- **Messaging Profile ID**: `40019d0c-8e22-4320-800d-81c7936a477e`
+- Number search: `GET /api/numbers/search?country_code=XX&limit=N` — live Telnyx results
+- Number provision: `POST /api/numbers/provision` — buys the number via Telnyx and writes to Supabase
+- SMS send: `POST /api/messages/send` — fires Telnyx message, increments counter via RPC
+- Inbound webhook: `POST /api/webhooks/telnyx` — handles `message.received`, `call.initiated`, `call.hangup`
+
+### API Server Routes (all at `/api/*`)
+- `POST /auth/signup` — creates Supabase user + profile, returns session
+- `POST /auth/login` — signs in via Supabase, returns session
+- `GET /auth/me` — validates token, returns user + profile
+- `GET /numbers/search?country_code=XX` — searches Telnyx available numbers
+- `POST /numbers/provision` — provisions number via Telnyx order, saves to DB
+- `GET /numbers` — returns user's numbers from Supabase
+- `DELETE /numbers/:id` — removes number from DB
+- `POST /messages/send` — sends SMS via Telnyx, saves to DB
+- `GET /messages` — returns user's messages
+- `GET /messages/threads` — thread view via RPC fallback
+- `POST /calls/initiate` — initiates call via Telnyx
+- `GET /calls` — returns user's call log
+- `POST /webhooks/telnyx` — inbound event handler
 
 ### DialGlobal Admin Dashboard (`artifacts/dialglobal-admin`, port 25321, path `/admin/`)
 React + Vite + Tailwind + shadcn admin panel. Always dark. Sidebar navigation.

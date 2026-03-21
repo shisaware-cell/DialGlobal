@@ -63,9 +63,22 @@ type AppCtx = {
   user: User | null;
   profile: Profile | null;
   setAuthed: (v: boolean) => void;
+
   currentPlan: string;
+  pendingPlan: string;
+  selectPlan: (planId: string) => void;
   billing: "monthly" | "yearly";
   upgradePlan: (planId: string, cycle?: "monthly" | "yearly") => void;
+
+  isInTrial: boolean;
+  trialEnds: Date | null;
+  trialPlan: string | null;
+  trialExpired: boolean;
+  trialMinsUsed: number;
+  trialSmsUsed: number;
+  expireTrial: () => void;
+  fullPlanActivate: () => void;
+
   numbers: VirtualNumber[];
   messages: Message[];
   calls: Call[];
@@ -76,6 +89,7 @@ type AppCtx = {
   refreshCalls: () => Promise<void>;
   loading: boolean;
   signOut: () => Promise<void>;
+
   ghostMode: boolean;
   setGhostMode: (v: boolean) => void;
   dndNumbers: Record<string, boolean>;
@@ -96,6 +110,7 @@ type AppCtx = {
   setForwardingNum: (id: string, num: string) => void;
   notifications: boolean;
   setNotifications: (v: boolean) => void;
+
   toast: Toast;
   showToast: (message: string, type?: ToastType) => void;
   dismissToast: () => void;
@@ -106,6 +121,15 @@ type AppCtx = {
   activateEsim: (planId: string) => void;
 };
 
+const PLAN_MAP: Record<string, string> = {
+  basic: "traveller",
+  free: "traveller",
+  starter: "professional",
+  pro: "professional",
+  unlimited: "professional",
+  global: "business",
+};
+
 const Ctx = createContext<AppCtx | null>(null);
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
@@ -113,8 +137,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [isAuthed, setAuthedState] = useState(false);
-  const [currentPlan, setCurrentPlan] = useState("free");
+  const [currentPlan, setCurrentPlan] = useState("traveller");
+  const [pendingPlan, setPendingPlan] = useState("professional");
   const [billing, setBilling] = useState<"monthly" | "yearly">("monthly");
+  const [isInTrial, setIsInTrial] = useState(false);
+  const [trialEnds, setTrialEnds] = useState<Date | null>(null);
+  const [trialPlan, setTrialPlan] = useState<string | null>(null);
+  const [trialExpired, setTrialExpired] = useState(false);
+  const [trialMinsUsed, setTrialMinsUsed] = useState(4);
+  const [trialSmsUsed, setTrialSmsUsed] = useState(3);
   const [numbers, setNumbers] = useState<VirtualNumber[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [calls, setCalls] = useState<Call[]>([]);
@@ -133,39 +164,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [incomingCall, setIncomingCall] = useState<IncomingCall>(null);
   const [activeEsim, setActiveEsimState] = useState<string | null>(null);
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session: s } }) => {
-      setSession(s);
-      setUser(s?.user ?? null);
-      if (s?.user) {
-        setAuthedState(true);
-        loadProfile(s.user.id);
-        loadData();
-      }
-      setLoading(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, s) => {
-      setSession(s);
-      setUser(s?.user ?? null);
-      if (s?.user) {
-        setAuthedState(true);
-        loadProfile(s.user.id);
-        loadData();
-      } else {
-        setAuthedState(false);
-        setProfile(null);
-        setNumbers([]);
-        setMessages([]);
-        setCalls([]);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
   const loadProfile = async (userId: string) => {
     const { data } = await supabase
       .from("profiles")
@@ -174,11 +172,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       .single();
     if (data) {
       setProfile(data as Profile);
-      const PLAN_MAP: Record<string, string> = {
-        basic: "starter", unlimited: "pro",
-      };
-      const rawPlan = data.plan || "free";
-      setCurrentPlan(PLAN_MAP[rawPlan] ?? rawPlan);
+      const rawPlan = data.plan || "traveller";
+      const normalized = PLAN_MAP[rawPlan] ?? rawPlan;
+      const validPlan = PLANS.find(p => p.id === normalized) ? normalized : "traveller";
+      setCurrentPlan(validPlan);
     }
   };
 
@@ -189,13 +186,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         api.getMessages(),
         api.getCalls(),
       ]);
-
       if (numsRes.status === "fulfilled") setNumbers(numsRes.value.numbers || []);
       if (msgsRes.status === "fulfilled") setMessages(msgsRes.value.messages || []);
       if (callsRes.status === "fulfilled") setCalls(callsRes.value.calls || []);
-    } catch (err) {
-      console.log("Data load error:", err);
-    }
+    } catch {}
   };
 
   const refreshNumbers = useCallback(async () => {
@@ -219,26 +213,113 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } catch {}
   }, []);
 
+  const setupRealtime = useCallback((userId: string) => {
+    const channel = supabase
+      .channel(`user-data-${userId}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "virtual_numbers", filter: `user_id=eq.${userId}` },
+        () => { refreshNumbers(); }
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "messages", filter: `user_id=eq.${userId}` },
+        (payload) => {
+          setMessages(prev => [payload.new as any, ...prev.filter(m => m.id !== (payload.new as any).id)]);
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "calls", filter: `user_id=eq.${userId}` },
+        (payload) => {
+          setCalls(prev => [payload.new as any, ...prev.filter(c => c.id !== (payload.new as any).id)]);
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [refreshNumbers]);
+
+  useEffect(() => {
+    let realtimeCleanup: (() => void) | null = null;
+
+    supabase.auth.getSession().then(({ data: { session: s } }) => {
+      setSession(s);
+      setUser(s?.user ?? null);
+      if (s?.user) {
+        setAuthedState(true);
+        loadProfile(s.user.id);
+        loadData();
+        realtimeCleanup = setupRealtime(s.user.id);
+      }
+      setLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, s) => {
+      setSession(s);
+      setUser(s?.user ?? null);
+      if (s?.user) {
+        setAuthedState(true);
+        loadProfile(s.user.id);
+        loadData();
+        if (realtimeCleanup) realtimeCleanup();
+        realtimeCleanup = setupRealtime(s.user.id);
+      } else {
+        setAuthedState(false);
+        setProfile(null);
+        setNumbers([]);
+        setMessages([]);
+        setCalls([]);
+        if (realtimeCleanup) {
+          realtimeCleanup();
+          realtimeCleanup = null;
+        }
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+      if (realtimeCleanup) realtimeCleanup();
+    };
+  }, [setupRealtime]);
+
   const setAuthed = (v: boolean) => {
     setAuthedState(v);
     if (!v) supabase.auth.signOut();
   };
 
+  const selectPlan = useCallback((planId: string) => {
+    setPendingPlan(planId);
+  }, []);
+
   const upgradePlan = (planId: string, cycle: "monthly" | "yearly" = "monthly") => {
     setCurrentPlan(planId);
+    setTrialPlan(planId);
     setBilling(cycle);
+    setIsInTrial(true);
+    setTrialExpired(false);
+    setTrialEnds(new Date(Date.now() + 3 * 86400000));
     if (user) {
       supabase.from("profiles").update({ plan: planId }).eq("id", user.id);
     }
   };
+
+  const expireTrial = useCallback(() => {
+    setIsInTrial(false);
+    setTrialExpired(true);
+    setCurrentPlan("traveller");
+  }, []);
+
+  const fullPlanActivate = useCallback(() => {
+    setIsInTrial(false);
+    setTrialExpired(false);
+  }, []);
 
   const addNumber = (n: VirtualNumber) => setNumbers((prev) => [n, ...prev]);
   const removeNumber = async (id: string) => {
     setNumbers((prev) => prev.filter((n) => n.id !== id));
     try {
       await api.deleteNumber(id);
-    } catch (e) {
-      console.log("Delete number error:", e);
+    } catch {
       refreshNumbers();
     }
   };
@@ -246,9 +327,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const toggleDnd = (id: string) => setDndNumbers(prev => ({ ...prev, [id]: !prev[id] }));
   const toggleSpam = (id: string) => setSpamEnabled(prev => ({ ...prev, [id]: !prev[id] }));
   const setAutoReply = (id: string, text: string) => setAutoReplies(prev => ({ ...prev, [id]: text }));
-  const importContacts = (newContacts: Contact[]) => setContacts(prev => [...prev, ...newContacts.filter(nc => !prev.some(c => c.phone === nc.phone))]);
+  const importContacts = (newContacts: Contact[]) =>
+    setContacts(prev => [...prev, ...newContacts.filter(nc => !prev.some(c => c.phone === nc.phone))]);
   const addCredits = (amount: number) => setCredits(prev => prev + amount);
-
   const toggleRecording = (id: string) => setRecordings(prev => ({ ...prev, [id]: !prev[id] }));
   const toggleForwarding = (id: string) => setForwarding(prev => ({ ...prev, [id]: !prev[id] }));
   const setForwardingNum = (id: string, num: string) => setForwardingNums(prev => ({ ...prev, [id]: num }));
@@ -260,13 +341,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const dismissToast = useCallback(() => setToast(null), []);
-
   const simulateIncomingCall = useCallback(() => {
     setIncomingCall({ caller: "Marcus Webb", number: "+1 917 555 0134" });
   }, []);
-
   const dismissIncomingCall = useCallback(() => setIncomingCall(null), []);
-
   const activateEsim = useCallback((planId: string) => setActiveEsimState(planId), []);
 
   const signOut = async () => {
@@ -278,60 +356,30 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setNumbers([]);
     setMessages([]);
     setCalls([]);
+    setIsInTrial(false);
+    setTrialExpired(false);
     router.replace("/onboarding");
   };
 
   return (
-    <Ctx.Provider
-      value={{
-        isAuthed,
-        session,
-        user,
-        profile,
-        setAuthed,
-        currentPlan,
-        billing,
-        upgradePlan,
-        numbers,
-        messages,
-        calls,
-        addNumber,
-        removeNumber,
-        refreshNumbers,
-        refreshMessages,
-        refreshCalls,
-        loading,
-        signOut,
-        ghostMode,
-        setGhostMode,
-        dndNumbers,
-        toggleDnd,
-        spamEnabled,
-        toggleSpam,
-        autoReplies,
-        setAutoReply,
-        contacts,
-        importContacts,
-        credits,
-        addCredits,
-        recordings,
-        toggleRecording,
-        forwarding,
-        toggleForwarding,
-        forwardingNums,
-        setForwardingNum,
-        notifications,
-        setNotifications,
-        toast,
-        showToast,
-        dismissToast,
-        incomingCall,
-        simulateIncomingCall,
-        dismissIncomingCall,
-        activeEsim,
-        activateEsim,
-      }}
-    >
+    <Ctx.Provider value={{
+      isAuthed, session, user, profile, setAuthed,
+      currentPlan, pendingPlan, selectPlan, billing, upgradePlan,
+      isInTrial, trialEnds, trialPlan, trialExpired, trialMinsUsed, trialSmsUsed,
+      expireTrial, fullPlanActivate,
+      numbers, messages, calls, addNumber, removeNumber,
+      refreshNumbers, refreshMessages, refreshCalls,
+      loading, signOut,
+      ghostMode, setGhostMode,
+      dndNumbers, toggleDnd, spamEnabled, toggleSpam,
+      autoReplies, setAutoReply, contacts, importContacts,
+      credits, addCredits, recordings, toggleRecording,
+      forwarding, toggleForwarding, forwardingNums, setForwardingNum,
+      notifications, setNotifications,
+      toast, showToast, dismissToast,
+      incomingCall, simulateIncomingCall, dismissIncomingCall,
+      activeEsim, activateEsim,
+    }}>
       {children}
     </Ctx.Provider>
   );

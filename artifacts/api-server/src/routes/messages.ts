@@ -65,12 +65,9 @@ router.post("/messages/send", async (req, res) => {
       return;
     }
 
-    await supabaseAdmin
-      .from("virtual_numbers")
-      .update({ sms_count: numRow ? undefined : 0 })
-      .eq("id", numRow?.id || "");
-
-    await supabaseAdmin.rpc("increment_sms", { num_id: numRow?.id });
+    if (numRow?.id) {
+      await supabaseAdmin.rpc("increment_sms", { num_id: numRow.id });
+    }
 
     res.json({ message: data });
   } catch (err: any) {

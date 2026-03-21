@@ -148,7 +148,7 @@ export default function Profile() {
             </View>
             <View style={styles.upgBtn}>
               <Text style={styles.upgTxt}>
-                {currentPlan === "global" ? "Active" : "Upgrade"}
+                {currentPlan === "business" ? "Active" : "Upgrade"}
               </Text>
             </View>
           </Pressable>

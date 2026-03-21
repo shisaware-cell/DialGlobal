@@ -97,6 +97,8 @@ function RootLayoutNav() {
         <Stack.Screen name="spamblocker" options={{ animation: "slide_from_bottom", presentation: "modal" }} />
         <Stack.Screen name="contacts" options={{ animation: "slide_from_bottom", presentation: "modal" }} />
         <Stack.Screen name="credits" options={{ animation: "slide_from_bottom", presentation: "modal" }} />
+        <Stack.Screen name="number-assignment" options={{ animation: "fade" }} />
+        <Stack.Screen name="expired-paywall" options={{ animation: "fade", gestureEnabled: false }} />
       </Stack>
     </AppOverlays>
   );

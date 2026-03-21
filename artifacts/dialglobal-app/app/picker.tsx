@@ -30,9 +30,7 @@ export default function Picker() {
   const popular = filtered.filter(c => c.popular);
   const rest = filtered.filter(c => !c.popular);
 
-  const isAllowed = (code: string) =>
-    plan.countries === "100+" || plan.countries === "45+" ||
-    (Array.isArray(plan.countries) && plan.countries.includes(code));
+  const isAllowed = (_code: string) => true;
 
   const handleCountrySelect = async (c: typeof COUNTRIES[0]) => {
     if (!canAdd) {

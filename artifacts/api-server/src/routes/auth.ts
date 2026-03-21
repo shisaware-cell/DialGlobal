@@ -22,12 +22,21 @@ router.post("/auth/signup", async (req, res) => {
     return;
   }
 
-  await supabaseAdmin.from("profiles").upsert({
-    id: data.user.id,
-    email,
-    name: name || "",
-    plan: "basic",
-  });
+  let profileErr;
+  for (let attempt = 0; attempt < 3; attempt++) {
+    const { error } = await supabaseAdmin.from("profiles").upsert({
+      id: data.user.id,
+      email,
+      name: name || "",
+      plan: "traveller",
+    });
+    profileErr = error;
+    if (!error) break;
+    await new Promise(r => setTimeout(r, 200));
+  }
+  if (profileErr) {
+    console.warn("Profile upsert failed:", profileErr.message);
+  }
 
   const { data: session, error: signInErr } =
     await supabaseAdmin.auth.signInWithPassword({ email, password });
