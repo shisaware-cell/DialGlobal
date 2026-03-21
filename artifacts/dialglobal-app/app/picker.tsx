@@ -23,7 +23,7 @@ export default function Picker() {
   const [searching, setSearching] = useState(false);
   const [provisioning, setProvisioning] = useState<string | null>(null);
 
-  const plan = PLANS.find(p => p.id === currentPlan)!;
+  const plan = PLANS.find(p => p.id === currentPlan) ?? PLANS[0];
   const canAdd = numbers.length < plan.numberLimit;
 
   const filtered = COUNTRIES.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));

@@ -174,7 +174,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       .single();
     if (data) {
       setProfile(data as Profile);
-      setCurrentPlan(data.plan || "free");
+      const PLAN_MAP: Record<string, string> = {
+        basic: "starter", unlimited: "pro",
+      };
+      const rawPlan = data.plan || "free";
+      setCurrentPlan(PLAN_MAP[rawPlan] ?? rawPlan);
     }
   };
 
