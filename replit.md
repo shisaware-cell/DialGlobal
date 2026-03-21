@@ -60,12 +60,13 @@ Expo React Native app for iOS App Store and Google Play. Testable via Expo Go QR
 - **4 Tabs**: Numbers (Dashboard with stats strip + flat expandable rows), Inbox (Messages + Call Log tabs), Calls (log with All/Missed/Incoming/Outgoing filter chips), Settings
 - **New screens (from Settings navigation)**: AutoReply (per-number away messages with templates), SpamBlocker (Ghost Mode + per-number DND & spam toggles + Robocall/Unknown/Intl blocking), Contacts (import from phone or CSV, selectable list), Credits (pay-as-you-go packs + rates table), ESim (regional plans + QR/manual activation flow)
 - **AppContext features**: `ghostMode`, `dndNumbers`, `spamEnabled`, `autoReplies`, `contacts`, `credits` — all with handlers (setGhostMode, toggleDnd, toggleSpam, setAutoReply, importContacts, addCredits)
-- **Stack screens**: Onboarding (3-slide: globe+flags, dashboard mockup, lock+privacy badges), Auth, Paywall, Country Picker, Profile, NumberDetail
-- **State**: React Context + AsyncStorage (`context/AppContext.tsx`) — currently mock data, pending Supabase
-- **Data**: Mock data in `data/mockData.ts`
+- **Stack screens**: Onboarding (3-slide: globe+flags, dashboard mockup, lock+privacy badges), Auth, Paywall, Country Picker, Profile (real data from AppContext, Save → Supabase update, Sign Out), NumberDetail (horizontal hero header with flag+number, stats grid, quick actions Call/Message/Copy, settings toggles Voicemail/Recording/Forwarding, recent calls list, Release)
+- **State**: React Context + AsyncStorage (`context/AppContext.tsx`) — fully wired to Supabase (real auth, numbers, messages, calls)
+- **Data**: Real Supabase data. Mock plan data still in `data/mockData.ts`
 - **Colors**: All tokens in `constants/colors.ts` — use `C.onAccent` for text/icons on amber backgrounds
 - **Bundle IDs**: iOS `com.dialglobal.app`, Android `com.dialglobal.app`
-- **Pending**: Supabase auth + data, Telnyx number provisioning + SMS + VoIP calls
+- **Schema fields**: VirtualNumber uses `phone_number`, `call_count`, `sms_count`, `missed_count` (not `number`/`calls`/`sms`/`missedCalls`)
+- **T003 COMPLETE**: All real auth/data wired, 5 new screens built, all schema bugs fixed
 
 ## Integration Roadmap
 
