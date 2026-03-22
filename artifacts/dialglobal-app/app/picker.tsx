@@ -17,7 +17,7 @@ type Country = typeof COUNTRIES[0];
 
 export default function Picker() {
   const insets = useSafeAreaInsets();
-  const { numbers, currentPlan, refreshNumbers } = useApp();
+  const { numbers, currentPlan, refreshNumbers, isAuthed } = useApp();
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Country | null>(null);
   const [availableNums, setAvailableNums] = useState<{ number: string; monthly_cost: string }[]>([]);
@@ -88,6 +88,7 @@ export default function Picker() {
   };
 
   const handleProvision = async () => {
+    if (!isAuthed) { router.push("/paywall"); return; }
     if (!selected || !currentNumber) return;
     setProvisioning(true);
     try {
