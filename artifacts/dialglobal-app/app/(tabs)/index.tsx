@@ -55,7 +55,8 @@ function NumberRow({ num, onDelete }: { num: VirtualNumber; onDelete: () => void
     },
   ];
 
-  const isPermanent = num.type === "permanent";
+  const isPermanent = num.type === "permanent" || num.type === "landline";
+  const isLandline  = num.type === "landline" || num.type === "landline-trial";
 
   return (
     <View>
@@ -73,9 +74,10 @@ function NumberRow({ num, onDelete }: { num: VirtualNumber; onDelete: () => void
           <View style={styles.numMeta}>
             <Text style={styles.numCountry}>{num.country}</Text>
             <View style={styles.dot} />
-            <View style={[styles.typeBadge, { backgroundColor: isPermanent ? C.accentDim : C.greenDim }]}>
-              <Text style={[styles.typeTxt, { color: isPermanent ? C.accent : C.green }]}>
-                {isPermanent ? "Permanent" : "Temporary"}
+            {/* Mobile vs Landline badge */}
+            <View style={[styles.typeBadge, { backgroundColor: isLandline ? "#D4E8FF" : C.greenDim }]}>
+              <Text style={[styles.typeTxt, { color: isLandline ? "#2D60C8" : C.green }]}>
+                {isLandline ? "📞 Landline" : "📱 Mobile"}
               </Text>
             </View>
           </View>
@@ -237,9 +239,9 @@ export default function NumbersScreen() {
             <Text style={[styles.tileVal, { color: C.accent }]}>{numbers.length}</Text>
             <Text style={[styles.tileLbl, { color: C.accent }]}>Numbers</Text>
             <View style={styles.sparkline}>
-              {[3, 5, 4, 6, 5, 7, numbers.length > 0 ? 8 : 3].map((h, i) => (
+              {[3, 5, 4, 6, 5, 7, numbers.length > 0 ? 7 : 3].map((h, i) => (
                 <View key={i} style={[styles.sparkBar, {
-                  height: h * 3,
+                  height: h * 2,
                   backgroundColor: i === 6 ? C.accent : "rgba(232,160,32,0.3)",
                 }]} />
               ))}
@@ -262,7 +264,7 @@ export default function NumbersScreen() {
             <View style={styles.sparkline}>
               {[3, 4, 5, 4, 6, 5, 7].map((h, i) => (
                 <View key={i} style={[styles.sparkBar, {
-                  height: h * 3,
+                  height: h * 2,
                   backgroundColor: i === 6 ? C.green : "rgba(22,163,74,0.27)",
                 }]} />
               ))}
@@ -285,7 +287,7 @@ export default function NumbersScreen() {
             <View style={styles.sparkline}>
               {[4, 3, 5, 4, 6, 5, 7].map((h, i) => (
                 <View key={i} style={[styles.sparkBar, {
-                  height: h * 3,
+                  height: h * 2,
                   backgroundColor: i === 6 ? C.blue : "rgba(37,99,235,0.22)",
                 }]} />
               ))}
@@ -403,47 +405,47 @@ const styles = StyleSheet.create({
   notifBadgeTxt: { fontFamily: "Inter_700Bold", fontSize: 9, color: "#fff" },
 
   tilesRow: {
-    flexDirection: "row", gap: 8,
-    paddingHorizontal: 14, paddingTop: 14, paddingBottom: 14,
+    flexDirection: "row", gap: 7,
+    paddingHorizontal: 14, paddingTop: 10, paddingBottom: 10,
     backgroundColor: C.surface, borderBottomWidth: 1, borderBottomColor: C.border,
   },
   tile: {
-    flex: 1, borderRadius: 18, padding: 12,
-    borderWidth: 1.5, gap: 2,
+    flex: 1, borderRadius: 14, padding: 10,
+    borderWidth: 1.5, gap: 1,
   },
   tileTop: {
-    flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6,
+    flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 4,
   },
   tileIco: {
-    width: 28, height: 28, borderRadius: 9, alignItems: "center", justifyContent: "center",
+    width: 24, height: 24, borderRadius: 7, alignItems: "center", justifyContent: "center",
   },
   trendPill: {
     flexDirection: "row", alignItems: "center", gap: 2,
-    paddingHorizontal: 5, paddingVertical: 2, borderRadius: 99,
+    paddingHorizontal: 4, paddingVertical: 1, borderRadius: 99,
   },
-  trendTxt: { fontFamily: "Inter_700Bold", fontSize: 8.5, letterSpacing: 0.3 },
-  tileVal: { fontFamily: "Inter_700Bold", fontSize: 30, letterSpacing: -1.5, lineHeight: 34 },
-  tileLbl: { fontFamily: "Inter_600SemiBold", fontSize: 10, letterSpacing: 0.4, marginBottom: 8 },
-  sparkline: { flexDirection: "row", alignItems: "flex-end", gap: 2.5, height: 21 },
+  trendTxt: { fontFamily: "Inter_700Bold", fontSize: 8, letterSpacing: 0.3 },
+  tileVal: { fontFamily: "Inter_700Bold", fontSize: 22, letterSpacing: -1, lineHeight: 26 },
+  tileLbl: { fontFamily: "Inter_600SemiBold", fontSize: 9.5, letterSpacing: 0.4, marginBottom: 5 },
+  sparkline: { flexDirection: "row", alignItems: "flex-end", gap: 2, height: 14 },
   sparkBar: { flex: 1, borderRadius: 2 },
 
-  listCard: { backgroundColor: C.surface, marginTop: 12, borderRadius: 0 },
+  listCard: { backgroundColor: C.surface, marginTop: 8, borderRadius: 0 },
   listHeader: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
-    paddingHorizontal: 20, paddingTop: 14, paddingBottom: 10,
+    paddingHorizontal: 20, paddingTop: 10, paddingBottom: 6,
   },
   listHeading: { fontFamily: "Inter_700Bold", fontSize: 11, color: C.textMuted, letterSpacing: 1.4 },
 
   row: {
-    flexDirection: "row", alignItems: "center", gap: 13,
-    paddingHorizontal: 20, paddingVertical: 14,
+    flexDirection: "row", alignItems: "center", gap: 11,
+    paddingHorizontal: 16, paddingVertical: 10,
   },
   flagBox: {
-    width: 44, height: 44, borderRadius: 13, backgroundColor: C.raised,
+    width: 38, height: 38, borderRadius: 11, backgroundColor: C.raised,
     alignItems: "center", justifyContent: "center", position: "relative", flexShrink: 0,
     borderWidth: 1, borderColor: C.border,
   },
-  flagTxt: { fontSize: 22 },
+  flagTxt: { fontSize: 19 },
   activeDot: {
     position: "absolute", bottom: 2, right: 2, width: 9, height: 9,
     borderRadius: 4.5, backgroundColor: C.green, borderWidth: 2, borderColor: C.surface,
