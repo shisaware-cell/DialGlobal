@@ -55,6 +55,8 @@ type CallItem = {
 function CallRow({ item }: { item: CallItem }) {
   const [expanded, setExpanded] = useState(false);
   const [playing, setPlaying] = useState(false);
+  const { isAuthed } = useApp();
+  const guard = (fn: () => void) => { if (!isAuthed) { router.push("/paywall"); return; } fn(); };
 
   const statusKey = item.type ?? (item.status === "voicemail" ? "voicemail" : item.status === "missed" ? "missed" : (item.direction ?? item.status ?? "completed"));
   const m = TYPE_META[statusKey] ?? TYPE_META.completed;
@@ -73,23 +75,23 @@ function CallRow({ item }: { item: CallItem }) {
 
   const handleCallBack = () => {
     if (!contactNumber) return;
-    Alert.alert(
+    guard(() => Alert.alert(
       "Call Back",
       `Call ${displayName}?`,
       [
         { text: "Cancel", style: "cancel" },
         { text: "Call", onPress: () => router.push({ pathname: "/dialer", params: { prefill: contactNumber } }) },
       ]
-    );
+    ));
   };
 
   const handleMessage = () => {
     if (!contactNumber) return;
-    router.push({ pathname: "/(tabs)/inbox", params: { compose: contactNumber } });
+    guard(() => router.push({ pathname: "/(tabs)/inbox", params: { compose: contactNumber } }));
   };
 
   const handleForward = () => {
-    Alert.alert(
+    guard(() => Alert.alert(
       "Forward Call",
       "Enter a number to forward incoming calls from this contact to:",
       [
@@ -101,7 +103,7 @@ function CallRow({ item }: { item: CallItem }) {
           },
         },
       ]
-    );
+    ));
   };
 
   return (
@@ -177,7 +179,7 @@ function CallRow({ item }: { item: CallItem }) {
 
 export default function Calls() {
   const insets = useSafeAreaInsets();
-  const { calls, refreshCalls } = useApp();
+  const { calls, refreshCalls, isAuthed } = useApp();
   const [filter, setFilter] = useState("all");
   const isWeb = Platform.OS === "web";
 
@@ -202,7 +204,7 @@ export default function Calls() {
       <View style={styles.headerWrap}>
         <View style={styles.headerTopRow}>
           <Text style={styles.title}>Calls</Text>
-          <Pressable style={styles.dialBtn} onPress={() => router.push("/dialer")}>
+          <Pressable style={styles.dialBtn} onPress={() => isAuthed ? router.push("/dialer") : router.push("/paywall")}>
             <Feather name="phone-outgoing" size={14} color={C.onAccent} />
             <Text style={styles.dialBtnTxt}>New Call</Text>
           </Pressable>
