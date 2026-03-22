@@ -9,83 +9,105 @@ import { CharGlobeHolder, CharMidCall, CharTraveller } from "@/components/Charac
 
 const { width: SW } = Dimensions.get("window");
 
-/* ── Slide visuals ── */
+/* ── Slide 1 — GLOBAL  ─────────────────────────────────────────────────── */
+const FLAGS_RING = [
+  { flag: "🇺🇸", top: 18,  left: 18  },
+  { flag: "🇬🇧", top: 12,  right: 22 },
+  { flag: "🇯🇵", top: 88,  left: 6   },
+  { flag: "🇩🇪", top: 84,  right: 6  },
+  { flag: "🇫🇷", top: 158, left: 22  },
+  { flag: "🇦🇺", top: 152, right: 18 },
+  { flag: "🇧🇷", top: 46,  left: 2   },
+  { flag: "🇮🇳", top: 42,  right: 2  },
+  { flag: "🇨🇦", top: 120, left: 10  },
+  { flag: "🇿🇦", top: 118, right: 10 },
+];
+
 function GlobalVisual() {
-  const FLAGS = [
-    { e: "🇺🇸", top: 18,  left: 20  },
-    { e: "🇬🇧", top: 10,  right: 18 },
-    { e: "🇯🇵", top: 72,  left: 8   },
-    { e: "🇧🇷", top: 64,  right: 10 },
-    { e: "🇩🇪", bottom: 16, left: 38 },
-    { e: "🇦🇺", bottom: 8,  right: 32 },
-  ];
   return (
-    <View style={vis.container}>
-      <View style={vis.globe}>
-        <Text style={vis.globeEmoji}>🌍</Text>
-      </View>
-      {FLAGS.map((f, i) => (
-        <View key={i} style={[vis.chip, f as any]}>
-          <Text style={vis.chipEmoji}>{f.e}</Text>
+    <View style={{ flex: 1, width: "100%", alignItems: "center", justifyContent: "center", position: "relative" }}>
+      {/* Soft globe glow rings */}
+      <View style={[gv.ring, { width: 230, height: 230, borderRadius: 115, opacity: 0.12 }]} />
+      <View style={[gv.ring, { width: 170, height: 170, borderRadius: 85, opacity: 0.18 }]} />
+      {/* Character centered */}
+      <CharGlobeHolder size={200} />
+      {/* Floating country flag chips */}
+      {FLAGS_RING.map((f, i) => (
+        <View key={i} style={[gv.chip, f as any]}>
+          <Text style={gv.chipEmoji}>{f.flag}</Text>
         </View>
       ))}
     </View>
   );
 }
 
+/* ── Slide 2 — INSTANT  ────────────────────────────────────────────────── */
+const PHONE_ROWS = [
+  { flag: "🇺🇸", num: "+1 (415) 823-4921", active: true  },
+  { flag: "🇬🇧", num: "+44 7700 123 456",  active: false },
+  { flag: "🇦🇺", num: "+61 4 1234 5678",   active: false },
+];
+
 function InstantVisual() {
-  const ROWS = [
-    { flag: "🇺🇸", num: "+1 (415) 823-4921", active: true  },
-    { flag: "🇬🇧", num: "+44 7700 123 456",  active: false },
-    { flag: "🇦🇺", num: "+61 4 1234 5678",   active: false },
-  ];
   return (
-    <View style={vis.phoneWrap}>
-      <View style={vis.phone}>
-        <View style={vis.phoneHeader}>
-          <Text style={vis.phoneHeaderTxt}>📱  DialGlobal</Text>
-        </View>
-        {ROWS.map((r, i) => (
-          <View key={i} style={[vis.phoneRow, r.active && vis.phoneRowActive]}>
-            <Text style={vis.phoneFlag}>{r.flag}</Text>
-            <Text style={[vis.phoneNum, r.active && { color: C.accent }]} numberOfLines={1}>
-              {r.num}
-            </Text>
-            {r.active && <View style={vis.activeDot} />}
+    <View style={{ flex: 1, width: "100%", flexDirection: "row", alignItems: "center", justifyContent: "center", paddingHorizontal: 12, gap: 8 }}>
+      {/* Character on the left, slightly smaller */}
+      <View style={{ flex: 1, alignItems: "flex-end" }}>
+        <CharMidCall size={160} />
+      </View>
+      {/* Phone mockup on the right */}
+      <View style={{ flex: 1, alignItems: "flex-start" }}>
+        <View style={iv.card}>
+          <View style={iv.cardHeader}>
+            <Text style={iv.cardTitle}>📱  DialGlobal</Text>
           </View>
-        ))}
-        <View style={vis.phonePulse}>
-          <View style={vis.phonePulseDot} />
-          <Text style={vis.phonePulseTxt}>3 numbers active</Text>
+          {PHONE_ROWS.map((r, i) => (
+            <View key={i} style={[iv.row, r.active && iv.rowActive]}>
+              <Text style={iv.flag}>{r.flag}</Text>
+              <Text style={[iv.num, r.active && { color: C.accent }]} numberOfLines={1}>
+                {r.num}
+              </Text>
+              {r.active && <View style={iv.dot} />}
+            </View>
+          ))}
+          <View style={iv.statusBar}>
+            <View style={iv.statusDot} />
+            <Text style={iv.statusTxt}>3 numbers active</Text>
+          </View>
         </View>
-      </View>
-      {/* floating badges */}
-      <View style={[vis.floatBadge, { top: -8, right: -12, backgroundColor: "#D4F4E8" }]}>
-        <Text style={[vis.floatTxt, { color: "#2D9966" }]}>✓ Verified</Text>
-      </View>
-      <View style={[vis.floatBadge, { bottom: 12, left: -14, backgroundColor: "#FFF3D4" }]}>
-        <Text style={[vis.floatTxt, { color: C.accent }]}>⚡ Instant</Text>
+        {/* Floating badges */}
+        <View style={[iv.badge, { top: -10, right: 0, backgroundColor: "#D4F4E8" }]}>
+          <Text style={[iv.badgeTxt, { color: "#2D9966" }]}>✓ Instant</Text>
+        </View>
+        <View style={[iv.badge, { bottom: 20, left: -8, backgroundColor: "#FFF3D4" }]}>
+          <Text style={[iv.badgeTxt, { color: C.accent }]}>⚡ Real SMS</Text>
+        </View>
       </View>
     </View>
   );
 }
 
+/* ── Slide 3 — PRIVATE  ────────────────────────────────────────────────── */
+const PRIVACY_BADGES = [
+  { txt: "🔒 Encrypted",  bg: "#D4E8FF", clr: "#2D60C8", top: 22,    left: 20   },
+  { txt: "✅ Verified",    bg: "#D4F4E8", clr: "#2D9966", top: 18,    right: 14  },
+  { txt: "🚫 No Spam",    bg: "#FFD4D4", clr: "#C83030", bottom: 55,  left: 14   },
+  { txt: "👁 Private",    bg: "#E8D4FF", clr: "#7830C8", bottom: 50,  right: 10  },
+  { txt: "🛡️ Secure",     bg: "#FFF3D4", clr: "#C88020", top: 90,     left: 4    },
+  { txt: "🌍 Worldwide",  bg: "#D4F0E4", clr: "#1A7A50", top: 86,     right: 2   },
+];
+
 function PrivateVisual() {
-  const BADGES = [
-    { txt: "🔒 Encrypted",  bg: "#D4E8FF", clr: "#2D60C8", top: 8,     left: 12  },
-    { txt: "✅ Verified",    bg: "#D4F4E8", clr: "#2D9966", top: 50,    right: 0  },
-    { txt: "🚫 No Spam",    bg: "#FFD4D4", clr: "#C83030", bottom: 42, left: 0   },
-    { txt: "👁 Private",    bg: "#E8D4FF", clr: "#7830C8", bottom: 4,  right: 8  },
-  ];
   return (
-    <View style={vis.container}>
-      <View style={vis.crownWrap}>
-        <Text style={vis.crownBig}>👑</Text>
-        <Text style={vis.shieldEmoji}>🛡️</Text>
-      </View>
-      {BADGES.map((b, i) => (
-        <View key={i} style={[vis.chip, b as any, { backgroundColor: b.bg }]}>
-          <Text style={[vis.chipEmoji, { color: b.clr, fontSize: 11 }]}>{b.txt}</Text>
+    <View style={{ flex: 1, width: "100%", alignItems: "center", justifyContent: "center", position: "relative" }}>
+      {/* Shield glow behind character */}
+      <View style={[pv.shield, { width: 180, height: 200, borderRadius: 90 }]} />
+      {/* Character */}
+      <CharTraveller size={190} />
+      {/* Privacy badge chips around character */}
+      {PRIVACY_BADGES.map((b, i) => (
+        <View key={i} style={[pv.badge, b as any, { backgroundColor: b.bg }]}>
+          <Text style={[pv.badgeTxt, { color: b.clr }]}>{b.txt}</Text>
         </View>
       ))}
     </View>
@@ -99,21 +121,21 @@ const SLIDES = [
     bigWord: "Global.",
     sub: "Real local phone numbers in 100+ countries. Receive calls and texts like a local.",
     bg: "#D4E6FF",
-    Character: CharGlobeHolder,
+    Visual: GlobalVisual,
   },
   {
     key: "instant",
     bigWord: "Instant.",
     sub: "Get a number in seconds. Manage calls, texts, and voicemail from one clean dashboard.",
     bg: "#D4F0E4",
-    Character: CharMidCall,
+    Visual: InstantVisual,
   },
   {
     key: "private",
     bigWord: "Private.",
     sub: "Your real number stays hidden. Every call encrypted. Your identity, on your terms.",
     bg: "#EDD4FF",
-    Character: CharTraveller,
+    Visual: PrivateVisual,
   },
 ];
 
@@ -145,17 +167,16 @@ export default function Onboarding() {
             <Text style={styles.skipTxt}>Skip</Text>
           </Pressable>
         )}
-        <sl.Character size={200} />
+        <sl.Visual />
       </Animated.View>
 
       {/* ── White bottom sheet ── */}
       <View style={[styles.sheet, { paddingBottom: insets.bottom + 24 }]}>
 
-        {/* Big single-word title */}
         <Animated.Text style={[styles.bigWord, { opacity: fadeAnim }]}>{sl.bigWord}</Animated.Text>
         <Animated.Text style={[styles.sub, { opacity: fadeAnim }]}>{sl.sub}</Animated.Text>
 
-        {/* Pill progress dots */}
+        {/* Progress dots */}
         <View style={styles.dots}>
           {SLIDES.map((_, i) => (
             <Pressable key={i} onPress={() => goTo(i)}>
@@ -164,7 +185,7 @@ export default function Onboarding() {
           ))}
         </View>
 
-        {/* Pill CTA button */}
+        {/* CTA */}
         <Pressable
           style={({ pressed }) => [styles.btn, { opacity: pressed ? 0.88 : 1 }]}
           onPress={next}
@@ -187,11 +208,9 @@ export default function Onboarding() {
 
 const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: "#fff" },
-
   top: { flex: 1, position: "relative", alignItems: "center", justifyContent: "center" },
   skip: { position: "absolute", top: 8, right: 22, padding: 4, zIndex: 10 },
   skipTxt: { fontFamily: "Inter_500Medium", fontSize: 13.5, color: "rgba(0,0,0,0.45)" },
-
   sheet: {
     backgroundColor: "#fff", borderTopLeftRadius: 32, borderTopRightRadius: 32,
     paddingHorizontal: 28, paddingTop: 28,
@@ -207,8 +226,7 @@ const styles = StyleSheet.create({
     lineHeight: 22, marginBottom: 28,
   },
   dots: { flexDirection: "row", gap: 6, marginBottom: 22, alignItems: "center" },
-  dot: { height: 8, borderRadius: 99 },
-
+  dot:  { height: 8, borderRadius: 99 },
   btn: {
     height: 56, backgroundColor: C.accent, borderRadius: 99,
     alignItems: "center", justifyContent: "center",
@@ -219,47 +237,65 @@ const styles = StyleSheet.create({
   logIn: { fontFamily: "Inter_400Regular", fontSize: 13, color: C.textMuted, textAlign: "center" },
 });
 
-const vis = StyleSheet.create({
-  container: { width: 260, height: 220, position: "relative", alignItems: "center", justifyContent: "center" },
-  globe: {
-    width: 120, height: 120, borderRadius: 60, backgroundColor: "rgba(255,255,255,0.55)",
-    alignItems: "center", justifyContent: "center",
-    shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 16, shadowOffset: { width: 0, height: 4 }, elevation: 4,
+/* Global visual styles */
+const gv = StyleSheet.create({
+  ring: {
+    position: "absolute",
+    borderWidth: 1.5, borderColor: "rgba(37,99,235,0.35)",
+    borderStyle: "dashed",
   },
-  globeEmoji: { fontSize: 72 },
   chip: {
-    position: "absolute", backgroundColor: "rgba(255,255,255,0.85)",
-    borderRadius: 20, paddingHorizontal: 10, paddingVertical: 6,
-    shadowColor: "#000", shadowOpacity: 0.10, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 3,
+    position: "absolute",
+    backgroundColor: "rgba(255,255,255,0.88)",
+    borderRadius: 22, paddingHorizontal: 8, paddingVertical: 5,
+    shadowColor: "#000", shadowOpacity: 0.10, shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 }, elevation: 3,
   },
-  chipEmoji: { fontSize: 18, fontFamily: "Inter_600SemiBold" },
+  chipEmoji: { fontSize: 20 },
+});
 
-  phoneWrap: { position: "relative", alignItems: "center" },
-  phone: {
-    width: 200, backgroundColor: "#fff", borderRadius: 20, overflow: "hidden",
-    shadowColor: "#000", shadowOpacity: 0.14, shadowRadius: 20, shadowOffset: { width: 0, height: 6 }, elevation: 8,
+/* Instant visual styles */
+const iv = StyleSheet.create({
+  card: {
+    backgroundColor: "#fff", borderRadius: 18, overflow: "hidden",
+    shadowColor: "#000", shadowOpacity: 0.14, shadowRadius: 18,
+    shadowOffset: { width: 0, height: 6 }, elevation: 8,
     borderWidth: 1, borderColor: "rgba(0,0,0,0.06)",
+    width: 168, position: "relative",
   },
-  phoneHeader: { backgroundColor: C.accent, paddingVertical: 10, paddingHorizontal: 14 },
-  phoneHeaderTxt: { fontFamily: "Inter_700Bold", fontSize: 11, color: C.onAccent, letterSpacing: 0.5 },
-  phoneRow: { flexDirection: "row", alignItems: "center", paddingHorizontal: 12, paddingVertical: 9, gap: 8 },
-  phoneRowActive: { backgroundColor: "#FFF8EC", borderLeftWidth: 2.5, borderLeftColor: C.accent },
-  phoneFlag: { fontSize: 16 },
-  phoneNum: { fontFamily: "Inter_500Medium", fontSize: 11, color: C.textSec, flex: 1 },
-  activeDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: C.green },
-  phonePulse: {
+  cardHeader: { backgroundColor: C.accent, paddingVertical: 10, paddingHorizontal: 14 },
+  cardTitle:  { fontFamily: "Inter_700Bold", fontSize: 11, color: C.onAccent, letterSpacing: 0.4 },
+  row:        { flexDirection: "row", alignItems: "center", paddingHorizontal: 12, paddingVertical: 9, gap: 7 },
+  rowActive:  { backgroundColor: "#FFF8EC", borderLeftWidth: 2.5, borderLeftColor: C.accent },
+  flag:       { fontSize: 15 },
+  num:        { fontFamily: "Inter_500Medium", fontSize: 10, color: C.textSec, flex: 1 },
+  dot:        { width: 7, height: 7, borderRadius: 4, backgroundColor: C.green },
+  statusBar:  {
     flexDirection: "row", alignItems: "center", gap: 6,
-    margin: 8, backgroundColor: "#D4F4E8", borderRadius: 8, paddingVertical: 7, paddingHorizontal: 10,
+    margin: 8, backgroundColor: "#D4F4E8", borderRadius: 8,
+    paddingVertical: 7, paddingHorizontal: 10,
   },
-  phonePulseDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: C.green },
-  phonePulseTxt: { fontFamily: "Inter_700Bold", fontSize: 9, color: "#2D9966" },
-  floatBadge: {
-    position: "absolute", borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5,
-    shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 8, shadowOffset: { width: 0, height: 2 }, elevation: 3,
+  statusDot:  { width: 6, height: 6, borderRadius: 3, backgroundColor: C.green },
+  statusTxt:  { fontFamily: "Inter_700Bold", fontSize: 9, color: "#2D9966" },
+  badge: {
+    position: "absolute", borderRadius: 20, paddingHorizontal: 9, paddingVertical: 5,
+    shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 }, elevation: 3,
   },
-  floatTxt: { fontFamily: "Inter_700Bold", fontSize: 11 },
+  badgeTxt: { fontFamily: "Inter_700Bold", fontSize: 10.5 },
+});
 
-  crownWrap: { alignItems: "center", justifyContent: "center", gap: -8 },
-  crownBig: { fontSize: 72 },
-  shieldEmoji: { fontSize: 44, marginTop: -12 },
+/* Private visual styles */
+const pv = StyleSheet.create({
+  shield: {
+    position: "absolute",
+    backgroundColor: "rgba(124,58,237,0.08)",
+    borderWidth: 1.5, borderColor: "rgba(124,58,237,0.2)",
+  },
+  badge: {
+    position: "absolute", borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5,
+    shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 8,
+    shadowOffset: { width: 0, height: 2 }, elevation: 3,
+  },
+  badgeTxt: { fontFamily: "Inter_700Bold", fontSize: 10.5 },
 });
