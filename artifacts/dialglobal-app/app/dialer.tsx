@@ -35,7 +35,7 @@ function fmtTime(secs: number) {
 
 export default function Dialer() {
   const insets = useSafeAreaInsets();
-  const { numbers, showToast, refreshCalls } = useApp();
+  const { numbers, showToast, refreshCalls, isAuthed } = useApp();
   const isWeb = Platform.OS === "web";
 
   const [digits, setDigits] = useState("");
@@ -76,6 +76,10 @@ export default function Dialer() {
   };
 
   const handleCall = async () => {
+    if (!isAuthed) {
+      router.push("/paywall");
+      return;
+    }
     if (!digits || digits.length < 7) {
       showToast("Enter a valid phone number", "warning");
       return;
