@@ -10,33 +10,30 @@ import { CharGlobeHolder, CharMidCall, CharTraveller } from "@/components/Charac
 const { width: SW } = Dimensions.get("window");
 
 /* ── Slide 1 — GLOBAL  ─────────────────────────────────────────────────── */
-const FLAGS_RING = [
-  { flag: "🇺🇸", top: 18,  left: 18  },
-  { flag: "🇬🇧", top: 12,  right: 22 },
-  { flag: "🇯🇵", top: 88,  left: 6   },
-  { flag: "🇩🇪", top: 84,  right: 6  },
-  { flag: "🇫🇷", top: 158, left: 22  },
-  { flag: "🇦🇺", top: 152, right: 18 },
-  { flag: "🇧🇷", top: 46,  left: 2   },
-  { flag: "🇮🇳", top: 42,  right: 2  },
-  { flag: "🇨🇦", top: 120, left: 10  },
-  { flag: "🇿🇦", top: 118, right: 10 },
-];
+const FLAG_EMOJIS = ["🇺🇸","🇬🇧","🇯🇵","🇩🇪","🇫🇷","🇦🇺","🇧🇷","🇮🇳","🇨🇦","🇿🇦"];
+const BOX = 284;
+const C_XY = BOX / 2;
+const ORBIT_R = 112;
+const FLAGS_RING = FLAG_EMOJIS.map((flag, i) => {
+  const angle = (i / FLAG_EMOJIS.length) * 2 * Math.PI - Math.PI / 2;
+  return { flag, left: C_XY + ORBIT_R * Math.cos(angle) - 18, top: C_XY + ORBIT_R * Math.sin(angle) - 17 };
+});
 
 function GlobalVisual() {
   return (
-    <View style={{ flex: 1, width: "100%", alignItems: "center", justifyContent: "center", position: "relative" }}>
-      {/* Soft globe glow rings */}
-      <View style={[gv.ring, { width: 230, height: 230, borderRadius: 115, opacity: 0.12 }]} />
-      <View style={[gv.ring, { width: 170, height: 170, borderRadius: 85, opacity: 0.18 }]} />
-      {/* Character centered */}
-      <CharGlobeHolder size={200} />
-      {/* Floating country flag chips */}
-      {FLAGS_RING.map((f, i) => (
-        <View key={i} style={[gv.chip, f as any]}>
-          <Text style={gv.chipEmoji}>{f.flag}</Text>
-        </View>
-      ))}
+    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+      <View style={{ width: BOX, height: BOX, alignItems: "center", justifyContent: "center" }}>
+        {/* Dashed orbit ring */}
+        <View style={[gv.ring, { width: 228, height: 228, borderRadius: 114 }]} />
+        {/* Character */}
+        <CharGlobeHolder size={170} />
+        {/* Flags in tight circular orbit */}
+        {FLAGS_RING.map((f, i) => (
+          <View key={i} style={[gv.chip, { position: "absolute", left: f.left, top: f.top }]}>
+            <Text style={gv.chipEmoji}>{f.flag}</Text>
+          </View>
+        ))}
+      </View>
     </View>
   );
 }
@@ -88,28 +85,38 @@ function InstantVisual() {
 }
 
 /* ── Slide 3 — PRIVATE  ────────────────────────────────────────────────── */
-const PRIVACY_BADGES = [
-  { txt: "🔒 Encrypted",  bg: "#D4E8FF", clr: "#2D60C8", top: 22,    left: 20   },
-  { txt: "✅ Verified",    bg: "#D4F4E8", clr: "#2D9966", top: 18,    right: 14  },
-  { txt: "🚫 No Spam",    bg: "#FFD4D4", clr: "#C83030", bottom: 55,  left: 14   },
-  { txt: "👁 Private",    bg: "#E8D4FF", clr: "#7830C8", bottom: 50,  right: 10  },
-  { txt: "🛡️ Secure",     bg: "#FFF3D4", clr: "#C88020", top: 90,     left: 4    },
-  { txt: "🌍 Worldwide",  bg: "#D4F0E4", clr: "#1A7A50", top: 86,     right: 2   },
+const LEFT_BADGES  = [
+  { txt: "🔒 Encrypted", bg: "#D4E8FF", clr: "#2D60C8" },
+  { txt: "🚫 No Spam",   bg: "#FFD4D4", clr: "#C83030" },
+  { txt: "🛡 Secure",    bg: "#FFF3D4", clr: "#C88020" },
+];
+const RIGHT_BADGES = [
+  { txt: "✅ Verified",  bg: "#D4F4E8", clr: "#2D9966" },
+  { txt: "👁 Private",  bg: "#E8D4FF", clr: "#7830C8" },
+  { txt: "🌍 Global",   bg: "#D4F0E4", clr: "#1A7A50" },
 ];
 
 function PrivateVisual() {
   return (
-    <View style={{ flex: 1, width: "100%", alignItems: "center", justifyContent: "center", position: "relative" }}>
-      {/* Shield glow behind character */}
-      <View style={[pv.shield, { width: 180, height: 200, borderRadius: 90 }]} />
-      {/* Character */}
-      <CharTraveller size={190} />
-      {/* Privacy badge chips around character */}
-      {PRIVACY_BADGES.map((b, i) => (
-        <View key={i} style={[pv.badge, b as any, { backgroundColor: b.bg }]}>
-          <Text style={[pv.badgeTxt, { color: b.clr }]}>{b.txt}</Text>
-        </View>
-      ))}
+    <View style={{ flex: 1, width: "100%", flexDirection: "row", alignItems: "center", justifyContent: "center", paddingHorizontal: 10, gap: 10 }}>
+      {/* Left column */}
+      <View style={{ gap: 9, alignItems: "flex-end" }}>
+        {LEFT_BADGES.map(b => (
+          <View key={b.txt} style={[pv.badge, { backgroundColor: b.bg }]}>
+            <Text style={[pv.badgeTxt, { color: b.clr }]}>{b.txt}</Text>
+          </View>
+        ))}
+      </View>
+      {/* Character centred */}
+      <CharTraveller size={148} />
+      {/* Right column */}
+      <View style={{ gap: 9, alignItems: "flex-start" }}>
+        {RIGHT_BADGES.map(b => (
+          <View key={b.txt} style={[pv.badge, { backgroundColor: b.bg }]}>
+            <Text style={[pv.badgeTxt, { color: b.clr }]}>{b.txt}</Text>
+          </View>
+        ))}
+      </View>
     </View>
   );
 }
@@ -293,7 +300,7 @@ const pv = StyleSheet.create({
     borderWidth: 1.5, borderColor: "rgba(124,58,237,0.2)",
   },
   badge: {
-    position: "absolute", borderRadius: 20, paddingHorizontal: 10, paddingVertical: 5,
+    borderRadius: 20, paddingHorizontal: 11, paddingVertical: 6,
     shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 }, elevation: 3,
   },
