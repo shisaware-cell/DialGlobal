@@ -204,10 +204,16 @@ export default function Calls() {
       <View style={styles.headerWrap}>
         <View style={styles.headerTopRow}>
           <Text style={styles.title}>Calls</Text>
-          <Pressable style={styles.dialBtn} onPress={() => isAuthed ? router.push("/dialer") : router.push("/paywall")}>
-            <Feather name="phone-outgoing" size={14} color={C.onAccent} />
-            <Text style={styles.dialBtnTxt}>New Call</Text>
-          </Pressable>
+          <View style={{ flexDirection: "row", gap: 8, alignItems: "center" }}>
+            <Pressable style={[styles.dialBtn, { backgroundColor: C.raised, borderWidth: 1, borderColor: C.border }]} onPress={() => router.push("/contacts" as any)}>
+              <Feather name="users" size={14} color={C.textSec} />
+              <Text style={[styles.dialBtnTxt, { color: C.textSec }]}>Contacts</Text>
+            </Pressable>
+            <Pressable style={styles.dialBtn} onPress={() => isAuthed ? router.push("/dialer") : router.push("/paywall")}>
+              <Feather name="phone-outgoing" size={14} color={C.onAccent} />
+              <Text style={styles.dialBtnTxt}>New Call</Text>
+            </Pressable>
+          </View>
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 7, paddingBottom: 2 }}>
           {FILTERS.map(f => (
