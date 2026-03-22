@@ -99,6 +99,7 @@ export default function Picker() {
         country: selected.name,
         country_code: selected.code,
         flag: selected.flag,
+        number_kind: isLandline ? "landline" : "mobile",
       });
       await refreshNumbers();
       router.back();
