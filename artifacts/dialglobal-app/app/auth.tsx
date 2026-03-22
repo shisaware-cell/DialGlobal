@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View, Text, StyleSheet, TextInput, Pressable, ActivityIndicator, ScrollView, KeyboardAvoidingView, Platform, Image,
 } from "react-native";
@@ -12,7 +12,18 @@ import { api } from "@/lib/api";
 
 export default function Auth() {
   const insets = useSafeAreaInsets();
-  const { setAuthed } = useApp();
+  const { setAuthed, isAuthed, numbers } = useApp();
+
+  useEffect(() => {
+    if (isAuthed) {
+      if (numbers.length > 0) {
+        router.replace("/(tabs)");
+      } else {
+        router.replace("/number-assignment");
+      }
+    }
+  }, [isAuthed]);
+
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
   const [pass, setPass] = useState("");

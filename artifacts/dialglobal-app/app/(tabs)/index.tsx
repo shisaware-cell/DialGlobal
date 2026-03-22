@@ -191,7 +191,7 @@ export default function NumbersScreen() {
     if (h < 17) return "GOOD AFTERNOON";
     return "GOOD EVENING";
   })();
-  const userName = profile?.name || profile?.email?.split("@")[0] || (isAuthed ? "User" : "Guest");
+  const userName = profile?.name || profile?.email?.split("@")[0] || (isAuthed ? "" : "Guest");
 
   return (
     <View style={[styles.root, { paddingTop: insets.top + (isWeb ? 67 : 0) }]}>

@@ -71,26 +71,13 @@ export default function NumberAssignment() {
         c.code.toLowerCase().includes(search.toLowerCase()))
     : COUNTRIES;
 
-  const pickCountry = useCallback(async (c: typeof COUNTRIES[0]) => {
+  const pickCountry = useCallback((c: typeof COUNTRIES[0]) => {
     setCountry(c);
     setNumberOptionIdx(0);
-    setSearching(true);
     const fallback = genNumber(c.prefix);
     setNumber(fallback);
-    try {
-      const res = await api.searchNumbers(c.code, 6);
-      const nums: string[] = (res.numbers || []).map((n: any) => n.number);
-      if (nums.length > 0) {
-        setNumberOptions(nums);
-        setNumber(nums[0]);
-      } else {
-        setNumberOptions([fallback]);
-      }
-    } catch {
-      setNumberOptions([fallback]);
-    } finally {
-      setSearching(false);
-    }
+    setNumberOptions([fallback]);
+    setSearching(false);
   }, []);
 
   const refreshNumber = useCallback(() => {
@@ -323,7 +310,7 @@ export default function NumberAssignment() {
   return (
     <View style={[styles.root, { paddingTop: insets.top }]}>
       <View style={styles.header}>
-        <Pressable onPress={() => router.replace("/auth")} hitSlop={12}>
+        <Pressable onPress={() => router.replace("/paywall")} hitSlop={12}>
           <Feather name="arrow-left" size={22} color={C.text} />
         </Pressable>
         <StepDots current={1} />

@@ -62,7 +62,7 @@ export default function Settings() {
   const price = billing === "yearly" ? plan?.yearlyPrice : plan?.monthlyPrice;
   const needsTrialStart = isAuthed && numbers.length === 0 && !isInTrial && !trialExpired;
 
-  const userName  = isAuthed ? (profile?.name || profile?.email?.split("@")[0] || "User") : "Guest";
+  const userName  = isAuthed ? (profile?.name || profile?.email?.split("@")[0] || "") : "Guest";
   const userEmail = isAuthed ? (profile?.email || "") : "Not signed in";
 
   const signOut = () => {
@@ -93,7 +93,9 @@ export default function Settings() {
             <Text style={styles.profileEmail}>{userEmail}</Text>
             <View style={styles.planTag}>
               <Ionicons name="star" size={11} color={C.accent} />
-              <Text style={styles.planTagTxt}>{needsTrialStart ? "Start Free Trial" : `${plan?.name ?? "Free"} Plan`}</Text>
+              <Text style={styles.planTagTxt}>
+                {!isAuthed ? "Guest" : needsTrialStart ? "Start Free Trial" : `${plan?.name ?? "Free"} Plan`}
+              </Text>
               {credits > 0 && <Text style={styles.creditsTag}>💳 ${credits.toFixed(2)}</Text>}
             </View>
           </View>
@@ -119,7 +121,15 @@ export default function Settings() {
           <Row
             icon="credit-card"
             label="Billing & Plan"
-            sublabel={needsTrialStart ? "Start Free Trial to activate your number" : (plan?.monthlyPrice === 0 ? "Free Plan · Upgrade to unlock more" : `${plan?.name} · $${price}/mo`)}
+            sublabel={
+              !isAuthed
+                ? "Sign in to manage your subscription"
+                : needsTrialStart
+                ? "Start Free Trial to activate your number"
+                : plan?.monthlyPrice === 0
+                ? "Free Plan · Upgrade to unlock more"
+                : `${plan?.name} · $${price}/mo`
+            }
             onPress={() => router.push("/paywall")}
           />
           <View style={styles.divider} />

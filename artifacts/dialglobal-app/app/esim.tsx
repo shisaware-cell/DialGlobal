@@ -18,7 +18,7 @@ const REST    = ESIM_COUNTRIES.filter(c => !c.popular);
 
 export default function ESim() {
   const insets = useSafeAreaInsets();
-  const { isAuthed } = useApp();
+  const { isAuthed, isInTrial, trialExpired, currentPlan } = useApp();
   const [step, setStep]               = useState<Step>("countries");
   const [search, setSearch]           = useState("");
   const [country, setCountry]         = useState<EsimCountry | null>(null);
@@ -41,7 +41,8 @@ export default function ESim() {
   };
 
   const buyEsim = async () => {
-    if (!isAuthed) { router.push("/paywall"); return; }
+    if (trialExpired) { router.push("/expired-paywall"); return; }
+    if (!isAuthed || (!isInTrial && currentPlan === "traveller")) { router.push("/paywall"); return; }
     if (!country || !plan) return;
     setLoading(true);
     try {

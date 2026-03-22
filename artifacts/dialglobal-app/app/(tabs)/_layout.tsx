@@ -171,8 +171,23 @@ function ClassicTabLayout() {
   );
 }
 
+function TrialExpiredGuard() {
+  const { trialExpired, isAuthed } = useApp();
+  useEffect(() => {
+    if (isAuthed && trialExpired) {
+      router.replace("/expired-paywall");
+    }
+  }, [trialExpired, isAuthed]);
+  return null;
+}
+
 export default function TabLayout() {
-  return <ClassicTabLayout />;
+  return (
+    <>
+      <TrialExpiredGuard />
+      <ClassicTabLayout />
+    </>
+  );
 }
 
 const tb = StyleSheet.create({

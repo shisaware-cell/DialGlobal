@@ -14,7 +14,13 @@ export default function Profile() {
   const { profile, numbers, currentPlan, signOut, updateProfile, isAuthed, isInTrial, trialExpired } = useApp();
   const plan = PLANS.find(p => p.id === currentPlan) ?? PLANS[0];
   const needsTrial = isAuthed && !isInTrial && !trialExpired && numbers.length === 0;
-  const planBadgeLabel = needsTrial ? "Start Free Trial" : isInTrial ? `${plan.name} Trial` : `${plan.name} Plan`;
+  const planBadgeLabel = !isAuthed
+    ? "Sign in to get started"
+    : needsTrial
+    ? "Start Free Trial"
+    : isInTrial
+    ? `${plan.name} Trial`
+    : `${plan.name} Plan`;
 
   const [name,    setName]    = useState(profile?.name  ?? "");
   const [email,   setEmail]   = useState(profile?.email ?? "");
@@ -28,7 +34,7 @@ export default function Profile() {
     }
   }, [profile]);
 
-  const displayName = isAuthed ? (profile?.name || profile?.email?.split("@")[0] || "User") : "Guest";
+  const displayName = isAuthed ? (profile?.name || profile?.email?.split("@")[0] || "") : "Guest";
   const initial = displayName.charAt(0).toUpperCase();
 
   const memberSince = profile
@@ -137,14 +143,20 @@ export default function Profile() {
               <Ionicons name="star" size={20} color={C.accent} />
             </View>
             <View style={{ flex: 1, gap: 2 }}>
-              <Text style={styles.planName}>{plan?.name ?? "Basic"} Plan</Text>
+              <Text style={styles.planName}>
+                {!isAuthed ? "No Plan" : needsTrial ? "Free Trial" : `${plan?.name ?? "Basic"} Plan`}
+              </Text>
               <Text style={styles.planSub}>
-                {numbers.length} / {plan?.numberLimit ?? 1} numbers · {plan?.countries ?? 10} countries
+                {!isAuthed
+                  ? "Sign in to activate your number"
+                  : needsTrial
+                  ? "Start your 3-day free trial"
+                  : `${numbers.length} / ${plan?.numberLimit ?? 1} numbers · ${plan?.countries ?? 10} countries`}
               </Text>
             </View>
             <View style={styles.upgBtn}>
               <Text style={styles.upgTxt}>
-                {currentPlan === "business" ? "Active" : "Upgrade"}
+                {!isAuthed || needsTrial ? "Start" : currentPlan === "business" ? "Active" : "Upgrade"}
               </Text>
             </View>
           </Pressable>
