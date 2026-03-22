@@ -11,9 +11,9 @@ const { width: SW } = Dimensions.get("window");
 
 /* ── Slide 1 — GLOBAL  ─────────────────────────────────────────────────── */
 const FLAG_EMOJIS = ["🇺🇸","🇬🇧","🇯🇵","🇩🇪","🇫🇷","🇦🇺","🇧🇷","🇮🇳","🇨🇦","🇿🇦"];
-const BOX = Math.min(SW - 2, 360);
+const BOX = Math.min(SW - 24, 332);
 const C_XY = BOX / 2;
-const ORBIT_R = BOX / 2 - 8;
+const ORBIT_R = BOX / 2 - 24;
 const FLAGS_RING = FLAG_EMOJIS.map((flag, i) => {
   const angle = (i / FLAG_EMOJIS.length) * 2 * Math.PI - Math.PI / 2;
   return { flag, left: C_XY + ORBIT_R * Math.cos(angle) - 18, top: C_XY + ORBIT_R * Math.sin(angle) - 17 };
@@ -40,31 +40,37 @@ function GlobalVisual() {
 
 /* ── Slide 2 — LANDLINE  ───────────────────────────────────────────────── */
 const LL_LEFT = [
-  { txt: "📞 HD Voice",      bg: "#D4E8FF", clr: "#2D60C8" },
-  { txt: "🏢 Fixed Address", bg: "#FFF0D4", clr: "#A06010" },
-  { txt: "📠 Fax Ready",     bg: "#F4D4FF", clr: "#7030B0" },
+  { icon: "📞", label: "HD Voice",      bg: "#D4E8FF", clr: "#2D60C8" },
+  { icon: "🏢", label: "Fixed Address", bg: "#FFF0D4", clr: "#A06010" },
+  { icon: "📠", label: "Fax Ready",     bg: "#F4D4FF", clr: "#7030B0" },
 ];
 const LL_RIGHT = [
-  { txt: "⭐ Trusted",   bg: "#D4F4E8", clr: "#2D9966" },
-  { txt: "🆘 E911",      bg: "#FFD4D4", clr: "#C83030" },
-  { txt: "💼 Business",  bg: "#D4E8FF", clr: "#2D60C8" },
+  { icon: "⭐", label: "Trusted",  bg: "#D4F4E8", clr: "#2D9966" },
+  { icon: "🆘", label: "E911",     bg: "#FFD4D4", clr: "#C83030" },
+  { icon: "💼", label: "Business", bg: "#D4E8FF", clr: "#2D60C8" },
 ];
 
 function LandlineVisual() {
   return (
-    <View style={{ flex: 1, width: "100%", flexDirection: "row", alignItems: "center", justifyContent: "center", paddingHorizontal: 14, gap: 14 }}>
-      <View style={{ gap: 16, alignItems: "flex-end", flex: 1 }}>
+    <View style={{ flex: 1, width: "100%", flexDirection: "row", alignItems: "center", justifyContent: "center", paddingHorizontal: 14, gap: 12 }}>
+      <View style={{ gap: 14, alignItems: "flex-end", flex: 1 }}>
         {LL_LEFT.map(b => (
-          <View key={b.txt} style={[pv.badge, { backgroundColor: b.bg }]}>
-            <Text style={[pv.badgeTxt, { color: b.clr }]}>{b.txt}</Text>
+          <View key={b.label} style={[pv.badge, { backgroundColor: b.bg }]}> 
+            <View style={pv.badgeRow}>
+              <Text style={pv.badgeIcon}>{b.icon}</Text>
+              <Text style={[pv.badgeTxt, { color: b.clr }]} numberOfLines={1}>{b.label}</Text>
+            </View>
           </View>
         ))}
       </View>
       <CharCelebrating size={158} />
-      <View style={{ gap: 16, alignItems: "flex-start", flex: 1 }}>
+      <View style={{ gap: 14, alignItems: "flex-start", flex: 1 }}>
         {LL_RIGHT.map(b => (
-          <View key={b.txt} style={[pv.badge, { backgroundColor: b.bg }]}>
-            <Text style={[pv.badgeTxt, { color: b.clr }]}>{b.txt}</Text>
+          <View key={b.label} style={[pv.badge, { backgroundColor: b.bg }]}> 
+            <View style={pv.badgeRow}>
+              <Text style={pv.badgeIcon}>{b.icon}</Text>
+              <Text style={[pv.badgeTxt, { color: b.clr }]} numberOfLines={1}>{b.label}</Text>
+            </View>
           </View>
         ))}
       </View>
@@ -120,34 +126,40 @@ function InstantVisual() {
 
 /* ── Slide 3 — PRIVATE  ────────────────────────────────────────────────── */
 const LEFT_BADGES  = [
-  { txt: "🔒 Encrypted", bg: "#D4E8FF", clr: "#2D60C8" },
-  { txt: "🚫 No Spam",   bg: "#FFD4D4", clr: "#C83030" },
-  { txt: "🛡 Secure",    bg: "#FFF3D4", clr: "#C88020" },
+  { icon: "🔒", label: "Encrypted", bg: "#D4E8FF", clr: "#2D60C8" },
+  { icon: "🚫", label: "No Spam",   bg: "#FFD4D4", clr: "#C83030" },
+  { icon: "🛡", label: "Secure",    bg: "#FFF3D4", clr: "#C88020" },
 ];
 const RIGHT_BADGES = [
-  { txt: "✅ Verified",  bg: "#D4F4E8", clr: "#2D9966" },
-  { txt: "👁 Private",  bg: "#E8D4FF", clr: "#7830C8" },
-  { txt: "🌍 Global",   bg: "#D4F0E4", clr: "#1A7A50" },
+  { icon: "✅", label: "Verified", bg: "#D4F4E8", clr: "#2D9966" },
+  { icon: "👁", label: "Private",  bg: "#E8D4FF", clr: "#7830C8" },
+  { icon: "🌍", label: "Global",   bg: "#D4F0E4", clr: "#1A7A50" },
 ];
 
 function PrivateVisual() {
   return (
-    <View style={{ flex: 1, width: "100%", flexDirection: "row", alignItems: "center", justifyContent: "center", paddingHorizontal: 14, gap: 14 }}>
+    <View style={{ flex: 1, width: "100%", flexDirection: "row", alignItems: "center", justifyContent: "center", paddingHorizontal: 14, gap: 12 }}>
       {/* Left column */}
-      <View style={{ gap: 16, alignItems: "flex-end", flex: 1 }}>
+      <View style={{ gap: 14, alignItems: "flex-end", flex: 1 }}>
         {LEFT_BADGES.map(b => (
-          <View key={b.txt} style={[pv.badge, { backgroundColor: b.bg }]}>
-            <Text style={[pv.badgeTxt, { color: b.clr }]}>{b.txt}</Text>
+          <View key={b.label} style={[pv.badge, { backgroundColor: b.bg }]}> 
+            <View style={pv.badgeRow}>
+              <Text style={pv.badgeIcon}>{b.icon}</Text>
+              <Text style={[pv.badgeTxt, { color: b.clr }]} numberOfLines={1}>{b.label}</Text>
+            </View>
           </View>
         ))}
       </View>
       {/* Character centred */}
       <CharTraveller size={182} />
       {/* Right column */}
-      <View style={{ gap: 16, alignItems: "flex-start", flex: 1 }}>
+      <View style={{ gap: 14, alignItems: "flex-start", flex: 1 }}>
         {RIGHT_BADGES.map(b => (
-          <View key={b.txt} style={[pv.badge, { backgroundColor: b.bg }]}>
-            <Text style={[pv.badgeTxt, { color: b.clr }]}>{b.txt}</Text>
+          <View key={b.label} style={[pv.badge, { backgroundColor: b.bg }]}> 
+            <View style={pv.badgeRow}>
+              <Text style={pv.badgeIcon}>{b.icon}</Text>
+              <Text style={[pv.badgeTxt, { color: b.clr }]} numberOfLines={1}>{b.label}</Text>
+            </View>
           </View>
         ))}
       </View>
@@ -341,9 +353,11 @@ const pv = StyleSheet.create({
     borderWidth: 1.5, borderColor: "rgba(124,58,237,0.2)",
   },
   badge: {
-    borderRadius: 20, paddingHorizontal: 11, paddingVertical: 6,
+    borderRadius: 20, paddingHorizontal: 10, paddingVertical: 6, minWidth: 108,
     shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 }, elevation: 3,
   },
-  badgeTxt: { fontFamily: "Inter_700Bold", fontSize: 10.5 },
+  badgeRow: { flexDirection: "row", alignItems: "center", gap: 5 },
+  badgeIcon: { fontSize: 12 },
+  badgeTxt: { fontFamily: "Inter_700Bold", fontSize: 10.5, flexShrink: 1 },
 });
