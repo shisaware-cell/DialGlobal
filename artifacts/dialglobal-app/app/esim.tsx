@@ -9,6 +9,7 @@ import { Feather } from "@expo/vector-icons";
 import C from "@/constants/colors";
 import { ESIM_COUNTRIES, EsimCountry, EsimPlan } from "@/data/mockData";
 import { api } from "@/lib/api";
+import { useApp } from "@/context/AppContext";
 
 type Step = "countries" | "plans" | "done";
 
@@ -17,6 +18,7 @@ const REST    = ESIM_COUNTRIES.filter(c => !c.popular);
 
 export default function ESim() {
   const insets = useSafeAreaInsets();
+  const { isAuthed } = useApp();
   const [step, setStep]               = useState<Step>("countries");
   const [search, setSearch]           = useState("");
   const [country, setCountry]         = useState<EsimCountry | null>(null);
@@ -39,6 +41,7 @@ export default function ESim() {
   };
 
   const buyEsim = async () => {
+    if (!isAuthed) { router.push("/paywall"); return; }
     if (!country || !plan) return;
     setLoading(true);
     try {
