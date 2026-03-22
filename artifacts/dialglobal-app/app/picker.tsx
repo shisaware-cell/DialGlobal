@@ -20,7 +20,7 @@ export default function Picker() {
   const { numbers, currentPlan, refreshNumbers } = useApp();
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Country | null>(null);
-  const [availableNums, setAvailableNums] = useState<string[]>([]);
+  const [availableNums, setAvailableNums] = useState<{ number: string; monthly_cost: string }[]>([]);
   const [numIdx, setNumIdx] = useState(0);
   const [fetchingNums, setFetchingNums] = useState(false);
   const [provisioning, setProvisioning] = useState(false);
@@ -39,7 +39,8 @@ export default function Picker() {
   const popularFiltered = filtered.filter(c => c.popular);
   const restFiltered = filtered.filter(c => !c.popular);
 
-  const currentNumber = availableNums[numIdx] ?? null;
+  const currentNumber = availableNums[numIdx]?.number ?? null;
+  const currentPrice  = availableNums[numIdx]?.monthly_cost ?? null;
 
   const handleCountrySelect = async (c: Country) => {
     if (!canAdd) {
@@ -55,9 +56,9 @@ export default function Picker() {
     setFetchingNums(true);
     try {
       const data = await api.searchNumbers(c.code, 6);
-      const nums = (data.numbers || []).map((n: any) => n.number).filter(Boolean);
+      const nums = (data.numbers || []).filter((n: any) => n.number);
       if (nums.length === 0) throw new Error("No numbers available");
-      setAvailableNums(nums);
+      setAvailableNums(nums.map((n: any) => ({ number: n.number, monthly_cost: n.monthly_cost || "—" })));
       setNumIdx(0);
     } catch {
       Alert.alert("No Numbers Available", "Couldn't find available numbers for this country. Try another.", [
@@ -75,8 +76,11 @@ export default function Picker() {
       setFetchingNums(true);
       api.searchNumbers(selected.code, 6)
         .then(data => {
-          const nums = (data.numbers || []).map((n: any) => n.number).filter(Boolean);
-          if (nums.length > 0) { setAvailableNums(nums); setNumIdx(0); }
+          const nums = (data.numbers || []).filter((n: any) => n.number);
+          if (nums.length > 0) {
+            setAvailableNums(nums.map((n: any) => ({ number: n.number, monthly_cost: n.monthly_cost || "—" })));
+            setNumIdx(0);
+          }
         })
         .catch(() => {})
         .finally(() => setFetchingNums(false));
@@ -121,7 +125,7 @@ export default function Picker() {
             </View>
           </View>
         </View>
-        <Text style={styles.price}>${c.price}/mo</Text>
+        <Text style={styles.price}>~${c.price}/mo</Text>
         {isSel ? (
           <View style={styles.checkCircle}>
             <Feather name="check" size={12} color={C.onAccent} />
@@ -199,7 +203,10 @@ export default function Picker() {
               <Text style={{ fontSize: 22, marginRight: 10 }}>{selected.flag}</Text>
               <View style={{ flex: 1 }}>
                 <Text style={styles.numPreviewNum}>{currentNumber}</Text>
-                <Text style={styles.numPreviewSub}>{selected.name} · {selected.prefix} · ${selected.price}/mo</Text>
+                <Text style={styles.numPreviewSub}>
+                  {selected.name} · {selected.prefix}
+                  {currentPrice && currentPrice !== "—" ? ` · $${currentPrice}/mo` : ""}
+                </Text>
               </View>
               <Pressable
                 hitSlop={10}

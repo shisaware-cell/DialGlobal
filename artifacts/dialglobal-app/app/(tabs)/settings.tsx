@@ -56,11 +56,16 @@ export default function Settings() {
     currentPlan, billing, profile, signOut: doSignOut,
     ghostMode, setGhostMode, credits,
     notifications, setNotifications,
+    isInTrial, trialEnds,
   } = useApp();
   const [biometric, setBiometric] = useState(false);
   const isWeb = Platform.OS === "web";
   const plan = PLANS.find(p => p.id === currentPlan);
   const price = billing === "yearly" ? plan?.yearlyPrice : plan?.monthlyPrice;
+
+  const trialDaysLeft = isInTrial && trialEnds
+    ? Math.max(0, Math.ceil((trialEnds.getTime() - Date.now()) / 86400000))
+    : null;
 
   const userName  = profile?.name  || profile?.email?.split("@")[0] || "User";
   const userEmail = profile?.email || "user@dialglobal.io";
@@ -86,7 +91,7 @@ export default function Settings() {
         {/* Profile header */}
         <Pressable style={styles.profileCard} onPress={() => router.push("/profile")}>
           <View style={styles.profileAvatar}>
-            <Text style={styles.avatarTxt}>{userName.charAt(0).toUpperCase()}</Text>
+            <Feather name="user" size={22} color={C.onAccent} />
           </View>
           <View style={{ flex: 1, gap: 3 }}>
             <Text style={styles.profileName}>{userName}</Text>
@@ -94,6 +99,13 @@ export default function Settings() {
             <View style={styles.planTag}>
               <Ionicons name="star" size={11} color={C.accent} />
               <Text style={styles.planTagTxt}>{plan?.name ?? "Free"} Plan</Text>
+              {trialDaysLeft !== null && (
+                <View style={[styles.trialPill, { backgroundColor: plan?.colorDim ?? C.accentDim }]}>
+                  <Text style={[styles.trialPillTxt, { color: plan?.color ?? C.accent }]}>
+                    {trialDaysLeft}d trial left
+                  </Text>
+                </View>
+              )}
               {credits > 0 && <Text style={styles.creditsTag}>💳 ${credits.toFixed(2)}</Text>}
             </View>
           </View>
@@ -115,7 +127,7 @@ export default function Settings() {
         </Section>
 
         <Section title="ACCOUNT">
-          <Row icon="user" label="Personal Info" sublabel="Name, email, password" onPress={() => router.push("/profile")} />
+          <Row icon="bell" label="Notifications" sublabel="Manage alerts & preferences" onPress={() => router.push("/(tabs)/inbox")} />
           <View style={styles.divider} />
           <Row
             icon="credit-card"
@@ -159,6 +171,8 @@ const styles = StyleSheet.create({
   profileEmail: { fontFamily: "Inter_400Regular", fontSize: 12, color: C.textMuted, marginTop: 2 },
   planTag: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 6, flexWrap: "wrap" },
   planTagTxt: { fontFamily: "Inter_700Bold", fontSize: 11, color: C.accent },
+  trialPill: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 99 },
+  trialPillTxt: { fontFamily: "Inter_700Bold", fontSize: 9.5 },
   creditsTag: { fontFamily: "Inter_600SemiBold", fontSize: 10, color: C.accent, marginLeft: 4 },
   section: { marginHorizontal: 16, marginBottom: 20 },
   secTitle: { fontFamily: "Inter_700Bold", fontSize: 10, color: C.textMuted, letterSpacing: 1.4, marginBottom: 8, paddingLeft: 4 },

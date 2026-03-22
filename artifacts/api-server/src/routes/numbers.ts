@@ -1,6 +1,7 @@
 import { Router, type IRouter } from "express";
 import { supabaseAdmin } from "../lib/supabase";
 import { telnyx, messagingProfileId } from "../lib/telnyx";
+import { getRetailPrice } from "../lib/pricing";
 
 const router: IRouter = Router();
 
@@ -58,7 +59,8 @@ router.get("/numbers/search", async (req, res) => {
       country_code: n.region_information?.[0]?.region_type === "country_code"
         ? n.region_information[0].region_name
         : country_code,
-      monthly_cost: n.cost_information?.monthly_cost || "1.00",
+      // Use our retail price (markup over Telnyx wholesale)
+      monthly_cost: getRetailPrice(country_code as string),
       features: n.features || [],
     }));
 

@@ -1,38 +1,13 @@
 import { BlurView } from "expo-blur";
-import { isLiquidGlassAvailable } from "expo-glass-effect";
 import { Tabs } from "expo-router";
-import { Icon, Label, NativeTabs } from "expo-router/unstable-native-tabs";
+import { router } from "expo-router";
 import { SymbolView } from "expo-symbols";
 import { Feather } from "@expo/vector-icons";
 import React, { useEffect, useRef } from "react";
 import { Animated, Platform, Pressable, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { router } from "expo-router";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import C from "@/constants/colors";
-
-function NativeTabLayout() {
-  return (
-    <NativeTabs>
-      <NativeTabs.Trigger name="index">
-        <Icon sf={{ default: "number.square", selected: "number.square.fill" }} />
-        <Label>Numbers</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="inbox">
-        <Icon sf={{ default: "message", selected: "message.fill" }} />
-        <Label>Inbox</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="calls">
-        <Icon sf={{ default: "phone", selected: "phone.fill" }} />
-        <Label>Calls</Label>
-      </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="settings">
-        <Icon sf={{ default: "gearshape", selected: "gearshape.fill" }} />
-        <Label>More</Label>
-      </NativeTabs.Trigger>
-    </NativeTabs>
-  );
-}
 
 function AnimatedFab() {
   const pulse = useRef(new Animated.Value(1)).current;
@@ -178,11 +153,11 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="settings"
         options={{
-          title: "More",
+          title: "Settings",
           tabBarIcon: ({ color }) =>
             Platform.OS === "ios"
               ? <SymbolView name="gearshape" tintColor={color} size={22} />
-              : <Feather name="grid" size={21} color={color} />,
+              : <Feather name="settings" size={21} color={color} />,
         }}
       />
     </Tabs>
@@ -190,7 +165,6 @@ function ClassicTabLayout() {
 }
 
 export default function TabLayout() {
-  if (isLiquidGlassAvailable()) return <NativeTabLayout />;
   return <ClassicTabLayout />;
 }
 

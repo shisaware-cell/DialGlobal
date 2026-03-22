@@ -2,6 +2,8 @@ import { supabase } from "./supabase";
 import { Platform } from "react-native";
 
 function getApiBase() {
+  const apiUrl = process.env.EXPO_PUBLIC_API_URL;
+  if (apiUrl) return apiUrl;
   const domain = process.env.EXPO_PUBLIC_DOMAIN;
   if (domain) {
     return `https://${domain}/api`;

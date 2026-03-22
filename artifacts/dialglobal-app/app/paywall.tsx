@@ -17,8 +17,8 @@ function CheckIcon({ size = 11, color = "#fff" }: { size?: number; color?: strin
 
 export default function Paywall() {
   const insets = useSafeAreaInsets();
-  const { selectPlan, pendingPlan } = useApp();
-  const [selected, setSelected] = useState(pendingPlan || "professional");
+  const { selectPlan, pendingPlan, isAuthed, upgradePlan, currentPlan, isInTrial, trialEnds } = useApp();
+  const [selected, setSelected] = useState(isAuthed ? currentPlan : (pendingPlan || "professional"));
   const [cycle, setCycle] = useState<"monthly" | "yearly">("monthly");
 
   const activePlan = PLANS.find(p => p.id === selected) ?? PLANS[1];
@@ -26,9 +26,18 @@ export default function Paywall() {
   const trialEnd = new Date(Date.now() + TRIAL_LIMITS.days * 86400000)
     .toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" });
 
+  const trialDaysLeft = isAuthed && isInTrial && trialEnds
+    ? Math.max(0, Math.ceil((trialEnds.getTime() - Date.now()) / 86400000))
+    : null;
+
   const handleContinue = () => {
-    selectPlan(selected);
-    router.replace("/auth");
+    if (isAuthed) {
+      upgradePlan(selected, cycle);
+      router.back();
+    } else {
+      selectPlan(selected);
+      router.replace("/auth");
+    }
   };
 
   return (
@@ -36,13 +45,38 @@ export default function Paywall() {
 
       {/* ── Gradient hero top ── */}
       <View style={styles.hero}>
-        <View style={styles.heroPill}>
-          <Text style={styles.heroPillTxt}>3-DAY FREE TRIAL</Text>
-        </View>
-        <Text style={styles.heroTitle}>Try DialGlobal free</Text>
-        <Text style={styles.heroSub}>
-          Get a real number, make calls & send SMS.{"\n"}No charge until {trialEnd}.
+        {/* Close button */}
+        <Pressable
+          style={styles.closeBtn}
+          onPress={() => router.canGoBack() ? router.back() : router.replace("/(tabs)")}
+          hitSlop={12}
+        >
+          <Feather name="x" size={20} color={C.textMuted} />
+        </Pressable>
+
+        {!isAuthed && (
+          <View style={styles.heroPill}>
+            <Text style={styles.heroPillTxt}>3-DAY FREE TRIAL</Text>
+          </View>
+        )}
+        <Text style={styles.heroTitle}>
+          {isAuthed ? "Choose a Plan" : "Try DialGlobal free"}
         </Text>
+        <Text style={styles.heroSub}>
+          {isAuthed
+            ? "Upgrade or switch your plan at any time."
+            : `Get a real number, make calls & send SMS.\nNo charge until ${trialEnd}.`}
+        </Text>
+
+        {/* Trial days remaining pill — shown when user is in trial */}
+        {trialDaysLeft !== null && (
+          <View style={[styles.trialRemainPill, { backgroundColor: activePlan.colorDim, borderColor: activePlan.color + "40" }]}>
+            <Feather name="clock" size={12} color={activePlan.color} />
+            <Text style={[styles.trialRemainTxt, { color: activePlan.color }]}>
+              {trialDaysLeft} day{trialDaysLeft !== 1 ? "s" : ""} remaining on your free trial
+            </Text>
+          </View>
+        )}
 
         {/* Billing toggle */}
         <View style={styles.cycleRow}>
@@ -132,41 +166,44 @@ export default function Paywall() {
           );
         })}
 
-        {/* Trial benefits strip */}
-        <View style={styles.trialCard}>
-          <View style={styles.trialHeader}>
-            <Text style={styles.trialHeaderTxt}>🎁 What you get during your 3-day trial</Text>
-          </View>
-          {[
-            { icon: "📞", label: `${TRIAL_LIMITS.callMinutes} minutes`, sub: "calls to any number worldwide" },
-            { icon: "💬", label: `${TRIAL_LIMITS.smsLimit} SMS`,        sub: "send & receive globally" },
-            { icon: "🌍", label: "1 virtual number",                     sub: "pick any country you want" },
-            { icon: "💳", label: `$${TRIAL_LIMITS.freeCredits.toFixed(2)} free credits`, sub: "for extra calls & SMS" },
-          ].map((r, i) => (
-            <View key={i} style={[styles.trialRow, i > 0 && { borderTopWidth: 1, borderTopColor: C.border }]}>
-              <Text style={{ fontSize: 20 }}>{r.icon}</Text>
-              <View style={{ flex: 1 }}>
-                <Text style={styles.trialRowLabel}>{r.label}</Text>
-                <Text style={styles.trialRowSub}>{r.sub}</Text>
-              </View>
+        {/* Trial benefits strip — only shown during onboarding (not logged in) */}
+        {!isAuthed && (
+          <View style={styles.trialCard}>
+            <View style={styles.trialHeader}>
+              <Text style={styles.trialHeaderTxt}>🎁 What you get during your 3-day trial</Text>
             </View>
-          ))}
-        </View>
+            {[
+              { icon: "📞", label: `${TRIAL_LIMITS.callMinutes} minutes`, sub: "calls to any number worldwide" },
+              { icon: "💬", label: `${TRIAL_LIMITS.smsLimit} SMS`,        sub: "send & receive globally" },
+              { icon: "🌍", label: "1 virtual number",                     sub: "pick any country you want" },
+              { icon: "💳", label: `$${TRIAL_LIMITS.freeCredits.toFixed(2)} free credits`, sub: "for extra calls & SMS" },
+            ].map((r, i) => (
+              <View key={i} style={[styles.trialRow, i > 0 && { borderTopWidth: 1, borderTopColor: C.border }]}>
+                <Text style={{ fontSize: 20 }}>{r.icon}</Text>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.trialRowLabel}>{r.label}</Text>
+                  <Text style={styles.trialRowSub}>{r.sub}</Text>
+                </View>
+              </View>
+            ))}
+          </View>
+        )}
       </ScrollView>
 
       {/* ── Footer CTA ── */}
       <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
         <Text style={styles.legal}>
-          Cancel anytime ·{" "}
-          {cycle === "yearly"
-            ? `$${activePlan.yearlyBilled}/year after trial`
-            : `$${activePlan.monthlyPrice.toFixed(2)}/month after trial`}
+          {isAuthed
+            ? `Cancel anytime · $${cycle === "yearly" ? activePlan.yearlyBilled + "/year" : activePlan.monthlyPrice.toFixed(2) + "/month"}`
+            : `Cancel anytime · ${cycle === "yearly" ? `$${activePlan.yearlyBilled}/year after trial` : `$${activePlan.monthlyPrice.toFixed(2)}/month after trial`}`}
         </Text>
         <Pressable
           style={({ pressed }) => [styles.btn, { opacity: pressed ? 0.88 : 1 }]}
           onPress={handleContinue}
         >
-          <Text style={styles.btnTxt}>Continue with {activePlan.name} →</Text>
+          <Text style={styles.btnTxt}>
+            {isAuthed ? `Upgrade to ${activePlan.name} →` : `Continue with ${activePlan.name} →`}
+          </Text>
         </Pressable>
         <View style={styles.legalLinks}>
           {["Terms", "Restore", "Privacy"].map((label, i) => (
@@ -187,9 +224,14 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: C.bg },
 
   hero: {
-    paddingHorizontal: 20, paddingBottom: 20,
+    paddingHorizontal: 20, paddingBottom: 20, paddingTop: 10,
     background: "linear-gradient(160deg, #FFF0DC 0%, #F5F3EF 60%)" as any,
     borderBottomWidth: 1, borderBottomColor: C.border,
+  },
+  closeBtn: {
+    alignSelf: "flex-end", width: 34, height: 34, borderRadius: 17,
+    backgroundColor: C.raised, alignItems: "center", justifyContent: "center",
+    marginBottom: 8,
   },
   heroPill: {
     alignSelf: "flex-start", backgroundColor: C.accentDim,
@@ -198,6 +240,12 @@ const styles = StyleSheet.create({
   heroPillTxt: { fontFamily: "Inter_700Bold", fontSize: 10.5, color: C.accent, letterSpacing: 1.5 },
   heroTitle: { fontFamily: "Inter_700Bold", fontSize: 26, color: C.text, letterSpacing: -0.7, marginBottom: 6 },
   heroSub: { fontFamily: "Inter_400Regular", fontSize: 13.5, color: C.textSec, lineHeight: 20, marginBottom: 16 },
+  trialRemainPill: {
+    flexDirection: "row", alignItems: "center", gap: 6,
+    alignSelf: "flex-start", borderRadius: 99, borderWidth: 1,
+    paddingHorizontal: 12, paddingVertical: 6, marginBottom: 16,
+  },
+  trialRemainTxt: { fontFamily: "Inter_600SemiBold", fontSize: 12 },
 
   cycleRow: {
     flexDirection: "row", backgroundColor: C.raised,

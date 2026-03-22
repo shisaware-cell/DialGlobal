@@ -77,7 +77,7 @@ export default function Profile() {
         {/* ── Avatar ── */}
         <View style={styles.avatarSection}>
           <View style={styles.avatar}>
-            <Text style={styles.avatarTxt}>{initial}</Text>
+            <Feather name="user" size={38} color={C.onAccent} />
             <Pressable style={styles.editAvatar}>
               <Feather name="camera" size={13} color={C.textSec} />
             </Pressable>
@@ -223,7 +223,7 @@ const styles = StyleSheet.create({
     shadowColor: C.accent, shadowOpacity: 0.4, shadowRadius: 20,
     shadowOffset: { width: 0, height: 6 }, elevation: 8,
   },
-  avatarTxt: { fontFamily: "Inter_700Bold", fontSize: 32, color: C.onAccent },
+  avatarTxt: { fontFamily: "Inter_700Bold", fontSize: 32, color: C.onAccent }, // kept for reference
   editAvatar: {
     position: "absolute", bottom: -6, right: -6, width: 28, height: 28,
     borderRadius: 8, backgroundColor: C.raised, alignItems: "center",

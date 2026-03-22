@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import {
-  View, Text, StyleSheet, ScrollView, Pressable, Alert, Platform, Switch,
+  View, Text, StyleSheet, ScrollView, Pressable, Alert, Platform, Switch, Image,
 } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -141,10 +141,10 @@ function NumberRow({ num, onDelete }: { num: VirtualNumber; onDelete: () => void
 }
 
 const QUICK_ACCESS = [
-  { emoji: "📡", label: "eSIM Data",    sub: "Travel ready",      onPress: () => router.push("/esim")        },
-  { emoji: "🛡️", label: "Spam Blocker", sub: "Block unwanted",    onPress: () => router.push("/spamblocker") },
-  { emoji: "💬", label: "Auto-Reply",   sub: "Set away messages", onPress: () => router.push("/autoreply")   },
-  { emoji: "👥", label: "Contacts",     sub: "Sync & manage",     onPress: () => router.push("/contacts")    },
+  { image: require("@/assets/images/esim.png"),         label: "eSIM Data",    sub: "Travel ready",      onPress: () => router.push("/esim")        },
+  { image: require("@/assets/images/spam_blocker.png"), label: "Spam Blocker", sub: "Block unwanted",    onPress: () => router.push("/spamblocker") },
+  { image: require("@/assets/images/auto-reply.png"),   label: "Auto-Reply",   sub: "Set away messages", onPress: () => router.push("/autoreply")   },
+  { image: require("@/assets/images/contact_list.png"), label: "Contacts",     sub: "Sync & manage",     onPress: () => router.push("/contacts")    },
 ] as const;
 
 export default function NumbersScreen() {
@@ -154,6 +154,7 @@ export default function NumbersScreen() {
     profile,
     isInTrial, trialEnds, trialMinsUsed, trialSmsUsed, trialExpired,
   } = useApp();
+  const unreadCount = messages.filter(m => !m.read).length;
   const isWeb = Platform.OS === "web";
   const tabBarH = isWeb ? 84 : 66;
 
@@ -193,27 +194,73 @@ export default function NumbersScreen() {
             <Text style={styles.headerTitle}>{userName} 👋</Text>
           </View>
           <View style={styles.headerRight}>
-            <Pressable onPress={() => router.push("/profile")}>
+            <Pressable onPress={() => router.push("/profile")} style={{ position: "relative" }}>
               <View style={styles.avatar}>
-                <Text style={styles.avatarTxt}>{userName.charAt(0).toUpperCase()}</Text>
+                <Feather name="user" size={20} color={C.onAccent} />
               </View>
+              {unreadCount > 0 && (
+                <Pressable style={styles.notifBadge} onPress={() => router.push("/(tabs)/inbox")}>
+                  <Text style={styles.notifBadgeTxt}>
+                    {unreadCount > 99 ? "99+" : String(unreadCount)}
+                  </Text>
+                </Pressable>
+              )}
             </Pressable>
           </View>
         </View>
 
         {/* ── Stats strip ── */}
         <View style={styles.statsStrip}>
-          <View style={[styles.statCard, { backgroundColor: C.raised }]}>
+          <View style={[styles.statCard, { backgroundColor: C.accentDim }]}>
+            <View style={styles.statTopRow}>
+              <Text style={[styles.statLabelUp, { color: C.accent }]}>Numbers</Text>
+              <View style={[styles.statIco, { backgroundColor: C.accentGlow }]}>
+                <Feather name="hash" size={11} color={C.accent} />
+              </View>
+            </View>
             <Text style={[styles.statVal, { color: C.accent }]}>{numbers.length}</Text>
-            <Text style={styles.statLabel}>Numbers</Text>
+            <View style={styles.sparkline}>
+              {[3, 5, 4, 6, 5, 7, 6].map((h, i) => (
+                <View key={i} style={[styles.sparkBar, {
+                  height: h * 3,
+                  backgroundColor: i === 6 ? C.accent : "rgba(232,160,32,0.28)",
+                }]} />
+              ))}
+            </View>
           </View>
           <View style={[styles.statCard, { backgroundColor: C.greenDim }]}>
+            <View style={styles.statTopRow}>
+              <Text style={[styles.statLabelUp, { color: C.green }]}>Messages</Text>
+              <View style={[styles.statIco, { backgroundColor: "rgba(22,163,74,0.18)" }]}>
+                <Feather name="message-square" size={11} color={C.green} />
+              </View>
+            </View>
             <Text style={[styles.statVal, { color: C.green }]}>{totalSms}</Text>
-            <Text style={[styles.statLabel, { color: C.green }]}>Messages</Text>
+            <View style={styles.sparkline}>
+              {[3, 4, 5, 4, 6, 5, 7].map((h, i) => (
+                <View key={i} style={[styles.sparkBar, {
+                  height: h * 3,
+                  backgroundColor: i === 6 ? C.green : "rgba(22,163,74,0.25)",
+                }]} />
+              ))}
+            </View>
           </View>
           <View style={[styles.statCard, { backgroundColor: C.blueDim }]}>
+            <View style={styles.statTopRow}>
+              <Text style={[styles.statLabelUp, { color: C.blue }]}>Calls</Text>
+              <View style={[styles.statIco, { backgroundColor: "rgba(37,99,235,0.15)" }]}>
+                <Feather name="phone" size={11} color={C.blue} />
+              </View>
+            </View>
             <Text style={[styles.statVal, { color: C.blue }]}>{totalCalls}</Text>
-            <Text style={[styles.statLabel, { color: C.blue }]}>Calls</Text>
+            <View style={styles.sparkline}>
+              {[4, 3, 5, 4, 6, 5, 7].map((h, i) => (
+                <View key={i} style={[styles.sparkBar, {
+                  height: h * 3,
+                  backgroundColor: i === 6 ? C.blue : "rgba(37,99,235,0.20)",
+                }]} />
+              ))}
+            </View>
           </View>
         </View>
 
@@ -283,7 +330,7 @@ export default function NumbersScreen() {
                 style={({ pressed }) => [styles.qaCard, { opacity: pressed ? 0.75 : 1 }]}
                 onPress={q.onPress}
               >
-                <Text style={styles.qaEmoji}>{q.emoji}</Text>
+                <Image source={q.image} style={styles.qaIcon} />
                 <Text style={styles.qaLabel}>{q.label}</Text>
                 <Text style={styles.qaSub}>{q.sub}</Text>
               </Pressable>
@@ -312,7 +359,13 @@ const styles = StyleSheet.create({
     width: 40, height: 40, borderRadius: 12, backgroundColor: C.accent,
     alignItems: "center", justifyContent: "center",
   },
-  avatarTxt: { fontFamily: "Inter_700Bold", fontSize: 15, color: C.onAccent },
+  notifBadge: {
+    position: "absolute", top: -5, right: -5,
+    minWidth: 18, height: 18, borderRadius: 9,
+    backgroundColor: C.red, alignItems: "center", justifyContent: "center",
+    paddingHorizontal: 4, borderWidth: 2, borderColor: C.surface,
+  },
+  notifBadgeTxt: { fontFamily: "Inter_700Bold", fontSize: 9, color: "#fff" },
 
   statsStrip: {
     flexDirection: "row", gap: 8,
@@ -320,11 +373,21 @@ const styles = StyleSheet.create({
     backgroundColor: C.surface, borderBottomWidth: 1, borderBottomColor: C.border,
   },
   statCard: {
-    flex: 1, borderRadius: 14, padding: 13,
+    flex: 1, borderRadius: 16, padding: 13,
     borderWidth: 1, borderColor: C.border,
   },
-  statVal: { fontFamily: "Inter_700Bold", fontSize: 24, letterSpacing: -0.5 },
-  statLabel: { fontFamily: "Inter_500Medium", fontSize: 11, color: C.textMuted, marginTop: 2 },
+  statTopRow: {
+    flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 5,
+  },
+  statLabelUp: {
+    fontFamily: "Inter_600SemiBold", fontSize: 9, letterSpacing: 0.8, textTransform: "uppercase",
+  },
+  statIco: {
+    width: 22, height: 22, borderRadius: 7, alignItems: "center", justifyContent: "center",
+  },
+  statVal: { fontFamily: "Inter_700Bold", fontSize: 28, letterSpacing: -1, marginBottom: 8 },
+  sparkline: { flexDirection: "row", alignItems: "flex-end", gap: 2.5, height: 21 },
+  sparkBar: { flex: 1, borderRadius: 2 },
 
   listCard: { backgroundColor: C.surface, marginTop: 12, borderRadius: 0 },
   listHeader: {
@@ -399,7 +462,7 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: C.border,
     padding: 14, gap: 4,
   },
-  qaEmoji: { fontSize: 24, marginBottom: 4 },
+  qaIcon: { width: 36, height: 36, marginBottom: 4, resizeMode: "contain" },
   qaLabel: { fontFamily: "Inter_700Bold", fontSize: 13, color: C.text },
   qaSub: { fontFamily: "Inter_400Regular", fontSize: 11, color: C.textMuted },
 
