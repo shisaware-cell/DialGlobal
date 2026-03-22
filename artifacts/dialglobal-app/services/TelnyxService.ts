@@ -1,17 +1,27 @@
-import { TelnyxRTC } from "@telnyx/react-native-voice-sdk";
+let TelnyxRTC: any;
 
-type TelnyxCall = any;
-type TelnyxClient = any;
+try {
+  TelnyxRTC = require("@telnyx/react-native-voice-sdk").TelnyxRTC;
+} catch {
+  TelnyxRTC = class {
+    constructor(_opts: any) {}
+    connect() {}
+    disconnect() {}
+    on(_event: string, _handler: any) {}
+    off(_event: string, _handler: any) {}
+    async newCall(_opts: any): Promise<null> { return null; }
+  };
+}
 
 export type TelnyxIncomingPayload = {
   caller: string;
   number: string;
-  callObj: TelnyxCall;
+  callObj: any;
 };
 
 export type TelnyxCallStatePayload = {
   state: string;
-  callObj: TelnyxCall | null;
+  callObj: any | null;
   number: string;
   caller: string;
 };
@@ -27,9 +37,9 @@ type InitOptions = {
 const TOKEN_REFRESH_MS = 55 * 60 * 1000;
 
 class TelnyxService {
-  private client: TelnyxClient | null = null;
-  private activeCall: TelnyxCall | null = null;
-  private incomingCall: TelnyxCall | null = null;
+  private client: any | null = null;
+  private activeCall: any | null = null;
+  private incomingCall: any | null = null;
   private refreshTimer: ReturnType<typeof setInterval> | null = null;
   private options: InitOptions | null = null;
   private ready = false;
@@ -39,7 +49,7 @@ class TelnyxService {
     this.options?.onClientReady?.(true);
   };
 
-  private onIncoming = (call: TelnyxCall) => {
+  private onIncoming = (call: any) => {
     this.incomingCall = call;
     this.bindCallEvents(call);
     this.options?.onIncomingCall?.({
@@ -90,12 +100,12 @@ class TelnyxService {
     this.client.off?.("telnyx.error", this.onClientError);
   }
 
-  private bindCallEvents(call: TelnyxCall | null) {
+  private bindCallEvents(call: any | null) {
     if (!call) return;
     call.on?.("telnyx.call.state", this.onCallState);
   }
 
-  private getCallerFromCall(call: TelnyxCall | null) {
+  private getCallerFromCall(call: any | null) {
     if (!call) return "Unknown caller";
     return String(
       call?.callerName ??
@@ -108,7 +118,7 @@ class TelnyxService {
     );
   }
 
-  private getNumberFromCall(call: TelnyxCall | null) {
+  private getNumberFromCall(call: any | null) {
     if (!call) return "";
     return String(
       call?.callerNumber ??
