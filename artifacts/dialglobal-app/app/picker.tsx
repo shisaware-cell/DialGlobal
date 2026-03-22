@@ -3,7 +3,7 @@ import {
   View, Text, StyleSheet, FlatList, Pressable, TextInput,
   ActivityIndicator, Alert, ScrollView,
 } from "react-native";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import C from "@/constants/colors";
@@ -17,6 +17,8 @@ type Country = typeof COUNTRIES[0];
 
 export default function Picker() {
   const insets = useSafeAreaInsets();
+  const { type: typeParam } = useLocalSearchParams<{ type?: string }>();
+  const isLandline = typeParam === "landline";
   const { numbers, currentPlan, refreshNumbers, isAuthed } = useApp();
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Country | null>(null);
@@ -55,7 +57,7 @@ export default function Picker() {
     setNumIdx(0);
     setFetchingNums(true);
     try {
-      const data = await api.searchNumbers(c.code, 6);
+      const data = await api.searchNumbers(c.code, 6, isLandline ? "local" : undefined);
       const nums = (data.numbers || []).filter((n: any) => n.number);
       if (nums.length === 0) throw new Error("No numbers available");
       setAvailableNums(nums.map((n: any) => ({ number: n.number, monthly_cost: n.monthly_cost || "—" })));
@@ -74,7 +76,7 @@ export default function Picker() {
       setNumIdx(i => (i + 1) % availableNums.length);
     } else if (selected) {
       setFetchingNums(true);
-      api.searchNumbers(selected.code, 6)
+      api.searchNumbers(selected.code, 6, isLandline ? "local" : undefined)
         .then(data => {
           const nums = (data.numbers || []).filter((n: any) => n.number);
           if (nums.length > 0) {
@@ -147,9 +149,9 @@ export default function Picker() {
           <Feather name="x" size={20} color={C.textSec} />
         </Pressable>
         <View style={{ flex: 1, marginLeft: 10 }}>
-          <Text style={styles.headerTitle}>Add a Number</Text>
+          <Text style={styles.headerTitle}>{isLandline ? "Virtual Landline" : "Add a Number"}</Text>
           <Text style={styles.headerSub}>
-            {plan.numberLimit - numbers.length} of {plan.numberLimit} remaining on {plan.name}
+            {isLandline ? "Business local numbers • HD Voice • E911 ready" : `${plan.numberLimit - numbers.length} of ${plan.numberLimit} remaining on ${plan.name}`}
           </Text>
         </View>
       </View>
@@ -208,6 +210,19 @@ export default function Picker() {
                   {selected.name} · {selected.prefix}
                   {currentPrice && currentPrice !== "—" ? ` · $${currentPrice}/mo` : ""}
                 </Text>
+                {/* Capabilities row */}
+                <View style={{ flexDirection: "row", gap: 5, marginTop: 6, flexWrap: "wrap" }}>
+                  {[
+                    { label: "📞 Voice", color: "#2D60C8", bg: "#D4E8FF" },
+                    { label: "💬 SMS",   color: "#2D9966", bg: "#D4F4E8" },
+                    { label: "🖼 MMS",   color: "#A06010", bg: "#FFF0D4" },
+                    ...(isLandline ? [{ label: "📠 Fax", color: "#7030B0", bg: "#F4D4FF" }] : []),
+                  ].map(cap => (
+                    <View key={cap.label} style={{ backgroundColor: cap.bg, borderRadius: 99, paddingHorizontal: 7, paddingVertical: 2 }}>
+                      <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 9.5, color: cap.color }}>{cap.label}</Text>
+                    </View>
+                  ))}
+                </View>
               </View>
               <Pressable
                 hitSlop={10}
@@ -232,7 +247,7 @@ export default function Picker() {
                 <Text style={styles.getBtnTxt}>Provisioning…</Text>
               </>
             ) : (
-              <Text style={styles.getBtnTxt}>Get {selected.name} Number →</Text>
+              <Text style={styles.getBtnTxt}>{isLandline ? "Get Landline →" : `Get ${selected.name} Number →`}</Text>
             )}
           </Pressable>
         </View>
