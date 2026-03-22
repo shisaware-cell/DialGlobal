@@ -8,6 +8,7 @@ import { Animated, Platform, Pressable, StyleSheet, Text, View } from "react-nat
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import C from "@/constants/colors";
+import { useApp } from "@/context/AppContext";
 
 function AnimatedFab() {
   const pulse = useRef(new Animated.Value(1)).current;
@@ -45,6 +46,7 @@ function AnimatedFab() {
 
 function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
+  const { isAuthed } = useApp();
   const isWeb  = Platform.OS === "web";
   const isIOS  = Platform.OS === "ios";
   const barH   = isWeb ? 84 : 66;
@@ -87,7 +89,10 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
           {index === FAB_INSERT_BEFORE && (
             <View style={tb.fabWrap}>
               {state.index === 0 ? (
-                <Pressable onPress={() => router.push("/picker")} hitSlop={10}>
+                <Pressable
+                  onPress={() => isAuthed ? router.push("/picker") : router.push("/paywall")}
+                  hitSlop={10}
+                >
                   <AnimatedFab />
                 </Pressable>
               ) : (
