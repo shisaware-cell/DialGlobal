@@ -8,6 +8,7 @@ import { Feather } from "@expo/vector-icons";
 import C from "@/constants/colors";
 import { PLANS } from "@/data/mockData";
 import { useApp } from "@/context/AppContext";
+import { CharLockedOut } from "@/components/Characters";
 
 export default function ExpiredPaywall() {
   const insets = useSafeAreaInsets();
@@ -37,6 +38,9 @@ export default function ExpiredPaywall() {
         <View style={styles.expiredPill}>
           <View style={styles.expiredDot} />
           <Text style={styles.expiredTxt}>Trial ended</Text>
+        </View>
+        <View style={{ alignItems: "center", marginBottom: 8 }}>
+          <CharLockedOut size={180} />
         </View>
         <Text style={styles.title}>Subscribe to keep your number</Text>
         <Text style={styles.sub}>
