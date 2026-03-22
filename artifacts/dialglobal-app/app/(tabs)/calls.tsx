@@ -4,6 +4,7 @@ import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import C from "@/constants/colors";
+import { CharShrug } from "@/components/Characters";
 import { useApp } from "@/context/AppContext";
 
 const TYPE_META: Record<string, { color: string; bg: string; label: string; icon: string }> = {
@@ -242,9 +243,9 @@ export default function Calls() {
           </Pressable>
         }
         ListEmptyComponent={
-          <View style={{ alignItems: "center", paddingTop: 80 }}>
-            <Feather name="phone" size={40} color={C.textMuted} />
-            <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 17, color: C.textSec, marginTop: 12 }}>
+          <View style={{ alignItems: "center", paddingTop: 48, paddingBottom: 24 }}>
+            <CharShrug size={150} />
+            <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 17, color: C.textSec, marginTop: 8 }}>
               {filter === "all" ? "No calls yet" : `No ${filter} calls`}
             </Text>
             <Text style={{ fontFamily: "Inter_400Regular", fontSize: 14, color: C.textMuted, marginTop: 4, textAlign: "center", paddingHorizontal: 40 }}>
