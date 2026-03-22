@@ -251,6 +251,95 @@ export const MOCK_CALLS = [
   { id:"5", name:"Sarah Miller",  from_number:"+49 30 1234567",   to_number:"+44 7700 123 456",  flag:"🇩🇪", type:"voicemail", duration:42,   time:"Yesterday" },
 ];
 
+export type EsimPlan = { id: string; data: string; days: number; price: number; speed: string; popular?: boolean };
+export type EsimCountry = { code: string; name: string; flag: string; popular: boolean; region: string; plans: EsimPlan[] };
+
+export const ESIM_COUNTRIES: EsimCountry[] = [
+  { code:"US", name:"United States",  flag:"🇺🇸", popular:true,  region:"Americas",     plans:[
+    { id:"us-1gb-7",   data:"1 GB",  days:7,  price:4.99,  speed:"5G/LTE" },
+    { id:"us-3gb-15",  data:"3 GB",  days:15, price:8.99,  speed:"5G/LTE", popular:true },
+    { id:"us-5gb-30",  data:"5 GB",  days:30, price:14.99, speed:"5G/LTE" },
+    { id:"us-10gb-30", data:"10 GB", days:30, price:24.99, speed:"5G/LTE" },
+  ]},
+  { code:"GB", name:"United Kingdom", flag:"🇬🇧", popular:true,  region:"Europe",       plans:[
+    { id:"gb-1gb-7",   data:"1 GB",  days:7,  price:4.99,  speed:"5G/LTE" },
+    { id:"gb-3gb-15",  data:"3 GB",  days:15, price:8.99,  speed:"5G/LTE", popular:true },
+    { id:"gb-5gb-30",  data:"5 GB",  days:30, price:14.99, speed:"5G/LTE" },
+    { id:"gb-15gb-30", data:"15 GB", days:30, price:29.99, speed:"5G/LTE" },
+  ]},
+  { code:"FR", name:"France",         flag:"🇫🇷", popular:true,  region:"Europe",       plans:[
+    { id:"fr-1gb-7",   data:"1 GB",  days:7,  price:4.99,  speed:"4G/LTE" },
+    { id:"fr-3gb-15",  data:"3 GB",  days:15, price:9.99,  speed:"4G/LTE", popular:true },
+    { id:"fr-5gb-30",  data:"5 GB",  days:30, price:15.99, speed:"4G/LTE" },
+  ]},
+  { code:"DE", name:"Germany",        flag:"🇩🇪", popular:true,  region:"Europe",       plans:[
+    { id:"de-1gb-7",   data:"1 GB",  days:7,  price:4.99,  speed:"5G/LTE" },
+    { id:"de-3gb-15",  data:"3 GB",  days:15, price:9.99,  speed:"5G/LTE", popular:true },
+    { id:"de-5gb-30",  data:"5 GB",  days:30, price:15.99, speed:"5G/LTE" },
+    { id:"de-10gb-30", data:"10 GB", days:30, price:24.99, speed:"5G/LTE" },
+  ]},
+  { code:"JP", name:"Japan",          flag:"🇯🇵", popular:true,  region:"Asia Pacific", plans:[
+    { id:"jp-1gb-7",   data:"1 GB",  days:7,  price:5.99,  speed:"5G/LTE" },
+    { id:"jp-3gb-15",  data:"3 GB",  days:15, price:11.99, speed:"5G/LTE", popular:true },
+    { id:"jp-5gb-30",  data:"5 GB",  days:30, price:18.99, speed:"5G/LTE" },
+  ]},
+  { code:"AU", name:"Australia",      flag:"🇦🇺", popular:true,  region:"Asia Pacific", plans:[
+    { id:"au-1gb-7",   data:"1 GB",  days:7,  price:5.99,  speed:"5G/LTE" },
+    { id:"au-3gb-15",  data:"3 GB",  days:15, price:10.99, speed:"5G/LTE", popular:true },
+    { id:"au-5gb-30",  data:"5 GB",  days:30, price:16.99, speed:"5G/LTE" },
+  ]},
+  { code:"SG", name:"Singapore",      flag:"🇸🇬", popular:false, region:"Asia Pacific", plans:[
+    { id:"sg-1gb-7",   data:"1 GB",  days:7,  price:4.99,  speed:"5G/LTE" },
+    { id:"sg-3gb-15",  data:"3 GB",  days:15, price:9.99,  speed:"5G/LTE", popular:true },
+    { id:"sg-5gb-30",  data:"5 GB",  days:30, price:15.99, speed:"5G/LTE" },
+  ]},
+  { code:"AE", name:"UAE",            flag:"🇦🇪", popular:false, region:"Middle East",  plans:[
+    { id:"ae-1gb-7",   data:"1 GB",  days:7,  price:5.99,  speed:"5G/LTE" },
+    { id:"ae-3gb-15",  data:"3 GB",  days:15, price:12.99, speed:"5G/LTE", popular:true },
+    { id:"ae-5gb-30",  data:"5 GB",  days:30, price:19.99, speed:"5G/LTE" },
+  ]},
+  { code:"ZA", name:"South Africa",   flag:"🇿🇦", popular:false, region:"Africa",       plans:[
+    { id:"za-1gb-7",   data:"1 GB",  days:7,  price:3.99,  speed:"4G/LTE" },
+    { id:"za-3gb-15",  data:"3 GB",  days:15, price:7.99,  speed:"4G/LTE", popular:true },
+    { id:"za-5gb-30",  data:"5 GB",  days:30, price:12.99, speed:"4G/LTE" },
+  ]},
+  { code:"BR", name:"Brazil",         flag:"🇧🇷", popular:false, region:"Americas",     plans:[
+    { id:"br-1gb-7",   data:"1 GB",  days:7,  price:4.49,  speed:"4G/LTE" },
+    { id:"br-3gb-15",  data:"3 GB",  days:15, price:8.99,  speed:"4G/LTE", popular:true },
+    { id:"br-5gb-30",  data:"5 GB",  days:30, price:13.99, speed:"4G/LTE" },
+  ]},
+  { code:"CA", name:"Canada",         flag:"🇨🇦", popular:false, region:"Americas",     plans:[
+    { id:"ca-1gb-7",   data:"1 GB",  days:7,  price:4.99,  speed:"5G/LTE" },
+    { id:"ca-3gb-15",  data:"3 GB",  days:15, price:9.99,  speed:"5G/LTE", popular:true },
+    { id:"ca-5gb-30",  data:"5 GB",  days:30, price:15.99, speed:"5G/LTE" },
+  ]},
+  { code:"IT", name:"Italy",          flag:"🇮🇹", popular:false, region:"Europe",       plans:[
+    { id:"it-1gb-7",   data:"1 GB",  days:7,  price:4.49,  speed:"4G/LTE" },
+    { id:"it-3gb-15",  data:"3 GB",  days:15, price:8.99,  speed:"4G/LTE", popular:true },
+    { id:"it-5gb-30",  data:"5 GB",  days:30, price:13.99, speed:"4G/LTE" },
+  ]},
+  { code:"ES", name:"Spain",          flag:"🇪🇸", popular:false, region:"Europe",       plans:[
+    { id:"es-1gb-7",   data:"1 GB",  days:7,  price:4.49,  speed:"4G/LTE" },
+    { id:"es-3gb-15",  data:"3 GB",  days:15, price:8.99,  speed:"4G/LTE", popular:true },
+    { id:"es-5gb-30",  data:"5 GB",  days:30, price:13.99, speed:"4G/LTE" },
+  ]},
+  { code:"NL", name:"Netherlands",    flag:"🇳🇱", popular:false, region:"Europe",       plans:[
+    { id:"nl-1gb-7",   data:"1 GB",  days:7,  price:4.49,  speed:"5G/LTE" },
+    { id:"nl-3gb-15",  data:"3 GB",  days:15, price:8.99,  speed:"5G/LTE", popular:true },
+    { id:"nl-5gb-30",  data:"5 GB",  days:30, price:13.99, speed:"5G/LTE" },
+  ]},
+  { code:"TH", name:"Thailand",       flag:"🇹🇭", popular:false, region:"Asia Pacific", plans:[
+    { id:"th-1gb-7",   data:"1 GB",  days:7,  price:3.99,  speed:"4G/LTE" },
+    { id:"th-3gb-15",  data:"3 GB",  days:15, price:7.99,  speed:"4G/LTE", popular:true },
+    { id:"th-5gb-30",  data:"5 GB",  days:30, price:11.99, speed:"4G/LTE" },
+  ]},
+  { code:"IN", name:"India",          flag:"🇮🇳", popular:false, region:"Asia Pacific", plans:[
+    { id:"in-1gb-7",   data:"1 GB",  days:7,  price:2.99,  speed:"4G/LTE" },
+    { id:"in-3gb-15",  data:"3 GB",  days:15, price:5.99,  speed:"4G/LTE", popular:true },
+    { id:"in-5gb-30",  data:"5 GB",  days:30, price:9.99,  speed:"4G/LTE" },
+  ]},
+];
+
 export function genNumber(prefix: string): string {
   const a = Math.floor(Math.random()*900+100);
   const b = Math.floor(Math.random()*900+100);

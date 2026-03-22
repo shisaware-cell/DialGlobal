@@ -55,7 +55,6 @@ export default function Settings() {
   const {
     currentPlan, billing, profile, signOut: doSignOut,
     ghostMode, setGhostMode, credits,
-    notifications, setNotifications,
   } = useApp();
   const [biometric, setBiometric] = useState(false);
   const isWeb = Platform.OS === "web";
@@ -103,10 +102,9 @@ export default function Settings() {
         <Section title="PREFERENCES">
           <Row
             icon="bell"
-            label="Push Notifications"
-            sublabel="Calls, messages & alerts"
-            value={notifications}
-            onToggle={setNotifications}
+            label="Notifications"
+            sublabel="Calls, messages, voicemail & alerts"
+            onPress={() => router.push("/notifications-settings")}
           />
           <View style={styles.divider} />
           <Row icon="shield" label="Biometric Lock" sublabel="Face ID / Fingerprint" value={biometric} onToggle={setBiometric} />
