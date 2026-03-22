@@ -19,7 +19,7 @@ export default function Picker() {
   const insets = useSafeAreaInsets();
   const { type: typeParam } = useLocalSearchParams<{ type?: string }>();
   const isLandline = typeParam === "landline";
-  const { numbers, currentPlan, refreshNumbers, isAuthed } = useApp();
+  const { numbers, currentPlan, refreshNumbers, isAuthed, isInTrial, trialExpired } = useApp();
   const [search, setSearch] = useState("");
   const [selected, setSelected] = useState<Country | null>(null);
   const [availableNums, setAvailableNums] = useState<{ number: string; monthly_cost: string }[]>([]);
@@ -43,6 +43,7 @@ export default function Picker() {
 
   const currentNumber = availableNums[numIdx]?.number ?? null;
   const currentPrice  = availableNums[numIdx]?.monthly_cost ?? null;
+  const shouldForceTrialFlow = isAuthed && numbers.length === 0 && !isInTrial && !trialExpired;
 
   const handleCountrySelect = async (c: Country) => {
     if (!canAdd) {
@@ -146,7 +147,11 @@ export default function Picker() {
 
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} hitSlop={14} style={styles.backBtn}>
+        <Pressable
+          onPress={() => shouldForceTrialFlow ? router.replace("/paywall") : router.back()}
+          hitSlop={14}
+          style={styles.backBtn}
+        >
           <Feather name="x" size={20} color={C.textSec} />
         </Pressable>
         <View style={{ flex: 1, marginLeft: 10 }}>

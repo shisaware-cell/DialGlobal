@@ -54,12 +54,13 @@ export default function Settings() {
   const insets = useSafeAreaInsets();
   const {
     currentPlan, billing, profile, signOut: doSignOut,
-    ghostMode, setGhostMode, credits,
+    ghostMode, setGhostMode, credits, numbers, isInTrial, trialExpired, isAuthed,
   } = useApp();
   const [biometric, setBiometric] = useState(false);
   const isWeb = Platform.OS === "web";
   const plan = PLANS.find(p => p.id === currentPlan);
   const price = billing === "yearly" ? plan?.yearlyPrice : plan?.monthlyPrice;
+  const needsTrialStart = isAuthed && numbers.length === 0 && !isInTrial && !trialExpired;
 
   const userName  = profile?.name  || profile?.email?.split("@")[0] || "User";
   const userEmail = profile?.email || "user@dialglobal.io";
@@ -92,7 +93,7 @@ export default function Settings() {
             <Text style={styles.profileEmail}>{userEmail}</Text>
             <View style={styles.planTag}>
               <Ionicons name="star" size={11} color={C.accent} />
-              <Text style={styles.planTagTxt}>{plan?.name ?? "Free"} Plan</Text>
+              <Text style={styles.planTagTxt}>{needsTrialStart ? "Start Free Trial" : `${plan?.name ?? "Free"} Plan`}</Text>
               {credits > 0 && <Text style={styles.creditsTag}>💳 ${credits.toFixed(2)}</Text>}
             </View>
           </View>
@@ -118,7 +119,7 @@ export default function Settings() {
           <Row
             icon="credit-card"
             label="Billing & Plan"
-            sublabel={plan?.monthlyPrice === 0 ? "Free Plan · Upgrade to unlock more" : `${plan?.name} · $${price}/mo`}
+            sublabel={needsTrialStart ? "Start Free Trial to activate your number" : (plan?.monthlyPrice === 0 ? "Free Plan · Upgrade to unlock more" : `${plan?.name} · $${price}/mo`)}
             onPress={() => router.push("/paywall")}
           />
           <View style={styles.divider} />

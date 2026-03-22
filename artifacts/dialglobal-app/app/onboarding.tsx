@@ -9,7 +9,19 @@ import { CharGlobeHolder, CharMidCall, CharTraveller, CharCelebrating } from "@/
 
 const { width: SW } = Dimensions.get("window");
 const IS_SMALL = SW <= 390;
-const SIDE_BADGE_W = IS_SMALL ? 92 : 108;
+const ORBIT_BOX = Math.min(SW - 26, IS_SMALL ? 302 : 334);
+const ORBIT_CENTER = ORBIT_BOX / 2;
+const ORBIT_RADIUS = IS_SMALL ? 112 : 124;
+const ORBIT_BADGE_W = IS_SMALL ? 96 : 108;
+const ORBIT_BADGE_H = 34;
+
+function orbitCoords(i: number, total: number) {
+  const angle = (i / total) * 2 * Math.PI - Math.PI / 2;
+  return {
+    left: ORBIT_CENTER + ORBIT_RADIUS * Math.cos(angle) - ORBIT_BADGE_W / 2,
+    top: ORBIT_CENTER + ORBIT_RADIUS * Math.sin(angle) - ORBIT_BADGE_H / 2,
+  };
+}
 
 /* ── Slide 1 — GLOBAL  ─────────────────────────────────────────────────── */
 const FLAG_EMOJIS = ["🇺🇸","🇬🇧","🇯🇵","🇩🇪","🇫🇷","🇦🇺","🇧🇷","🇮🇳","🇨🇦","🇿🇦"];
@@ -53,22 +65,14 @@ const LL_RIGHT = [
 ];
 
 function LandlineVisual() {
+  const ALL_BADGES = [...LL_LEFT, ...LL_RIGHT];
   return (
-    <View style={{ flex: 1, width: "100%", flexDirection: "row", alignItems: "center", justifyContent: "center", paddingHorizontal: 12, gap: IS_SMALL ? 8 : 12 }}>
-      <View style={{ gap: IS_SMALL ? 10 : 14, alignItems: "flex-end", width: SIDE_BADGE_W }}>
-        {LL_LEFT.map(b => (
-          <View key={b.label} style={[pv.badge, { backgroundColor: b.bg, width: SIDE_BADGE_W }]}> 
-            <View style={pv.badgeRow}>
-              <Text style={pv.badgeIcon}>{b.icon}</Text>
-              <Text style={[pv.badgeTxt, { color: b.clr }]} numberOfLines={1}>{b.label}</Text>
-            </View>
-          </View>
-        ))}
-      </View>
-      <CharCelebrating size={IS_SMALL ? 140 : 158} />
-      <View style={{ gap: IS_SMALL ? 10 : 14, alignItems: "flex-start", width: SIDE_BADGE_W }}>
-        {LL_RIGHT.map(b => (
-          <View key={b.label} style={[pv.badge, { backgroundColor: b.bg, width: SIDE_BADGE_W }]}> 
+    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+      <View style={{ width: ORBIT_BOX, height: ORBIT_BOX, alignItems: "center", justifyContent: "center" }}>
+        <View style={[gv.ring, { width: ORBIT_RADIUS * 2 + 28, height: ORBIT_RADIUS * 2 + 28, borderRadius: ORBIT_RADIUS + 14 }]} />
+        <CharCelebrating size={IS_SMALL ? 140 : 158} />
+        {ALL_BADGES.map((b, i) => (
+          <View key={b.label} style={[pv.badge, { backgroundColor: b.bg, width: ORBIT_BADGE_W, position: "absolute", ...orbitCoords(i, ALL_BADGES.length) }]}> 
             <View style={pv.badgeRow}>
               <Text style={pv.badgeIcon}>{b.icon}</Text>
               <Text style={[pv.badgeTxt, { color: b.clr }]} numberOfLines={1}>{b.label}</Text>
@@ -139,25 +143,14 @@ const RIGHT_BADGES = [
 ];
 
 function PrivateVisual() {
+  const ALL_BADGES = [...LEFT_BADGES, ...RIGHT_BADGES];
   return (
-    <View style={{ flex: 1, width: "100%", flexDirection: "row", alignItems: "center", justifyContent: "center", paddingHorizontal: 12, gap: IS_SMALL ? 8 : 12 }}>
-      {/* Left column */}
-      <View style={{ gap: IS_SMALL ? 10 : 14, alignItems: "flex-end", width: SIDE_BADGE_W }}>
-        {LEFT_BADGES.map(b => (
-          <View key={b.label} style={[pv.badge, { backgroundColor: b.bg, width: SIDE_BADGE_W }]}> 
-            <View style={pv.badgeRow}>
-              <Text style={pv.badgeIcon}>{b.icon}</Text>
-              <Text style={[pv.badgeTxt, { color: b.clr }]} numberOfLines={1}>{b.label}</Text>
-            </View>
-          </View>
-        ))}
-      </View>
-      {/* Character centred */}
-      <CharTraveller size={IS_SMALL ? 162 : 182} />
-      {/* Right column */}
-      <View style={{ gap: IS_SMALL ? 10 : 14, alignItems: "flex-start", width: SIDE_BADGE_W }}>
-        {RIGHT_BADGES.map(b => (
-          <View key={b.label} style={[pv.badge, { backgroundColor: b.bg, width: SIDE_BADGE_W }]}> 
+    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+      <View style={{ width: ORBIT_BOX, height: ORBIT_BOX, alignItems: "center", justifyContent: "center" }}>
+        <View style={[gv.ring, { width: ORBIT_RADIUS * 2 + 28, height: ORBIT_RADIUS * 2 + 28, borderRadius: ORBIT_RADIUS + 14 }]} />
+        <CharTraveller size={IS_SMALL ? 162 : 182} />
+        {ALL_BADGES.map((b, i) => (
+          <View key={b.label} style={[pv.badge, { backgroundColor: b.bg, width: ORBIT_BADGE_W, position: "absolute", ...orbitCoords(i, ALL_BADGES.length) }]}> 
             <View style={pv.badgeRow}>
               <Text style={pv.badgeIcon}>{b.icon}</Text>
               <Text style={[pv.badgeTxt, { color: b.clr }]} numberOfLines={1}>{b.label}</Text>
