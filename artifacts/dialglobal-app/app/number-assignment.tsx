@@ -241,6 +241,19 @@ export default function NumberAssignment() {
                 <Text style={cnf.maskedNoteTxt}>Full number revealed after activation</Text>
               </View>
             )}
+            {/* Feature pills */}
+            <View style={{ flexDirection: "row", gap: 6, flexWrap: "wrap", justifyContent: "center", marginTop: 10 }}>
+              {[
+                { label: "📞 Voice", color: "#2D60C8", bg: "#D4E8FF" },
+                { label: "💬 SMS",   color: "#2D9966", bg: "#D4F4E8" },
+                { label: "🖼 MMS",   color: "#A06010", bg: "#FFF0D4" },
+                { label: "📶 Data",  color: "#7030B0", bg: "#F4D4FF" },
+              ].map(cap => (
+                <View key={cap.label} style={{ backgroundColor: cap.bg, borderRadius: 99, paddingHorizontal: 10, paddingVertical: 4 }}>
+                  <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 10, color: cap.color }}>{cap.label}</Text>
+                </View>
+              ))}
+            </View>
             <Pressable onPress={refreshNumber} style={cnf.refreshBtn} disabled={searching || numberOptions.length <= 1}>
               <Feather name="refresh-cw" size={13} color={searching || numberOptions.length <= 1 ? C.textMuted : C.accent} />
               <Text style={[cnf.refreshTxt, (searching || numberOptions.length <= 1) && { color: C.textMuted }]}>Try a different number</Text>

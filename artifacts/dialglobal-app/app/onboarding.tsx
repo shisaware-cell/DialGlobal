@@ -11,9 +11,9 @@ const { width: SW } = Dimensions.get("window");
 
 /* ── Slide 1 — GLOBAL  ─────────────────────────────────────────────────── */
 const FLAG_EMOJIS = ["🇺🇸","🇬🇧","🇯🇵","🇩🇪","🇫🇷","🇦🇺","🇧🇷","🇮🇳","🇨🇦","🇿🇦"];
-const BOX = 284;
+const BOX = Math.min(SW - 16, 340);
 const C_XY = BOX / 2;
-const ORBIT_R = 112;
+const ORBIT_R = BOX / 2 - 22;
 const FLAGS_RING = FLAG_EMOJIS.map((flag, i) => {
   const angle = (i / FLAG_EMOJIS.length) * 2 * Math.PI - Math.PI / 2;
   return { flag, left: C_XY + ORBIT_R * Math.cos(angle) - 18, top: C_XY + ORBIT_R * Math.sin(angle) - 17 };
@@ -24,7 +24,7 @@ function GlobalVisual() {
     <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
       <View style={{ width: BOX, height: BOX, alignItems: "center", justifyContent: "center" }}>
         {/* Dashed orbit ring */}
-        <View style={[gv.ring, { width: 228, height: 228, borderRadius: 114 }]} />
+        <View style={[gv.ring, { width: ORBIT_R * 2 + 36, height: ORBIT_R * 2 + 36, borderRadius: ORBIT_R + 18 }]} />
         {/* Character */}
         <CharGlobeHolder size={170} />
         {/* Flags in tight circular orbit */}
@@ -52,16 +52,16 @@ const LL_RIGHT = [
 
 function LandlineVisual() {
   return (
-    <View style={{ flex: 1, width: "100%", flexDirection: "row", alignItems: "center", justifyContent: "center", paddingHorizontal: 10, gap: 10 }}>
-      <View style={{ gap: 9, alignItems: "flex-end" }}>
+    <View style={{ flex: 1, width: "100%", flexDirection: "row", alignItems: "center", justifyContent: "center", paddingHorizontal: 6, gap: 12 }}>
+      <View style={{ gap: 13, alignItems: "flex-end", flex: 1 }}>
         {LL_LEFT.map(b => (
           <View key={b.txt} style={[pv.badge, { backgroundColor: b.bg }]}>
             <Text style={[pv.badgeTxt, { color: b.clr }]}>{b.txt}</Text>
           </View>
         ))}
       </View>
-      <CharCelebrating size={148} />
-      <View style={{ gap: 9, alignItems: "flex-start" }}>
+      <CharCelebrating size={152} />
+      <View style={{ gap: 13, alignItems: "flex-start", flex: 1 }}>
         {LL_RIGHT.map(b => (
           <View key={b.txt} style={[pv.badge, { backgroundColor: b.bg }]}>
             <Text style={[pv.badgeTxt, { color: b.clr }]}>{b.txt}</Text>
@@ -82,9 +82,9 @@ const PHONE_ROWS = [
 function InstantVisual() {
   return (
     <View style={{ flex: 1, width: "100%", flexDirection: "row", alignItems: "center", justifyContent: "center", paddingHorizontal: 12, gap: 8 }}>
-      {/* Character on the left, slightly smaller */}
+      {/* Character on the left */}
       <View style={{ flex: 1, alignItems: "flex-end" }}>
-        <CharMidCall size={160} />
+        <CharMidCall size={180} />
       </View>
       {/* Phone mockup on the right */}
       <View style={{ flex: 1, alignItems: "flex-start" }}>
@@ -132,9 +132,9 @@ const RIGHT_BADGES = [
 
 function PrivateVisual() {
   return (
-    <View style={{ flex: 1, width: "100%", flexDirection: "row", alignItems: "center", justifyContent: "center", paddingHorizontal: 10, gap: 10 }}>
+    <View style={{ flex: 1, width: "100%", flexDirection: "row", alignItems: "center", justifyContent: "center", paddingHorizontal: 6, gap: 12 }}>
       {/* Left column */}
-      <View style={{ gap: 9, alignItems: "flex-end" }}>
+      <View style={{ gap: 13, alignItems: "flex-end", flex: 1 }}>
         {LEFT_BADGES.map(b => (
           <View key={b.txt} style={[pv.badge, { backgroundColor: b.bg }]}>
             <Text style={[pv.badgeTxt, { color: b.clr }]}>{b.txt}</Text>
@@ -142,9 +142,9 @@ function PrivateVisual() {
         ))}
       </View>
       {/* Character centred */}
-      <CharTraveller size={148} />
+      <CharTraveller size={168} />
       {/* Right column */}
-      <View style={{ gap: 9, alignItems: "flex-start" }}>
+      <View style={{ gap: 13, alignItems: "flex-start", flex: 1 }}>
         {RIGHT_BADGES.map(b => (
           <View key={b.txt} style={[pv.badge, { backgroundColor: b.bg }]}>
             <Text style={[pv.badgeTxt, { color: b.clr }]}>{b.txt}</Text>
