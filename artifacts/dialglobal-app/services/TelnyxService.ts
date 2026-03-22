@@ -1,16 +1,24 @@
-let TelnyxRTC: any;
+import Constants from "expo-constants";
 
-try {
-  TelnyxRTC = require("@telnyx/react-native-voice-sdk").TelnyxRTC;
-} catch {
-  TelnyxRTC = class {
-    constructor(_opts: any) {}
-    connect() {}
-    disconnect() {}
-    on(_event: string, _handler: any) {}
-    off(_event: string, _handler: any) {}
-    async newCall(_opts: any): Promise<null> { return null; }
-  };
+const isExpoGo = Constants.appOwnership === "expo";
+
+class TelnyxRTCStub {
+  constructor(_opts: any) {}
+  connect() {}
+  disconnect() {}
+  on(_event: string, _handler: any) {}
+  off(_event: string, _handler: any) {}
+  async newCall(_opts: any): Promise<null> { return null; }
+}
+
+let TelnyxRTC: any = TelnyxRTCStub;
+
+if (!isExpoGo) {
+  try {
+    TelnyxRTC = require("@telnyx/react-native-voice-sdk").TelnyxRTC;
+  } catch {
+    TelnyxRTC = TelnyxRTCStub;
+  }
 }
 
 export type TelnyxIncomingPayload = {
