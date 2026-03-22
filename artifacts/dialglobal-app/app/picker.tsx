@@ -45,7 +45,13 @@ export default function Picker() {
   const currentPrice  = availableNums[numIdx]?.monthly_cost ?? null;
   const shouldForceTrialFlow = isAuthed && numbers.length === 0 && !isInTrial && !trialExpired;
 
+  const needsTrial = isAuthed && !isInTrial && !trialExpired;
+
   const handleCountrySelect = async (c: Country) => {
+    if (needsTrial) {
+      router.push("/paywall");
+      return;
+    }
     if (!canAdd) {
       Alert.alert("Limit Reached", `Your ${plan.name} plan allows ${plan.numberLimit} number${plan.numberLimit > 1 ? "s" : ""}. Upgrade to add more.`, [
         { text: "Upgrade Plan", onPress: () => { router.back(); setTimeout(() => router.push("/paywall"), 200); } },
@@ -91,7 +97,7 @@ export default function Picker() {
   };
 
   const handleProvision = async () => {
-    if (!isAuthed) { router.push("/paywall"); return; }
+    if (!isAuthed || needsTrial) { router.push("/paywall"); return; }
     if (!selected || !currentNumber) return;
     setProvisioning(true);
     try {

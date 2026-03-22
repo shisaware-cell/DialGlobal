@@ -65,17 +65,30 @@ const LL_RIGHT = [
 ];
 
 function LandlineVisual() {
-  const ALL_BADGES = [...LL_LEFT, ...LL_RIGHT];
   return (
-    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-      <View style={{ width: ORBIT_BOX, height: ORBIT_BOX, alignItems: "center", justifyContent: "center" }}>
-        <View style={[gv.ring, { width: ORBIT_RADIUS * 2 + 28, height: ORBIT_RADIUS * 2 + 28, borderRadius: ORBIT_RADIUS + 14 }]} />
-        <CharCelebrating size={IS_SMALL ? 140 : 158} />
-        {ALL_BADGES.map((b, i) => (
-          <View key={b.label} style={[pv.badge, { backgroundColor: b.bg, width: ORBIT_BADGE_W, position: "absolute", ...orbitCoords(i, ALL_BADGES.length) }]}> 
+    <View style={{ flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center", paddingHorizontal: 8 }}>
+      {/* Left column */}
+      <View style={{ gap: IS_SMALL ? 8 : 10, alignItems: "flex-end", flex: 1 }}>
+        {LL_LEFT.map(b => (
+          <View key={b.label} style={[pv.badge, { backgroundColor: b.bg, alignSelf: "stretch" }]}>
             <View style={pv.badgeRow}>
               <Text style={pv.badgeIcon}>{b.icon}</Text>
-              <Text style={[pv.badgeTxt, { color: b.clr }]} numberOfLines={1}>{b.label}</Text>
+              <Text style={[pv.badgeTxt, { color: b.clr }]}>{b.label}</Text>
+            </View>
+          </View>
+        ))}
+      </View>
+
+      {/* Character centre */}
+      <CharCelebrating size={IS_SMALL ? 120 : 142} />
+
+      {/* Right column */}
+      <View style={{ gap: IS_SMALL ? 8 : 10, alignItems: "flex-start", flex: 1 }}>
+        {LL_RIGHT.map(b => (
+          <View key={b.label} style={[pv.badge, { backgroundColor: b.bg, alignSelf: "stretch" }]}>
+            <View style={pv.badgeRow}>
+              <Text style={pv.badgeIcon}>{b.icon}</Text>
+              <Text style={[pv.badgeTxt, { color: b.clr }]}>{b.label}</Text>
             </View>
           </View>
         ))}

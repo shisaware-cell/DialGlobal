@@ -61,32 +61,27 @@ export default function Credits() {
         {/* Balance card */}
         <View style={styles.balanceCard}>
           <View style={styles.balanceOrb} />
-          <Text style={styles.balanceLbl}>YOUR CREDIT BALANCE</Text>
-          <Text style={styles.balanceNum}>${credits.toFixed(2)}</Text>
-          {credits > 0 && (
-            <View style={styles.balanceMeta}>
-              <Text style={styles.balanceMetaTxt}>
-                ~{Math.floor(credits / CREDIT_RATES.outboundCallPerMin)} min calls
-              </Text>
-              <Text style={[styles.balanceMetaTxt, { opacity: 0.5, marginHorizontal: 6 }]}>·</Text>
-              <Text style={styles.balanceMetaTxt}>
-                ~{Math.floor(credits / CREDIT_RATES.smsPerMessage)} SMS
-              </Text>
+          <View style={{ flexDirection: "row", alignItems: "center" }}>
+            <View style={{ marginRight: 14, marginLeft: -4 }}>
+              <CharEmptyPockets size={88} />
             </View>
-          )}
-        </View>
-
-        {credits <= 0 && (
-          <View style={{ alignItems: "center", marginBottom: 16, marginTop: -4 }}>
-            <CharEmptyPockets size={140} />
-            <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 14, color: C.textSec, marginTop: 4 }}>
-              Your wallet is empty
-            </Text>
-            <Text style={{ fontFamily: "Inter_400Regular", fontSize: 12, color: C.textMuted, marginTop: 2 }}>
-              Top up to keep calling
-            </Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.balanceLbl}>YOUR CREDIT BALANCE</Text>
+              <Text style={styles.balanceNum}>${credits.toFixed(2)}</Text>
+              {credits > 0 && (
+                <View style={styles.balanceMeta}>
+                  <Text style={styles.balanceMetaTxt}>
+                    ~{Math.floor(credits / CREDIT_RATES.outboundCallPerMin)} min
+                  </Text>
+                  <Text style={[styles.balanceMetaTxt, { opacity: 0.5, marginHorizontal: 5 }]}>·</Text>
+                  <Text style={styles.balanceMetaTxt}>
+                    ~{Math.floor(credits / CREDIT_RATES.smsPerMessage)} SMS
+                  </Text>
+                </View>
+              )}
+            </View>
           </View>
-        )}
+        </View>
 
         <Text style={styles.sectionLabel}>TOP UP WALLET</Text>
 
@@ -197,11 +192,11 @@ const styles = StyleSheet.create({
   headerTitle: { fontFamily: "Inter_700Bold", fontSize: 18, color: C.text },
   headerSub: { fontFamily: "Inter_400Regular", fontSize: 11, color: C.textMuted, marginTop: 1 },
 
-  balanceCard: { borderRadius: 20, padding: 20, marginBottom: 20, alignItems: "center", backgroundColor: C.accent, shadowColor: C.accent, shadowOpacity: 0.4, shadowRadius: 20, shadowOffset: { width: 0, height: 6 }, elevation: 10, overflow: "hidden", position: "relative" },
+  balanceCard: { borderRadius: 20, padding: 16, marginBottom: 20, backgroundColor: C.accent, shadowColor: C.accent, shadowOpacity: 0.4, shadowRadius: 20, shadowOffset: { width: 0, height: 6 }, elevation: 10, overflow: "hidden", position: "relative" },
   balanceOrb: { position: "absolute", top: -20, right: -20, width: 80, height: 80, borderRadius: 40, backgroundColor: "rgba(255,255,255,0.10)" },
-  balanceLbl: { fontFamily: "Inter_700Bold", fontSize: 10, color: "rgba(255,255,255,0.65)", letterSpacing: 1.8, marginBottom: 6 },
-  balanceNum: { fontFamily: "Inter_700Bold", fontSize: 46, color: C.onAccent, letterSpacing: -1.5, lineHeight: 52 },
-  balanceMeta: { flexDirection: "row", alignItems: "center", marginTop: 10, backgroundColor: "rgba(26,23,20,0.12)", borderRadius: 99, paddingHorizontal: 14, paddingVertical: 5 },
+  balanceLbl: { fontFamily: "Inter_700Bold", fontSize: 9, color: "rgba(255,255,255,0.65)", letterSpacing: 1.8, marginBottom: 4 },
+  balanceNum: { fontFamily: "Inter_700Bold", fontSize: 38, color: C.onAccent, letterSpacing: -1.5, lineHeight: 44 },
+  balanceMeta: { flexDirection: "row", alignItems: "center", marginTop: 8, backgroundColor: "rgba(26,23,20,0.12)", borderRadius: 99, paddingHorizontal: 10, paddingVertical: 4, alignSelf: "flex-start" },
   balanceMetaTxt: { fontFamily: "Inter_600SemiBold", fontSize: 12, color: C.onAccent },
 
   sectionLabel: { fontFamily: "Inter_700Bold", fontSize: 10, color: C.textMuted, letterSpacing: 1.4, marginBottom: 10 },

@@ -17,7 +17,7 @@ export default function Index() {
         .single();
 
       if (!profile?.plan) {
-        router.replace("/number-assignment");
+        router.replace("/paywall");
       } else {
         router.replace("/(tabs)");
       }

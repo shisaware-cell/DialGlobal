@@ -17,7 +17,7 @@ function CheckIcon({ size = 11, color = "#fff" }: { size?: number; color?: strin
 
 export default function Paywall() {
   const insets = useSafeAreaInsets();
-  const { selectPlan, pendingPlan, isAuthed, upgradePlan, currentPlan, isInTrial, trialEnds } = useApp();
+  const { selectPlan, pendingPlan, isAuthed, upgradePlan, currentPlan, isInTrial, trialEnds, numbers } = useApp();
   const [selected, setSelected] = useState(isAuthed ? currentPlan : (pendingPlan || "professional"));
   const [cycle, setCycle] = useState<"monthly" | "yearly">("monthly");
 
@@ -32,8 +32,13 @@ export default function Paywall() {
 
   const handleContinue = () => {
     if (isAuthed) {
+      const needsNumber = numbers.length === 0;
       upgradePlan(selected, cycle);
-      router.back();
+      if (needsNumber) {
+        router.replace("/number-assignment");
+      } else {
+        router.back();
+      }
     } else {
       selectPlan(selected);
       router.replace("/auth");
@@ -54,16 +59,16 @@ export default function Paywall() {
           <Feather name="x" size={20} color={C.textMuted} />
         </Pressable>
 
-        {!isAuthed && (
+        {(!isAuthed || !isInTrial) && (
           <View style={styles.heroPill}>
             <Text style={styles.heroPillTxt}>3-DAY FREE TRIAL</Text>
           </View>
         )}
         <Text style={styles.heroTitle}>
-          {isAuthed ? "Choose a Plan" : "Try DialGlobal free"}
+          {isInTrial ? "Choose a Plan" : "Try DialGlobal free"}
         </Text>
         <Text style={styles.heroSub}>
-          {isAuthed
+          {isInTrial
             ? "Upgrade or switch your plan at any time."
             : `Get a real number, make calls & send SMS.\nNo charge until ${trialEnd}.`}
         </Text>
@@ -193,7 +198,7 @@ export default function Paywall() {
       {/* ── Footer CTA ── */}
       <View style={[styles.footer, { paddingBottom: insets.bottom + 12 }]}>
         <Text style={styles.legal}>
-          {isAuthed
+          {isInTrial
             ? `Cancel anytime · $${cycle === "yearly" ? activePlan.yearlyBilled + "/year" : activePlan.monthlyPrice.toFixed(2) + "/month"}`
             : `Cancel anytime · ${cycle === "yearly" ? `$${activePlan.yearlyBilled}/year after trial` : `$${activePlan.monthlyPrice.toFixed(2)}/month after trial`}`}
         </Text>
@@ -202,7 +207,7 @@ export default function Paywall() {
           onPress={handleContinue}
         >
           <Text style={styles.btnTxt}>
-            {isAuthed ? `Upgrade to ${activePlan.name} →` : `Continue with ${activePlan.name} →`}
+            {isInTrial ? `Upgrade to ${activePlan.name} →` : `Start Free Trial →`}
           </Text>
         </Pressable>
         <View style={styles.legalLinks}>

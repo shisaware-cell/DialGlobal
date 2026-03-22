@@ -11,8 +11,10 @@ import { PLANS } from "@/data/mockData";
 
 export default function Profile() {
   const insets = useSafeAreaInsets();
-  const { profile, numbers, currentPlan, signOut, updateProfile, isAuthed } = useApp();
+  const { profile, numbers, currentPlan, signOut, updateProfile, isAuthed, isInTrial, trialExpired } = useApp();
   const plan = PLANS.find(p => p.id === currentPlan) ?? PLANS[0];
+  const needsTrial = isAuthed && !isInTrial && !trialExpired && numbers.length === 0;
+  const planBadgeLabel = needsTrial ? "Start Free Trial" : isInTrial ? `${plan.name} Trial` : `${plan.name} Plan`;
 
   const [name,    setName]    = useState(profile?.name  ?? "");
   const [email,   setEmail]   = useState(profile?.email ?? "");
@@ -85,12 +87,10 @@ export default function Profile() {
           </View>
           <Text style={styles.name}>{displayName}</Text>
           <Text style={styles.email}>{profile?.email || ""}</Text>
-          {plan && (
-            <View style={styles.planBadge}>
-              <Ionicons name="star" size={11} color={C.accent} />
-              <Text style={styles.planBadgeTxt}>{plan.name} Plan</Text>
-            </View>
-          )}
+          <Pressable style={styles.planBadge} onPress={() => router.push("/paywall")}>
+            <Ionicons name="star" size={11} color={needsTrial ? C.green : C.accent} />
+            <Text style={[styles.planBadgeTxt, needsTrial && { color: C.green }]}>{planBadgeLabel}</Text>
+          </Pressable>
         </View>
 
         {/* ── Stats 2×2 ── */}
