@@ -151,7 +151,7 @@ function NumberRow({ num, onDelete }: { num: VirtualNumber; onDelete: () => void
 type QAItem = { image?: any; icon?: string; iconBg?: string; iconColor?: string; label: string; sub: string; route: string; gated: boolean };
 const QUICK_ACCESS_DEF: QAItem[] = [
   { image: require("@/assets/images/esim.png"),         label: "eSIM Data",    sub: "Travel ready",      route: "/esim",                  gated: false },
-  { icon: "phone-call", iconBg: "#D4E8FF", iconColor: "#2D60C8", label: "Landline",  sub: "Business number",   route: "/picker?type=landline",  gated: false },
+  { image: require("@/assets/images/telephone.png"),    label: "Landline",     sub: "Business number",   route: "/picker?type=landline",  gated: false },
   { image: require("@/assets/images/spam_blocker.png"), label: "Spam Blocker", sub: "Block unwanted",    route: "/spamblocker",           gated: true  },
   { image: require("@/assets/images/auto-reply.png"),   label: "Auto-Reply",   sub: "Set away messages", route: "/autoreply",             gated: true  },
 ];
@@ -161,7 +161,6 @@ export default function NumbersScreen() {
   const {
     numbers, messages, removeNumber, refreshNumbers,
     profile, isAuthed,
-    isInTrial, trialEnds, trialMinsUsed, trialSmsUsed, trialExpired,
   } = useApp();
 
   const guestGuardQA = (gated: boolean, route: string) => {
@@ -205,7 +204,7 @@ export default function NumbersScreen() {
         <View style={styles.header}>
           <View style={{ flex: 1 }}>
             <Text style={styles.greeting}>{greeting}</Text>
-            <Text style={styles.headerTitle}>{userName} 👋</Text>
+            <Text style={styles.headerTitle}>{userName}</Text>
           </View>
           <View style={styles.headerRight}>
             <Pressable onPress={() => router.push("/profile")} style={{ position: "relative" }}>
@@ -295,44 +294,6 @@ export default function NumbersScreen() {
           </View>
         </View>
 
-        {/* ── TRIAL BANNER ── */}
-        {isInTrial && trialEnds && (
-          <View style={styles.trialBanner}>
-            <View style={styles.trialBannerTop}>
-              <View style={styles.trialPill}>
-                <View style={styles.trialDot} />
-                <Text style={styles.trialPillTxt}>FREE TRIAL ACTIVE</Text>
-              </View>
-              <Text style={styles.trialEndsLabel}>
-                Ends {trialEnds.toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-              </Text>
-            </View>
-            <View style={styles.trialBars}>
-              <View style={{ flex: 1 }}>
-                <View style={styles.trialBarRow}>
-                  <Text style={styles.trialBarLabel}>📞 Calls</Text>
-                  <Text style={styles.trialBarVal}>{trialMinsUsed}/15 min</Text>
-                </View>
-                <View style={styles.trialBarBg}>
-                  <View style={[styles.trialBarFill, { width: `${Math.min((trialMinsUsed / 15) * 100, 100)}%` as any, backgroundColor: "#A78BFA" }]} />
-                </View>
-              </View>
-              <View style={{ flex: 1 }}>
-                <View style={styles.trialBarRow}>
-                  <Text style={styles.trialBarLabel}>💬 SMS</Text>
-                  <Text style={styles.trialBarVal}>{trialSmsUsed}/10</Text>
-                </View>
-                <View style={styles.trialBarBg}>
-                  <View style={[styles.trialBarFill, { width: `${Math.min((trialSmsUsed / 10) * 100, 100)}%` as any, backgroundColor: "#7C3AED" }]} />
-                </View>
-              </View>
-            </View>
-            <Pressable onPress={() => router.push("/upgrade")} style={styles.trialUpgradeBtn}>
-              <Text style={styles.trialUpgradeTxt}>Upgrade to unlock full plan →</Text>
-            </Pressable>
-          </View>
-        )}
-
         {/* ── MY NUMBERS ── */}
         <View style={styles.listCard}>
           <View style={styles.listHeader}>
@@ -390,7 +351,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1, borderBottomColor: C.border,
   },
   greeting: { fontSize: 10, fontFamily: "Inter_700Bold", color: C.textMuted, letterSpacing: 1.5 },
-  headerTitle: { fontSize: 24, fontFamily: "Inter_700Bold", color: C.text, letterSpacing: -0.5, marginTop: 3 },
+  headerTitle: { fontSize: 12, fontFamily: "Inter_700Bold", color: C.text, letterSpacing: -0.1, marginTop: 3 },
   headerRight: { flexDirection: "row", alignItems: "center", gap: 9 },
   avatar: {
     width: 40, height: 40, borderRadius: 12, backgroundColor: C.accent,
@@ -507,23 +468,4 @@ const styles = StyleSheet.create({
   qaLabel: { fontFamily: "Inter_700Bold", fontSize: 13, color: C.text },
   qaSub: { fontFamily: "Inter_400Regular", fontSize: 11, color: C.textMuted },
 
-  trialBanner: {
-    marginHorizontal: 16, marginTop: 12, marginBottom: 4,
-    backgroundColor: "rgba(124,58,237,0.09)", borderRadius: 18,
-    borderWidth: 1.5, borderColor: "rgba(124,58,237,0.2)",
-    padding: 14,
-  },
-  trialBannerTop: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", marginBottom: 12 },
-  trialPill: { flexDirection: "row", alignItems: "center", gap: 5 },
-  trialDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: "#7C3AED" },
-  trialPillTxt: { fontFamily: "Inter_700Bold", fontSize: 10.5, color: "#7C3AED", letterSpacing: 1.2 },
-  trialEndsLabel: { fontFamily: "Inter_400Regular", fontSize: 11.5, color: "#7C3AED" },
-  trialBars: { flexDirection: "row", gap: 14, marginBottom: 12 },
-  trialBarRow: { flexDirection: "row", justifyContent: "space-between", marginBottom: 5 },
-  trialBarLabel: { fontFamily: "Inter_600SemiBold", fontSize: 11, color: C.textSec },
-  trialBarVal: { fontFamily: "Inter_700Bold", fontSize: 11, color: "#7C3AED" },
-  trialBarBg: { height: 5, backgroundColor: "rgba(124,58,237,0.15)", borderRadius: 99, overflow: "hidden" },
-  trialBarFill: { height: "100%", borderRadius: 99 },
-  trialUpgradeBtn: { alignSelf: "center", paddingVertical: 4 },
-  trialUpgradeTxt: { fontFamily: "Inter_600SemiBold", fontSize: 12.5, color: "#7C3AED" },
 });

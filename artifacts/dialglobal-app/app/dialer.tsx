@@ -9,6 +9,7 @@ import { Feather } from "@expo/vector-icons";
 import C from "@/constants/colors";
 import { useApp } from "@/context/AppContext";
 import { api } from "@/lib/api";
+import { CharBored } from "@/components/Characters";
 
 const KEYS = [
   { d: "1",   s: ""     },
@@ -35,8 +36,9 @@ function fmtTime(secs: number) {
 
 export default function Dialer() {
   const insets = useSafeAreaInsets();
-  const { numbers, showToast, refreshCalls, isAuthed } = useApp();
+  const { numbers, showToast, refreshCalls, isAuthed, isInTrial, trialMinsUsed, trialSmsUsed } = useApp();
   const isWeb = Platform.OS === "web";
+  const TRIAL_MIN_LIMIT = 15;
 
   const [digits, setDigits] = useState("");
   const [fromIdx, setFromIdx] = useState(0);
@@ -46,6 +48,7 @@ export default function Dialer() {
   const [speaker, setSpeaker] = useState(false);
   const [showKeypad, setShowKeypad] = useState(false);
   const [showFromPicker, setShowFromPicker] = useState(false);
+  const [trialLimitModal, setTrialLimitModal] = useState<null | "minutes" | "sms">(null);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fromNumber = numbers[fromIdx] ?? null;
@@ -86,6 +89,10 @@ export default function Dialer() {
     }
     if (!fromNumber) {
       showToast("You need a virtual number to make calls", "warning");
+      return;
+    }
+    if (isInTrial && trialMinsUsed >= TRIAL_MIN_LIMIT) {
+      setTrialLimitModal("minutes");
       return;
     }
 
@@ -282,6 +289,32 @@ export default function Dialer() {
           />
         </View>
       </Modal>
+
+      <Modal visible={trialLimitModal !== null} transparent animationType="fade" onRequestClose={() => setTrialLimitModal(null)}>
+        <View style={s.limitOverlay}>
+          <View style={s.limitCard}>
+            <CharBored size={120} />
+            <Text style={s.limitTitle}>{trialLimitModal === "minutes" ? "You are out of trial minutes" : "You are out of trial SMS"}</Text>
+            <Text style={s.limitSub}>
+              {trialLimitModal === "minutes"
+                ? `You've used all ${TRIAL_MIN_LIMIT} trial call minutes.`
+                : `You've used all ${trialSmsUsed} trial SMS.`}
+            </Text>
+            <Pressable
+              style={s.limitUpgradeBtn}
+              onPress={() => {
+                setTrialLimitModal(null);
+                router.push("/paywall");
+              }}
+            >
+              <Text style={s.limitUpgradeTxt}>Upgrade Plan →</Text>
+            </Pressable>
+            <Pressable style={s.limitCloseBtn} onPress={() => setTrialLimitModal(null)}>
+              <Text style={s.limitCloseTxt}>Not now</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -415,4 +448,50 @@ const s = StyleSheet.create({
   pickerRowActive: { backgroundColor: C.accentDim },
   pickerNum: { fontFamily: "Inter_600SemiBold", fontSize: 14, color: C.text },
   pickerCountry: { fontFamily: "Inter_400Regular", fontSize: 11.5, color: C.textMuted, marginTop: 2 },
+
+  limitOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+  },
+  limitCard: {
+    width: "100%",
+    maxWidth: 340,
+    backgroundColor: C.surface,
+    borderRadius: 22,
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    borderWidth: 1,
+    borderColor: C.border,
+  },
+  limitTitle: {
+    fontFamily: "Inter_700Bold",
+    fontSize: 18,
+    color: C.text,
+    textAlign: "center",
+    marginTop: 6,
+  },
+  limitSub: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 13,
+    color: C.textSec,
+    textAlign: "center",
+    marginTop: 8,
+    lineHeight: 20,
+  },
+  limitUpgradeBtn: {
+    height: 46,
+    alignSelf: "stretch",
+    backgroundColor: C.accent,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 16,
+  },
+  limitUpgradeTxt: { fontFamily: "Inter_700Bold", fontSize: 14, color: C.onAccent },
+  limitCloseBtn: { paddingVertical: 9, paddingHorizontal: 10, marginTop: 8 },
+  limitCloseTxt: { fontFamily: "Inter_500Medium", fontSize: 12.5, color: C.textMuted },
 });

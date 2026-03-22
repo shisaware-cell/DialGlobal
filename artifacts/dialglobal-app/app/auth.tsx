@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import {
-  View, Text, StyleSheet, TextInput, Pressable, ActivityIndicator, ScrollView, KeyboardAvoidingView, Platform,
+  View, Text, StyleSheet, TextInput, Pressable, ActivityIndicator, ScrollView, KeyboardAvoidingView, Platform, Image,
 } from "react-native";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -176,7 +176,12 @@ export default function Auth() {
 
           {["Google", "Apple"].map(s => (
             <Pressable key={s} style={({ pressed }) => [styles.social, { opacity: pressed ? 0.8 : 1 }]}>
-              <Feather name={s === "Google" ? "globe" : "smartphone"} size={16} color={C.textSec} />
+              <Image
+                source={s === "Google"
+                  ? require("@/assets/images/google_icon.png")
+                  : require("@/assets/images/apple_icon.png")}
+                style={styles.socialIcon}
+              />
               <Text style={styles.socialTxt}>Continue with {s}</Text>
             </Pressable>
           ))}
@@ -212,6 +217,7 @@ const styles = StyleSheet.create({
   div: { flex: 1, height: 1, backgroundColor: C.border },
   divTxt: { fontFamily: "Inter_400Regular", fontSize: 12, color: C.textMuted },
   social: { height: 48, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: C.raised, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 },
+  socialIcon: { width: 16, height: 16, resizeMode: "contain" },
   socialTxt: { fontFamily: "Inter_500Medium", fontSize: 14, color: C.textSec },
   terms: { fontFamily: "Inter_400Regular", fontSize: 11.5, color: C.textMuted, textAlign: "center", lineHeight: 18 },
 });

@@ -1,12 +1,14 @@
 import React, { useState, useEffect } from "react";
 import {
-  View, Text, StyleSheet, FlatList, Pressable, Platform, TextInput, KeyboardAvoidingView,
+  View, Text, StyleSheet, FlatList, Pressable, Platform, TextInput, KeyboardAvoidingView, Modal,
 } from "react-native";
+import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import C from "@/constants/colors";
 import { useApp, Message, Call } from "@/context/AppContext";
 import { api } from "@/lib/api";
+import { CharBored } from "@/components/Characters";
 
 type ThreadItem = {
   id: string;
@@ -30,10 +32,12 @@ function timeAgo(dateStr: string) {
 }
 
 function ChatView({ item, onBack }: { item: ThreadItem; onBack: () => void }) {
-  const { numbers } = useApp();
+  const { numbers, isInTrial, trialSmsUsed } = useApp();
+  const TRIAL_SMS_LIMIT = 10;
   const [input, setInput] = useState("");
   const [chatMsgs, setChatMsgs] = useState<Message[]>([]);
   const [sending, setSending] = useState(false);
+  const [showTrialSmsModal, setShowTrialSmsModal] = useState(false);
   const insets = useSafeAreaInsets();
   const isWeb = Platform.OS === "web";
 
@@ -48,6 +52,10 @@ function ChatView({ item, onBack }: { item: ThreadItem; onBack: () => void }) {
 
   const send = async () => {
     if (!input.trim() || !numbers[0]) return;
+    if (isInTrial && trialSmsUsed >= TRIAL_SMS_LIMIT) {
+      setShowTrialSmsModal(true);
+      return;
+    }
     setSending(true);
     try {
       const res = await api.sendMessage(numbers[0].phone_number, item.number, input);
@@ -112,6 +120,28 @@ function ChatView({ item, onBack }: { item: ThreadItem; onBack: () => void }) {
           <Feather name="send" size={16} color={C.onAccent} />
         </Pressable>
       </View>
+
+      <Modal visible={showTrialSmsModal} transparent animationType="fade" onRequestClose={() => setShowTrialSmsModal(false)}>
+        <View style={cv.limitOverlay}>
+          <View style={cv.limitCard}>
+            <CharBored size={120} />
+            <Text style={cv.limitTitle}>You are out of trial SMS</Text>
+            <Text style={cv.limitSub}>You have used all {TRIAL_SMS_LIMIT} trial messages. Upgrade to keep texting.</Text>
+            <Pressable
+              style={cv.limitUpgradeBtn}
+              onPress={() => {
+                setShowTrialSmsModal(false);
+                router.push("/paywall");
+              }}
+            >
+              <Text style={cv.limitUpgradeTxt}>Upgrade Plan →</Text>
+            </Pressable>
+            <Pressable style={cv.limitCloseBtn} onPress={() => setShowTrialSmsModal(false)}>
+              <Text style={cv.limitCloseTxt}>Not now</Text>
+            </Pressable>
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 }
@@ -311,4 +341,49 @@ const cv = StyleSheet.create({
   inputRow: { flexDirection: "row", padding: 13, gap: 9, borderTopWidth: 1, borderTopColor: C.border, backgroundColor: C.surface, alignItems: "center" },
   msgInput: { flex: 1, height: 42, backgroundColor: C.input, borderRadius: 99, borderWidth: 1.5, borderColor: C.border, paddingHorizontal: 16, fontSize: 13.5, color: C.text, fontFamily: "Inter_400Regular" },
   sendBtn: { width: 42, height: 42, borderRadius: 21, backgroundColor: C.accent, alignItems: "center", justifyContent: "center", flexShrink: 0 },
+  limitOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.45)",
+    alignItems: "center",
+    justifyContent: "center",
+    padding: 24,
+  },
+  limitCard: {
+    width: "100%",
+    maxWidth: 340,
+    backgroundColor: C.surface,
+    borderRadius: 22,
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    borderWidth: 1,
+    borderColor: C.border,
+  },
+  limitTitle: {
+    fontFamily: "Inter_700Bold",
+    fontSize: 18,
+    color: C.text,
+    textAlign: "center",
+    marginTop: 6,
+  },
+  limitSub: {
+    fontFamily: "Inter_400Regular",
+    fontSize: 13,
+    color: C.textSec,
+    textAlign: "center",
+    marginTop: 8,
+    lineHeight: 20,
+  },
+  limitUpgradeBtn: {
+    height: 46,
+    alignSelf: "stretch",
+    backgroundColor: C.accent,
+    borderRadius: 12,
+    alignItems: "center",
+    justifyContent: "center",
+    marginTop: 16,
+  },
+  limitUpgradeTxt: { fontFamily: "Inter_700Bold", fontSize: 14, color: C.onAccent },
+  limitCloseBtn: { paddingVertical: 9, paddingHorizontal: 10, marginTop: 8 },
+  limitCloseTxt: { fontFamily: "Inter_500Medium", fontSize: 12.5, color: C.textMuted },
 });
