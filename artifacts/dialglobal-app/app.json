@@ -15,10 +15,19 @@
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.dialglobal.app"
+      "bundleIdentifier": "com.dialglobal.app",
+      "infoPlist": {
+        "UIBackgroundModes": [
+          "remote-notification",
+          "voip"
+        ]
+      }
     },
     "android": {
       "package": "com.dialglobal.app",
+      "permissions": [
+        "POST_NOTIFICATIONS"
+      ],
       "adaptiveIcon": {
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundColor": "#0D0D0E"
@@ -34,6 +43,7 @@
           "origin": "https://replit.com/"
         }
       ],
+      "expo-notifications",
       "expo-font",
       "expo-web-browser"
     ],

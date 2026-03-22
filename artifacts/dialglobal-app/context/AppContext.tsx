@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { router } from "expo-router";
+import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Notifications from "expo-notifications";
 import { supabase } from "@/lib/supabase";
 import { api } from "@/lib/api";
 import { PLANS } from "@/data/mockData";
@@ -429,6 +431,95 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       telnyxService.disconnect();
     };
   }, [isAuthed, showToast]);
+
+  useEffect(() => {
+    let cancelled = false;
+    let foregroundSub: Notifications.Subscription | null = null;
+    let responseSub: Notifications.Subscription | null = null;
+    let voipRegisterHandler: ((token: string) => void) | null = null;
+    let voipNotificationHandler: ((notification: any) => void) | null = null;
+    let voipInstance: any = null;
+
+    if (!isAuthed || !notifications) {
+      return;
+    }
+
+    Notifications.setNotificationHandler({
+      handleNotification: async () => ({
+        shouldShowBanner: true,
+        shouldShowList: true,
+        shouldPlaySound: true,
+        shouldSetBadge: false,
+      }),
+    });
+
+    const registerPushHooks = async () => {
+      try {
+        const permission = await Notifications.requestPermissionsAsync();
+        if (permission.status !== "granted") return;
+
+        const deviceToken = await Notifications.getDevicePushTokenAsync();
+        const tokenValue = String((deviceToken as any)?.data ?? "");
+        if (tokenValue) {
+          await telnyxService.registerPushToken(tokenValue, "fcm");
+        }
+      } catch {
+        // Do not interrupt app flow if push registration is unavailable in this runtime.
+      }
+
+      foregroundSub = Notifications.addNotificationReceivedListener((event) => {
+        telnyxService.handlePushNotification(event?.request?.content?.data).catch(() => {});
+      });
+
+      responseSub = Notifications.addNotificationResponseReceivedListener((response) => {
+        telnyxService.handlePushNotification(response?.notification?.request?.content?.data).catch(() => {});
+      });
+
+      if (Platform.OS !== "ios") return;
+
+      try {
+        voipInstance = require("react-native-voip-push-notification").default;
+      } catch {
+        voipInstance = null;
+      }
+      if (!voipInstance) return;
+
+      voipRegisterHandler = (token: string) => {
+        telnyxService.registerPushToken(token, "voip").catch(() => {});
+      };
+
+      voipNotificationHandler = (notification: any) => {
+        telnyxService.handlePushNotification(notification).catch(() => {});
+        const complete = voipInstance?.onVoipNotificationCompleted;
+        const uuid = notification?.uuid;
+        if (typeof complete === "function" && uuid) {
+          complete(uuid);
+        }
+      };
+
+      voipInstance.addEventListener("register", voipRegisterHandler);
+      voipInstance.addEventListener("notification", voipNotificationHandler);
+      voipInstance.registerVoipToken?.();
+    };
+
+    registerPushHooks().catch(() => {
+      if (!cancelled) {
+        showToast("Push hooks unavailable in current runtime", "warning");
+      }
+    });
+
+    return () => {
+      cancelled = true;
+      foregroundSub?.remove();
+      responseSub?.remove();
+      if (voipInstance && voipRegisterHandler) {
+        voipInstance.removeEventListener("register", voipRegisterHandler);
+      }
+      if (voipInstance && voipNotificationHandler) {
+        voipInstance.removeEventListener("notification", voipNotificationHandler);
+      }
+    };
+  }, [isAuthed, notifications, showToast]);
 
   const dismissToast = useCallback(() => setToast(null), []);
   const startCall = useCallback(async (number: string) => {

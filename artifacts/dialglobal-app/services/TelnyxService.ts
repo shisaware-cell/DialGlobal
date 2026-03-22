@@ -163,6 +163,62 @@ class TelnyxService {
     await this.connect();
   }
 
+  async registerPushToken(token: string, type: "fcm" | "voip") {
+    if (!token) return;
+    if (!this.client) {
+      await this.connect();
+    }
+
+    const c: any = this.client;
+    if (type === "voip") {
+      if (typeof c?.registerVoipToken === "function") {
+        await c.registerVoipToken(token);
+        return;
+      }
+      if (typeof c?.registerPushToken === "function") {
+        await c.registerPushToken({ token, type: "voip" });
+        return;
+      }
+      if (typeof c?.registerDeviceToken === "function") {
+        await c.registerDeviceToken(token);
+        return;
+      }
+      return;
+    }
+
+    if (typeof c?.registerFCMToken === "function") {
+      await c.registerFCMToken(token);
+      return;
+    }
+    if (typeof c?.registerPushToken === "function") {
+      await c.registerPushToken({ token, type: "fcm" });
+      return;
+    }
+    if (typeof c?.registerDeviceToken === "function") {
+      await c.registerDeviceToken(token);
+    }
+  }
+
+  async handlePushNotification(payload: any) {
+    if (!payload) return;
+    if (!this.client) {
+      await this.connect();
+    }
+
+    const c: any = this.client;
+    if (typeof c?.handlePushNotification === "function") {
+      await c.handlePushNotification(payload);
+      return;
+    }
+    if (typeof c?.processPushNotification === "function") {
+      await c.processPushNotification(payload);
+      return;
+    }
+    if (typeof c?.onPushNotification === "function") {
+      await c.onPushNotification(payload);
+    }
+  }
+
   disconnect() {
     this.stopTokenRefresh();
     this.unbindClientEvents();
