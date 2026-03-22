@@ -76,26 +76,39 @@ ALTER TABLE calls ENABLE ROW LEVEL SECURITY;
 ALTER TABLE user_push_tokens ENABLE ROW LEVEL SECURITY;
 
 -- Profiles: users can read/update their own
+DROP POLICY IF EXISTS profiles_select_own ON profiles;
 CREATE POLICY profiles_select_own ON profiles FOR SELECT USING (auth.uid() = id);
+DROP POLICY IF EXISTS profiles_update_own ON profiles;
 CREATE POLICY profiles_update_own ON profiles FOR UPDATE USING (auth.uid() = id);
+DROP POLICY IF EXISTS profiles_insert_own ON profiles;
 CREATE POLICY profiles_insert_own ON profiles FOR INSERT WITH CHECK (auth.uid() = id);
 
 -- Virtual numbers: users can CRUD their own
+DROP POLICY IF EXISTS numbers_select_own ON virtual_numbers;
 CREATE POLICY numbers_select_own ON virtual_numbers FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS numbers_insert_own ON virtual_numbers;
 CREATE POLICY numbers_insert_own ON virtual_numbers FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS numbers_delete_own ON virtual_numbers;
 CREATE POLICY numbers_delete_own ON virtual_numbers FOR DELETE USING (auth.uid() = user_id);
 
 -- Messages: users can CRUD their own
+DROP POLICY IF EXISTS messages_select_own ON messages;
 CREATE POLICY messages_select_own ON messages FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS messages_insert_own ON messages;
 CREATE POLICY messages_insert_own ON messages FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Calls: users can read their own
+DROP POLICY IF EXISTS calls_select_own ON calls;
 CREATE POLICY calls_select_own ON calls FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS calls_insert_own ON calls;
 CREATE POLICY calls_insert_own ON calls FOR INSERT WITH CHECK (auth.uid() = user_id);
 
 -- Push tokens: users can read and upsert their own row
+DROP POLICY IF EXISTS push_tokens_select_own ON user_push_tokens;
 CREATE POLICY push_tokens_select_own ON user_push_tokens FOR SELECT USING (auth.uid() = user_id);
+DROP POLICY IF EXISTS push_tokens_insert_own ON user_push_tokens;
 CREATE POLICY push_tokens_insert_own ON user_push_tokens FOR INSERT WITH CHECK (auth.uid() = user_id);
+DROP POLICY IF EXISTS push_tokens_update_own ON user_push_tokens;
 CREATE POLICY push_tokens_update_own ON user_push_tokens FOR UPDATE USING (auth.uid() = user_id);
 
 -- Helper functions for counter increments
