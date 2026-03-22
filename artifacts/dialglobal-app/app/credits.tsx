@@ -8,6 +8,7 @@ import { Feather } from "@expo/vector-icons";
 import C from "@/constants/colors";
 import { CREDIT_PACKS, CREDIT_RATES } from "@/data/mockData";
 import { useApp } from "@/context/AppContext";
+import { CharEmptyPockets } from "@/components/Characters";
 
 const RATES = [
   { type: "Outbound calls",   rate: `$${CREDIT_RATES.outboundCallPerMin.toFixed(3)}/min`,  note: "Calls you make to any number" },
@@ -73,6 +74,18 @@ export default function Credits() {
             </View>
           )}
         </View>
+
+        {credits <= 0 && (
+          <View style={{ alignItems: "center", marginBottom: 16, marginTop: -4 }}>
+            <CharEmptyPockets size={140} />
+            <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 14, color: C.textSec, marginTop: 4 }}>
+              Your wallet is empty
+            </Text>
+            <Text style={{ fontFamily: "Inter_400Regular", fontSize: 12, color: C.textMuted, marginTop: 2 }}>
+              Top up to keep calling
+            </Text>
+          </View>
+        )}
 
         <Text style={styles.sectionLabel}>TOP UP WALLET</Text>
 
