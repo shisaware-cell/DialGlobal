@@ -6,6 +6,7 @@ import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import C from "@/constants/colors";
+import { CharBored } from "@/components/Characters";
 import { useApp, VirtualNumber } from "@/context/AppContext";
 
 function NumberRow({ num, onDelete }: { num: VirtualNumber; onDelete: () => void }) {
@@ -326,7 +327,7 @@ export default function NumbersScreen() {
           </View>
           {numbers.length === 0 ? (
             <View style={styles.empty}>
-              <Feather name="hash" size={32} color={C.textMuted} />
+              <CharBored size={140} />
               <Text style={styles.emptyTxt}>No virtual numbers yet</Text>
               <Text style={styles.emptySub}>Tap + to get your first number</Text>
             </View>
