@@ -28,7 +28,7 @@ const DISCLOSURES = [
 
 export default function Credits() {
   const insets = useSafeAreaInsets();
-  const { credits, addCredits } = useApp();
+  const { credits, addCredits, isAuthed } = useApp();
   const [selected, setSelected]   = useState("c2");
   const [loading, setLoading]     = useState(false);
   const [showRates, setShowRates] = useState(false);
@@ -36,6 +36,7 @@ export default function Credits() {
   const pack = CREDIT_PACKS.find(p => p.id === selected)!;
 
   const purchase = () => {
+    if (!isAuthed) { router.push("/paywall"); return; }
     setLoading(true);
     setTimeout(() => {
       addCredits(pack.credits);
