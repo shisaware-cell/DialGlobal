@@ -67,8 +67,8 @@ export const api = {
 
   getMe: () => apiFetch("/auth/me"),
 
-  searchNumbers: (countryCode = "US", limit = 10) =>
-    apiFetch(`/numbers/search?country_code=${countryCode}&limit=${limit}`),
+  searchNumbers: (countryCode = "US", limit = 10, numberType?: string) =>
+    apiFetch(`/numbers/search?country_code=${countryCode}&limit=${limit}${numberType ? `&number_type=${numberType}` : ""}`),
 
   provisionNumber: (data: {
     phone_number: string;
