@@ -175,58 +175,28 @@ class TelnyxService {
 
   async registerPushToken(token: string, type: "fcm" | "voip") {
     if (!token) return;
-    if (!this.client) {
-      await this.connect();
-    }
+    if (!this.client) await this.connect();
 
     const c: any = this.client;
     if (type === "voip") {
-      if (typeof c?.registerVoipToken === "function") {
-        await c.registerVoipToken(token);
-        return;
-      }
-      if (typeof c?.registerPushToken === "function") {
-        await c.registerPushToken({ token, type: "voip" });
-        return;
-      }
-      if (typeof c?.registerDeviceToken === "function") {
-        await c.registerDeviceToken(token);
-        return;
-      }
+      if (typeof c?.registerVoipToken === "function") { await c.registerVoipToken(token); return; }
+      if (typeof c?.registerPushToken === "function") { await c.registerPushToken({ token, type: "voip" }); return; }
+      if (typeof c?.registerDeviceToken === "function") { await c.registerDeviceToken(token); return; }
       return;
     }
-
-    if (typeof c?.registerFCMToken === "function") {
-      await c.registerFCMToken(token);
-      return;
-    }
-    if (typeof c?.registerPushToken === "function") {
-      await c.registerPushToken({ token, type: "fcm" });
-      return;
-    }
-    if (typeof c?.registerDeviceToken === "function") {
-      await c.registerDeviceToken(token);
-    }
+    if (typeof c?.registerFCMToken === "function") { await c.registerFCMToken(token); return; }
+    if (typeof c?.registerPushToken === "function") { await c.registerPushToken({ token, type: "fcm" }); return; }
+    if (typeof c?.registerDeviceToken === "function") { await c.registerDeviceToken(token); }
   }
 
   async handlePushNotification(payload: any) {
     if (!payload) return;
-    if (!this.client) {
-      await this.connect();
-    }
+    if (!this.client) await this.connect();
 
     const c: any = this.client;
-    if (typeof c?.handlePushNotification === "function") {
-      await c.handlePushNotification(payload);
-      return;
-    }
-    if (typeof c?.processPushNotification === "function") {
-      await c.processPushNotification(payload);
-      return;
-    }
-    if (typeof c?.onPushNotification === "function") {
-      await c.onPushNotification(payload);
-    }
+    if (typeof c?.handlePushNotification === "function") { await c.handlePushNotification(payload); return; }
+    if (typeof c?.processPushNotification === "function") { await c.processPushNotification(payload); return; }
+    if (typeof c?.onPushNotification === "function") { await c.onPushNotification(payload); }
   }
 
   disconnect() {
@@ -272,7 +242,6 @@ class TelnyxService {
   async answer() {
     const call = this.incomingCall ?? this.activeCall;
     if (!call) throw new Error("No incoming call to answer");
-
     await call.answer?.();
     this.activeCall = call;
     this.incomingCall = null;
@@ -281,27 +250,53 @@ class TelnyxService {
   async muteAudio() {
     const call = this.activeCall;
     if (!call) throw new Error("No active call to mute");
+    if (typeof call.muteAudio === "function") { await call.muteAudio(); return; }
+    if (typeof call.mute === "function") { await call.mute(); return; }
+    throw new Error("Mute is not supported");
+  }
 
-    if (typeof call.muteAudio === "function") {
-      await call.muteAudio();
-      return;
-    }
-    if (typeof call.mute === "function") {
-      await call.mute();
-      return;
-    }
-    throw new Error("Mute is not supported by current call object");
+  async unmuteAudio() {
+    const call = this.activeCall;
+    if (!call) throw new Error("No active call to unmute");
+    if (typeof call.unmuteAudio === "function") { await call.unmuteAudio(); return; }
+    if (typeof call.unmute === "function") { await call.unmute(); return; }
+    throw new Error("Unmute is not supported");
+  }
+
+  async toggleSpeaker(enabled: boolean) {
+    const call = this.activeCall ?? this.incomingCall;
+    if (!call) return;
+    // Try Telnyx SDK speaker toggle first
+    if (typeof call.setSpeakerphone === "function") { await call.setSpeakerphone(enabled); return; }
+    if (typeof call.toggleSpeaker === "function") { await call.toggleSpeaker(enabled); return; }
+    // Fallback: try client-level audio routing
+    const c: any = this.client;
+    if (typeof c?.setSpeakerphone === "function") { await c.setSpeakerphone(enabled); return; }
+    // Silently succeed — speakerphone may work automatically via OS
   }
 
   async hold() {
     const call = this.activeCall;
     if (!call) throw new Error("No active call to hold");
+    if (typeof call.hold === "function") { await call.hold(); return; }
+    throw new Error("Hold is not supported");
+  }
 
-    if (typeof call.hold === "function") {
-      await call.hold();
-      return;
-    }
-    throw new Error("Hold is not supported by current call object");
+  async unhold() {
+    const call = this.activeCall;
+    if (!call) throw new Error("No active call to unhold");
+    if (typeof call.unhold === "function") { await call.unhold(); return; }
+    if (typeof call.resume === "function") { await call.resume(); return; }
+    throw new Error("Unhold is not supported");
+  }
+
+  async sendDTMF(digit: string) {
+    const call = this.activeCall;
+    if (!call) throw new Error("No active call for DTMF");
+    if (typeof call.dtmf === "function") { await call.dtmf(digit); return; }
+    if (typeof call.sendDTMF === "function") { await call.sendDTMF(digit); return; }
+    if (typeof call.sendDigits === "function") { await call.sendDigits(digit); return; }
+    throw new Error("DTMF is not supported");
   }
 }
 

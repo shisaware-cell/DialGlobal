@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import { Platform } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Notifications from "expo-notifications";
+import * as ExpoAV from "expo-av";
 import { supabase } from "@/lib/supabase";
 import { api } from "@/lib/api";
 import { PLANS } from "@/data/mockData";
@@ -125,10 +126,18 @@ type AppCtx = {
   telnyxReady: boolean;
   activeCall: ActiveCall;
   incomingCall: IncomingCall;
+  callMuted: boolean;
+  callOnHold: boolean;
+  callSpeaker: boolean;
   startCall: (number: string) => Promise<void>;
   answerCall: () => Promise<void>;
   hangupCall: () => Promise<void>;
   muteCall: () => Promise<void>;
+  unmuteCall: () => Promise<void>;
+  holdCall: () => Promise<void>;
+  unholdCall: () => Promise<void>;
+  toggleSpeaker: (enabled: boolean) => Promise<void>;
+  sendDTMF: (digit: string) => Promise<void>;
   dismissIncomingCall: () => void;
   activeEsim: string | null;
   activateEsim: (planId: string) => void;
@@ -177,6 +186,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [telnyxReady, setTelnyxReady] = useState(false);
   const [activeCall, setActiveCall] = useState<ActiveCall>(null);
   const [incomingCall, setIncomingCall] = useState<IncomingCall>(null);
+  const [callMuted, setCallMuted] = useState(false);
+  const [callOnHold, setCallOnHold] = useState(false);
+  const [callSpeaker, setCallSpeaker] = useState(false);
   const [activeEsim, setActiveEsimState] = useState<string | null>(null);
   const incomingCallRef = useRef<IncomingCall>(null);
 
@@ -246,25 +258,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const setupRealtime = useCallback((userId: string) => {
     const channel = supabase
       .channel(`user-data-${userId}`)
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "virtual_numbers", filter: `user_id=eq.${userId}` },
-        () => { refreshNumbers(); }
-      )
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "messages", filter: `user_id=eq.${userId}` },
-        (payload) => {
-          setMessages(prev => [payload.new as any, ...prev.filter(m => m.id !== (payload.new as any).id)]);
-        }
-      )
-      .on(
-        "postgres_changes",
-        { event: "INSERT", schema: "public", table: "calls", filter: `user_id=eq.${userId}` },
-        (payload) => {
-          setCalls(prev => [payload.new as any, ...prev.filter(c => c.id !== (payload.new as any).id)]);
-        }
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "virtual_numbers", filter: `user_id=eq.${userId}` }, () => { refreshNumbers(); })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "messages", filter: `user_id=eq.${userId}` }, (payload) => {
+        setMessages(prev => [payload.new as any, ...prev.filter(m => m.id !== (payload.new as any).id)]);
+      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "calls", filter: `user_id=eq.${userId}` }, (payload) => {
+        setCalls(prev => [payload.new as any, ...prev.filter(c => c.id !== (payload.new as any).id)]);
+      })
       .subscribe();
     return () => { supabase.removeChannel(channel); };
   }, [refreshNumbers]);
@@ -299,10 +299,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setNumbers([]);
         setMessages([]);
         setCalls([]);
-        if (realtimeCleanup) {
-          realtimeCleanup();
-          realtimeCleanup = null;
-        }
+        if (realtimeCleanup) { realtimeCleanup(); realtimeCleanup = null; }
       }
     });
 
@@ -317,9 +314,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!v) supabase.auth.signOut();
   };
 
-  const selectPlan = useCallback((planId: string) => {
-    setPendingPlan(planId);
-  }, []);
+  const selectPlan = useCallback((planId: string) => { setPendingPlan(planId); }, []);
 
   const upgradePlan = async (planId: string, cycle: "monthly" | "yearly" = "monthly") => {
     setCurrentPlan(planId);
@@ -328,9 +323,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setIsInTrial(true);
     setTrialExpired(false);
     setTrialEnds(new Date(Date.now() + 3 * 86400000));
-    if (user) {
-      await supabase.from("profiles").update({ plan: planId }).eq("id", user.id);
-    }
+    if (user) await supabase.from("profiles").update({ plan: planId }).eq("id", user.id);
   };
 
   const expireTrial = useCallback(() => {
@@ -347,11 +340,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const addNumber = (n: VirtualNumber) => setNumbers((prev) => [n, ...prev]);
   const removeNumber = async (id: string) => {
     setNumbers((prev) => prev.filter((n) => n.id !== id));
-    try {
-      await api.deleteNumber(id);
-    } catch {
-      refreshNumbers();
-    }
+    try { await api.deleteNumber(id); } catch { refreshNumbers(); }
   };
 
   const toggleDnd = (id: string) => setDndNumbers(prev => ({ ...prev, [id]: !prev[id] }));
@@ -362,9 +351,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const addCredits = (amount: number) => {
     setCredits(prev => {
       const next = parseFloat((prev + amount).toFixed(2));
-      if (user) {
-        AsyncStorage.setItem(`${CREDITS_KEY}_${user.id}`, String(next)).catch(() => {});
-      }
+      if (user) AsyncStorage.setItem(`${CREDITS_KEY}_${user.id}`, String(next)).catch(() => {});
       return next;
     });
   };
@@ -378,6 +365,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setTimeout(() => setToast(null), 3500);
   }, []);
 
+  const resetCallState = useCallback(() => {
+    setCallMuted(false);
+    setCallOnHold(false);
+    setCallSpeaker(false);
+  }, []);
+
   useEffect(() => {
     let disposed = false;
 
@@ -386,6 +379,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       setTelnyxReady(false);
       setActiveCall(null);
       setIncomingCall(null);
+      resetCallState();
       return;
     }
 
@@ -401,23 +395,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (disposed) return;
         setIncomingCall(incoming);
         setActiveCall({ state: "ringing", caller: incoming.caller, number: incoming.number, callObj: incoming.callObj });
+        resetCallState();
       },
       onCallState: (payload) => {
         if (disposed) return;
-        const normalized = {
-          state: payload.state,
-          caller: payload.caller,
-          number: payload.number,
-          callObj: payload.callObj,
-        };
-
         if (["hangup", "destroy", "ended", "done", "disconnected"].includes(String(payload.state).toLowerCase())) {
           setActiveCall(null);
           setIncomingCall(null);
+          resetCallState();
           return;
         }
-
-        setActiveCall(normalized);
+        setActiveCall({ state: payload.state, caller: payload.caller, number: payload.number, callObj: payload.callObj });
       },
       onError: (err) => {
         if (!disposed) showToast(err.message || "Telnyx connection failed", "error");
@@ -430,7 +418,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       disposed = true;
       telnyxService.disconnect();
     };
-  }, [isAuthed, showToast]);
+  }, [isAuthed, showToast, resetCallState]);
 
   useEffect(() => {
     let cancelled = false;
@@ -441,25 +429,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     let voipNotificationHandler: ((notification: any) => void) | null = null;
     let voipInstance: any = null;
 
-    if (!isAuthed || !notifications) {
-      return;
-    }
+    if (!isAuthed || !notifications) return;
 
     const upsertPushTokens = async (fields: { ios_voip_token?: string | null; android_fcm_token?: string | null }) => {
       if (!user?.id) return;
-      const { error } = await supabase.from("user_push_tokens").upsert(
-        {
-          user_id: user.id,
-          ios_voip_token: fields.ios_voip_token,
-          android_fcm_token: fields.android_fcm_token,
-          updated_at: new Date().toISOString(),
-        },
+      await supabase.from("user_push_tokens").upsert(
+        { user_id: user.id, ...fields, updated_at: new Date().toISOString() },
         { onConflict: "user_id" },
       );
-
-      if (error) {
-        throw new Error(error.message);
-      }
     };
 
     Notifications.setNotificationHandler({
@@ -475,21 +452,17 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       try {
         const permission = await Notifications.requestPermissionsAsync();
         if (permission.status !== "granted") return;
-
         const deviceToken = await Notifications.getDevicePushTokenAsync();
         const tokenValue = String((deviceToken as any)?.data ?? "");
         if (tokenValue) {
           await upsertPushTokens({ android_fcm_token: tokenValue });
           await telnyxService.registerPushToken(tokenValue, "fcm");
         }
-      } catch {
-        // Do not interrupt app flow if push registration is unavailable in this runtime.
-      }
+      } catch {}
 
       pushTokenSub = (Notifications as any).addPushTokenListener?.((event: any) => {
         const refreshed = String(event?.data ?? "");
         if (!refreshed) return;
-
         upsertPushTokens({ android_fcm_token: refreshed }).catch(() => {});
         telnyxService.registerPushToken(refreshed, "fcm").catch(() => {});
       }) ?? null;
@@ -504,11 +477,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
       if (Platform.OS !== "ios") return;
 
-      try {
-        voipInstance = require("react-native-voip-push-notification").default;
-      } catch {
-        voipInstance = null;
-      }
+      try { voipInstance = require("react-native-voip-push-notification").default; } catch { voipInstance = null; }
       if (!voipInstance) return;
 
       voipRegisterHandler = (token: string) => {
@@ -520,9 +489,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         telnyxService.handlePushNotification(notification).catch(() => {});
         const complete = voipInstance?.onVoipNotificationCompleted;
         const uuid = notification?.uuid;
-        if (typeof complete === "function" && uuid) {
-          complete(uuid);
-        }
+        if (typeof complete === "function" && uuid) complete(uuid);
       };
 
       voipInstance.addEventListener("register", voipRegisterHandler);
@@ -531,9 +498,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     };
 
     registerPushHooks().catch(() => {
-      if (!cancelled) {
-        showToast("Push hooks unavailable in current runtime", "warning");
-      }
+      if (!cancelled) showToast("Push hooks unavailable in current runtime", "warning");
     });
 
     return () => {
@@ -541,51 +506,89 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       foregroundSub?.remove();
       responseSub?.remove();
       pushTokenSub?.remove();
-      if (voipInstance && voipRegisterHandler) {
-        voipInstance.removeEventListener("register", voipRegisterHandler);
-      }
-      if (voipInstance && voipNotificationHandler) {
-        voipInstance.removeEventListener("notification", voipNotificationHandler);
-      }
+      if (voipInstance && voipRegisterHandler) voipInstance.removeEventListener("register", voipRegisterHandler);
+      if (voipInstance && voipNotificationHandler) voipInstance.removeEventListener("notification", voipNotificationHandler);
     };
   }, [isAuthed, notifications, showToast, user?.id]);
 
   const dismissToast = useCallback(() => setToast(null), []);
+
+  const requestMicPermission = useCallback(async (): Promise<boolean> => {
+    try {
+      const { status } = await ExpoAV.Audio.requestPermissionsAsync();
+      return status === "granted";
+    } catch {
+      return true;
+    }
+  }, []);
+
   const startCall = useCallback(async (number: string) => {
     const destination = number?.trim();
     if (!destination) throw new Error("Destination number is required");
 
+    const hasMic = await requestMicPermission();
+    if (!hasMic) throw new Error("Microphone permission is required to make calls");
+
     const callObj = await telnyxService.makeCall(destination, "DialGlobal");
     setIncomingCall(null);
     setActiveCall({ state: "calling", caller: "DialGlobal", number: destination, callObj });
-  }, []);
+    resetCallState();
+  }, [requestMicPermission, resetCallState]);
 
   const answerCall = useCallback(async () => {
+    const hasMic = await requestMicPermission();
+    if (!hasMic) throw new Error("Microphone permission is required to answer calls");
+
     await telnyxService.answer();
     const incoming = incomingCallRef.current;
     if (incoming) {
       setActiveCall({ state: "connected", caller: incoming.caller, number: incoming.number, callObj: incoming.callObj });
     }
     setIncomingCall(null);
-  }, []);
+    resetCallState();
+  }, [requestMicPermission, resetCallState]);
 
   const hangupCall = useCallback(async () => {
     await telnyxService.hangup();
     setActiveCall(null);
     setIncomingCall(null);
-  }, []);
+    resetCallState();
+  }, [resetCallState]);
 
   const muteCall = useCallback(async () => {
     await telnyxService.muteAudio();
+    setCallMuted(true);
+  }, []);
+
+  const unmuteCall = useCallback(async () => {
+    await telnyxService.unmuteAudio();
+    setCallMuted(false);
+  }, []);
+
+  const holdCall = useCallback(async () => {
+    await telnyxService.hold();
+    setCallOnHold(true);
+  }, []);
+
+  const unholdCall = useCallback(async () => {
+    await telnyxService.unhold();
+    setCallOnHold(false);
+  }, []);
+
+  const toggleSpeaker = useCallback(async (enabled: boolean) => {
+    await telnyxService.toggleSpeaker(enabled);
+    setCallSpeaker(enabled);
+  }, []);
+
+  const sendDTMF = useCallback(async (digit: string) => {
+    await telnyxService.sendDTMF(digit);
   }, []);
 
   const dismissIncomingCall = useCallback(() => setIncomingCall(null), []);
   const activateEsim = useCallback((planId: string) => setActiveEsimState(planId), []);
 
   const signOut = async () => {
-    if (user) {
-      AsyncStorage.removeItem(`${CREDITS_KEY}_${user.id}`).catch(() => {});
-    }
+    if (user) AsyncStorage.removeItem(`${CREDITS_KEY}_${user.id}`).catch(() => {});
     await supabase.auth.signOut();
     setAuthedState(false);
     setSession(null);
@@ -601,6 +604,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setTelnyxReady(false);
     setActiveCall(null);
     setIncomingCall(null);
+    resetCallState();
     router.replace("/onboarding");
   };
 
@@ -621,7 +625,11 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       notifications, setNotifications,
       toast, showToast, dismissToast,
       telnyxReady, activeCall, incomingCall,
-      startCall, answerCall, hangupCall, muteCall, dismissIncomingCall,
+      callMuted, callOnHold, callSpeaker,
+      startCall, answerCall, hangupCall,
+      muteCall, unmuteCall, holdCall, unholdCall,
+      toggleSpeaker, sendDTMF,
+      dismissIncomingCall,
       activeEsim, activateEsim,
     }}>
       {children}

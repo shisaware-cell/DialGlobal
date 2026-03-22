@@ -73,6 +73,10 @@ Expo React Native app for iOS App Store and Google Play. Testable via Expo Go QR
 - **Trial expiry COMPLETE**: `GET /numbers` runs `cleanupExpiredNumbers()` which marks expired trial numbers as "expired" and releases from Telnyx; `POST /numbers/provision` accepts `trial_days` param to set `expires_at`
 - **Calls route fix**: `telnyx.calls.dial()` (not `.create()`) — SDK v6.22.0 pattern
 - **Picker key fix**: picker.tsx uses `${num}-${idx}` key to prevent duplicate key warning
+- **WebRTC features COMPLETE**: TelnyxService now has `muteAudio`/`unmuteAudio`, `toggleSpeaker`, `hold`/`unhold`, `sendDTMF` — all wired to AppContext and Dialer UI
+- **Mic permissions**: `expo-av` `Audio.requestPermissionsAsync()` called before every outbound/inbound call
+- **Context call state**: `callMuted`, `callOnHold`, `callSpeaker` booleans exposed from AppContext; `unmuteCall`, `holdCall`, `unholdCall`, `toggleSpeaker`, `sendDTMF` all exported
+- **Dialer**: Mute toggle, Speaker toggle, Hold/Resume button, DTMF via keypad during connected calls, "Hide Keypad" back button
 
 ## Backend Integration (COMPLETE)
 

@@ -38,7 +38,10 @@ export default function Dialer() {
   const {
     numbers, showToast, refreshCalls,
     isAuthed, isInTrial, trialMinsUsed, trialSmsUsed,
-    startCall, hangupCall, muteCall, activeCall, telnyxReady,
+    startCall, hangupCall, muteCall, unmuteCall,
+    holdCall, unholdCall, toggleSpeaker, sendDTMF,
+    activeCall, telnyxReady,
+    callMuted, callOnHold, callSpeaker,
   } = useApp();
   const isWeb = Platform.OS === "web";
   const TRIAL_MIN_LIMIT = 15;
@@ -47,8 +50,6 @@ export default function Dialer() {
   const [fromIdx, setFromIdx] = useState(0);
   const [callState, setCallState] = useState<CallState>("idle");
   const [elapsed, setElapsed] = useState(0);
-  const [muted, setMuted] = useState(false);
-  const [speaker, setSpeaker] = useState(false);
   const [showKeypad, setShowKeypad] = useState(false);
   const [showFromPicker, setShowFromPicker] = useState(false);
   const [trialLimitModal, setTrialLimitModal] = useState<null | "minutes" | "sms">(null);
@@ -66,30 +67,26 @@ export default function Dialer() {
   }, [callState]);
 
   useEffect(() => {
-    if (!activeCall) {
-      return;
-    }
+    if (!activeCall) return;
 
     const state = String(activeCall.state || "").toLowerCase();
     if (activeCall.number) setDigits(activeCall.number);
 
     if (["calling", "ringing", "new", "trying"].includes(state)) {
       setCallState("calling");
-      return;
-    }
-    if (["connected", "active", "answered"].includes(state)) {
+    } else if (["connected", "active", "answered"].includes(state)) {
       setCallState("connected");
-      return;
-    }
-    if (["hangup", "destroy", "ended", "done", "disconnected"].includes(state)) {
+    } else if (["hangup", "destroy", "ended", "done", "disconnected"].includes(state)) {
       setCallState("ended");
-      return;
     }
   }, [activeCall]);
 
   const press = (d: string) => {
-    if (callState !== "idle" && callState !== "ended") return;
-    setDigits(prev => (prev + d).slice(0, 18));
+    if (callState === "connected") {
+      sendDTMF(d).catch(() => {});
+    } else if (callState === "idle" || callState === "ended") {
+      setDigits(prev => (prev + d).slice(0, 18));
+    }
   };
 
   const backspace = () => setDigits(prev => prev.slice(0, -1));
@@ -104,22 +101,10 @@ export default function Dialer() {
   };
 
   const handleCall = async () => {
-    if (!isAuthed) {
-      router.push("/paywall");
-      return;
-    }
-    if (!digits || digits.length < 7) {
-      showToast("Enter a valid phone number", "warning");
-      return;
-    }
-    if (!fromNumber) {
-      showToast("You need a virtual number to make calls", "warning");
-      return;
-    }
-    if (isInTrial && trialMinsUsed >= TRIAL_MIN_LIMIT) {
-      setTrialLimitModal("minutes");
-      return;
-    }
+    if (!isAuthed) { router.push("/paywall"); return; }
+    if (!digits || digits.length < 7) { showToast("Enter a valid phone number", "warning"); return; }
+    if (!fromNumber) { showToast("You need a virtual number to make calls", "warning"); return; }
+    if (isInTrial && trialMinsUsed >= TRIAL_MIN_LIMIT) { setTrialLimitModal("minutes"); return; }
 
     setCallState("calling");
     const toNumber = digits.startsWith("+") ? digits : `+${digits.replace(/\D/g, "")}`;
@@ -142,10 +127,42 @@ export default function Dialer() {
     setTimeout(() => {
       setCallState("idle");
       setElapsed(0);
-      setMuted(false);
-      setSpeaker(false);
       setShowKeypad(false);
     }, 1800);
+  };
+
+  const handleMuteToggle = async () => {
+    try {
+      if (callMuted) {
+        await unmuteCall();
+      } else {
+        await muteCall();
+      }
+    } catch (err: any) {
+      showToast(err?.message || "Mute failed", "error");
+    }
+  };
+
+  const handleSpeakerToggle = async () => {
+    try {
+      await toggleSpeaker(!callSpeaker);
+    } catch (err: any) {
+      showToast(err?.message || "Speaker toggle failed", "error");
+    }
+  };
+
+  const handleHoldToggle = async () => {
+    try {
+      if (callOnHold) {
+        await unholdCall();
+        showToast("Call resumed", "info");
+      } else {
+        await holdCall();
+        showToast("Call on hold", "info");
+      }
+    } catch (err: any) {
+      showToast(err?.message || "Hold failed", "error");
+    }
   };
 
   const isInCall = callState === "connected" || callState === "calling";
@@ -174,9 +191,7 @@ export default function Dialer() {
               <Text style={s.fromNum}>{fromNumber?.phone_number ?? "No number"}</Text>
             </View>
           </View>
-          {numbers.length > 1 && (
-            <Feather name="chevron-down" size={16} color={C.textMuted} />
-          )}
+          {numbers.length > 1 && <Feather name="chevron-down" size={16} color={C.textMuted} />}
         </Pressable>
       )}
 
@@ -214,20 +229,20 @@ export default function Dialer() {
           <View style={s.inCallDisplay}>
             <View style={[s.callAvatar, { backgroundColor: callState === "connected" ? C.greenDim : C.accentDim }]}>
               <Feather
-                name={callState === "connected" ? "phone-call" : "phone"}
+                name={callOnHold ? "pause" : callState === "connected" ? "phone-call" : "phone"}
                 size={32}
-                color={callState === "connected" ? C.green : C.accent}
+                color={callOnHold ? C.textSec : callState === "connected" ? C.green : C.accent}
               />
             </View>
             <Text style={s.inCallNum}>{formatDisplay(digits)}</Text>
-            <Text style={[s.callStatus, { color: callState === "connected" ? C.green : C.accent }]}>
-              {callState === "calling" ? "Connecting…" : fmtTime(elapsed)}
+            <Text style={[s.callStatus, { color: callOnHold ? C.textSec : callState === "connected" ? C.green : C.accent }]}>
+              {callOnHold ? "On Hold" : callState === "calling" ? "Connecting…" : fmtTime(elapsed)}
             </Text>
           </View>
         )}
       </View>
 
-      {/* Keypad — hide during active call unless user opens it */}
+      {/* Keypad — regular entry OR DTMF during connected call */}
       {(callState === "idle" || callState === "ended" || showKeypad) && (
         <View style={s.keypad}>
           {KEYS.map((k) => (
@@ -247,35 +262,53 @@ export default function Dialer() {
       {isInCall && !showKeypad && (
         <View style={s.inCallControls}>
           <View style={s.controlsRow}>
+            {/* Mute */}
             <Pressable
-              style={[s.ctrlBtn, muted && s.ctrlBtnActive]}
-              onPress={async () => {
-                try {
-                  await muteCall();
-                  setMuted(m => !m);
-                } catch (err: any) {
-                  showToast(err?.message || "Mute failed", "error");
-                }
-              }}
+              style={[s.ctrlBtn, callMuted && s.ctrlBtnActive]}
+              onPress={handleMuteToggle}
             >
-              <Feather name={muted ? "mic-off" : "mic"} size={22} color={muted ? C.red : C.textSec} />
-              <Text style={[s.ctrlLabel, muted && { color: C.red }]}>Mute</Text>
+              <Feather name={callMuted ? "mic-off" : "mic"} size={22} color={callMuted ? C.red : C.textSec} />
+              <Text style={[s.ctrlLabel, callMuted && { color: C.red }]}>{callMuted ? "Unmute" : "Mute"}</Text>
             </Pressable>
+
+            {/* Speaker */}
             <Pressable
-              style={[s.ctrlBtn, speaker && s.ctrlBtnActive]}
-              onPress={() => setSpeaker(sp => !sp)}
+              style={[s.ctrlBtn, callSpeaker && s.ctrlBtnActive]}
+              onPress={handleSpeakerToggle}
             >
-              <Feather name="volume-2" size={22} color={speaker ? C.accent : C.textSec} />
-              <Text style={[s.ctrlLabel, speaker && { color: C.accent }]}>Speaker</Text>
+              <Feather name="volume-2" size={22} color={callSpeaker ? C.accent : C.textSec} />
+              <Text style={[s.ctrlLabel, callSpeaker && { color: C.accent }]}>Speaker</Text>
             </Pressable>
-            <Pressable
-              style={s.ctrlBtn}
-              onPress={() => setShowKeypad(true)}
-            >
+
+            {/* Keypad */}
+            <Pressable style={s.ctrlBtn} onPress={() => setShowKeypad(true)}>
               <Feather name="grid" size={22} color={C.textSec} />
               <Text style={s.ctrlLabel}>Keypad</Text>
             </Pressable>
           </View>
+
+          {/* Hold — only during connected state */}
+          {callState === "connected" && (
+            <View style={[s.controlsRow, { marginTop: 12 }]}>
+              <Pressable
+                style={[s.ctrlBtn, callOnHold && s.ctrlBtnActive]}
+                onPress={handleHoldToggle}
+              >
+                <Feather name={callOnHold ? "play" : "pause"} size={22} color={callOnHold ? C.accent : C.textSec} />
+                <Text style={[s.ctrlLabel, callOnHold && { color: C.accent }]}>{callOnHold ? "Resume" : "Hold"}</Text>
+              </Pressable>
+            </View>
+          )}
+        </View>
+      )}
+
+      {/* DTMF back button when keypad shown during call */}
+      {isInCall && showKeypad && (
+        <View style={s.dtmfBackRow}>
+          <Pressable style={s.dtmfBackBtn} onPress={() => setShowKeypad(false)}>
+            <Feather name="chevron-down" size={18} color={C.textSec} />
+            <Text style={s.dtmfBackTxt}>Hide Keypad</Text>
+          </Pressable>
         </View>
       )}
 
@@ -340,13 +373,7 @@ export default function Dialer() {
                 ? `You've used all ${TRIAL_MIN_LIMIT} trial call minutes.`
                 : `You've used all ${trialSmsUsed} trial SMS.`}
             </Text>
-            <Pressable
-              style={s.limitUpgradeBtn}
-              onPress={() => {
-                setTrialLimitModal(null);
-                router.push("/paywall");
-              }}
-            >
+            <Pressable style={s.limitUpgradeBtn} onPress={() => { setTrialLimitModal(null); router.push("/paywall"); }}>
               <Text style={s.limitUpgradeTxt}>Upgrade Plan →</Text>
             </Pressable>
             <Pressable style={s.limitCloseBtn} onPress={() => setTrialLimitModal(null)}>
@@ -435,6 +462,17 @@ const s = StyleSheet.create({
   ctrlBtnActive: { backgroundColor: C.raised, borderColor: C.borderStrong },
   ctrlLabel: { fontFamily: "Inter_500Medium", fontSize: 11, color: C.textSec },
 
+  dtmfBackRow: {
+    alignItems: "center", marginTop: 8,
+  },
+  dtmfBackBtn: {
+    flexDirection: "row", alignItems: "center", gap: 6,
+    paddingHorizontal: 16, paddingVertical: 8,
+    backgroundColor: C.surface, borderRadius: 99,
+    borderWidth: 1, borderColor: C.border,
+  },
+  dtmfBackTxt: { fontFamily: "Inter_500Medium", fontSize: 13, color: C.textSec },
+
   bottom: {
     paddingHorizontal: 28, paddingTop: 12,
     alignItems: "center", justifyContent: "center",
@@ -464,9 +502,7 @@ const s = StyleSheet.create({
     shadowOffset: { width: 0, height: 6 }, elevation: 12,
   },
 
-  modalOverlay: {
-    ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.4)",
-  },
+  modalOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: "rgba(0,0,0,0.4)" },
   pickerSheet: {
     position: "absolute", bottom: 0, left: 0, right: 0,
     backgroundColor: C.bg, borderTopLeftRadius: 26, borderTopRightRadius: 26,
@@ -490,46 +526,25 @@ const s = StyleSheet.create({
   pickerCountry: { fontFamily: "Inter_400Regular", fontSize: 11.5, color: C.textMuted, marginTop: 2 },
 
   limitOverlay: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.45)",
-    alignItems: "center",
-    justifyContent: "center",
-    padding: 24,
+    flex: 1, backgroundColor: "rgba(0,0,0,0.45)",
+    alignItems: "center", justifyContent: "center", padding: 24,
   },
   limitCard: {
-    width: "100%",
-    maxWidth: 340,
-    backgroundColor: C.surface,
-    borderRadius: 22,
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 20,
-    borderWidth: 1,
-    borderColor: C.border,
+    width: "100%", maxWidth: 340, backgroundColor: C.surface, borderRadius: 22,
+    alignItems: "center", paddingHorizontal: 20, paddingVertical: 20,
+    borderWidth: 1, borderColor: C.border,
   },
   limitTitle: {
-    fontFamily: "Inter_700Bold",
-    fontSize: 18,
-    color: C.text,
-    textAlign: "center",
-    marginTop: 6,
+    fontFamily: "Inter_700Bold", fontSize: 18, color: C.text,
+    textAlign: "center", marginTop: 6,
   },
   limitSub: {
-    fontFamily: "Inter_400Regular",
-    fontSize: 13,
-    color: C.textSec,
-    textAlign: "center",
-    marginTop: 8,
-    lineHeight: 20,
+    fontFamily: "Inter_400Regular", fontSize: 13, color: C.textSec,
+    textAlign: "center", marginTop: 8, lineHeight: 20,
   },
   limitUpgradeBtn: {
-    height: 46,
-    alignSelf: "stretch",
-    backgroundColor: C.accent,
-    borderRadius: 12,
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 16,
+    height: 46, alignSelf: "stretch", backgroundColor: C.accent,
+    borderRadius: 12, alignItems: "center", justifyContent: "center", marginTop: 16,
   },
   limitUpgradeTxt: { fontFamily: "Inter_700Bold", fontSize: 14, color: C.onAccent },
   limitCloseBtn: { paddingVertical: 9, paddingHorizontal: 10, marginTop: 8 },
