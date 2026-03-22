@@ -3,6 +3,19 @@ import { supabaseAdmin } from "../lib/supabase";
 
 const router: IRouter = Router();
 
+async function getBearerUser(req: any) {
+  const token = req.headers.authorization?.replace("Bearer ", "");
+  if (!token) return null;
+
+  const {
+    data: { user },
+    error,
+  } = await supabaseAdmin.auth.getUser(token);
+
+  if (error || !user) return null;
+  return user;
+}
+
 router.post("/auth/signup", async (req, res) => {
   const { email, password, name } = req.body;
   if (!email || !password) {
@@ -75,17 +88,8 @@ router.post("/auth/login", async (req, res) => {
 });
 
 router.get("/auth/me", async (req, res) => {
-  const token = req.headers.authorization?.replace("Bearer ", "");
-  if (!token) {
-    res.status(401).json({ error: "No token" });
-    return;
-  }
-
-  const {
-    data: { user },
-    error,
-  } = await supabaseAdmin.auth.getUser(token);
-  if (error || !user) {
+  const user = await getBearerUser(req);
+  if (!user) {
     res.status(401).json({ error: "Invalid token" });
     return;
   }
@@ -97,6 +101,45 @@ router.get("/auth/me", async (req, res) => {
     .single();
 
   res.json({ user, profile });
+});
+
+router.get("/auth/telnyx-token", async (req, res) => {
+  const user = await getBearerUser(req);
+  if (!user) {
+    res.status(401).json({ error: "Invalid token" });
+    return;
+  }
+
+  const apiKey = process.env.TELNYX_API_KEY;
+  const credentialId = process.env.TELNYX_TELEPHONY_CREDENTIAL_ID;
+  if (!apiKey || !credentialId) {
+    res.status(500).json({ error: "Telnyx credentials are not configured" });
+    return;
+  }
+
+  try {
+    const tokenRes = await fetch(`https://api.telnyx.com/v2/telephony_credentials/${credentialId}/token`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({}),
+    });
+
+    const raw: any = await tokenRes.json().catch(() => ({}));
+    const loginToken = raw?.data?.token;
+
+    if (!tokenRes.ok || !loginToken) {
+      const detail = raw?.errors?.[0]?.detail || raw?.errors?.[0]?.title || "Token generation failed";
+      res.status(502).json({ error: detail });
+      return;
+    }
+
+    res.json({ login_token: loginToken, expires_in: raw?.data?.expires_in ?? 3600 });
+  } catch (err: any) {
+    res.status(500).json({ error: err?.message || "Unable to generate Telnyx token" });
+  }
 });
 
 export default router;

@@ -8,7 +8,6 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
 import C from "@/constants/colors";
 import { useApp } from "@/context/AppContext";
-import { api } from "@/lib/api";
 import { CharBored } from "@/components/Characters";
 
 const KEYS = [
@@ -36,7 +35,11 @@ function fmtTime(secs: number) {
 
 export default function Dialer() {
   const insets = useSafeAreaInsets();
-  const { numbers, showToast, refreshCalls, isAuthed, isInTrial, trialMinsUsed, trialSmsUsed } = useApp();
+  const {
+    numbers, showToast, refreshCalls,
+    isAuthed, isInTrial, trialMinsUsed, trialSmsUsed,
+    startCall, hangupCall, muteCall, activeCall, telnyxReady,
+  } = useApp();
   const isWeb = Platform.OS === "web";
   const TRIAL_MIN_LIMIT = 15;
 
@@ -61,6 +64,28 @@ export default function Dialer() {
       if (timerRef.current) clearInterval(timerRef.current);
     };
   }, [callState]);
+
+  useEffect(() => {
+    if (!activeCall) {
+      return;
+    }
+
+    const state = String(activeCall.state || "").toLowerCase();
+    if (activeCall.number) setDigits(activeCall.number);
+
+    if (["calling", "ringing", "new", "trying"].includes(state)) {
+      setCallState("calling");
+      return;
+    }
+    if (["connected", "active", "answered"].includes(state)) {
+      setCallState("connected");
+      return;
+    }
+    if (["hangup", "destroy", "ended", "done", "disconnected"].includes(state)) {
+      setCallState("ended");
+      return;
+    }
+  }, [activeCall]);
 
   const press = (d: string) => {
     if (callState !== "idle" && callState !== "ended") return;
@@ -100,7 +125,7 @@ export default function Dialer() {
     const toNumber = digits.startsWith("+") ? digits : `+${digits.replace(/\D/g, "")}`;
 
     try {
-      await api.initiateCall(fromNumber.phone_number, toNumber);
+      await startCall(toNumber);
       setCallState("connected");
       refreshCalls();
     } catch (err: any) {
@@ -109,7 +134,8 @@ export default function Dialer() {
     }
   };
 
-  const hangUp = () => {
+  const hangUp = async () => {
+    await hangupCall();
     if (timerRef.current) clearInterval(timerRef.current);
     setCallState("ended");
     refreshCalls();
@@ -161,6 +187,13 @@ export default function Dialer() {
           <Pressable onPress={() => router.push("/picker")} style={s.noNumBtn}>
             <Text style={s.noNumBtnTxt}>Add Number</Text>
           </Pressable>
+        </View>
+      )}
+
+      {!telnyxReady && numbers.length > 0 && (
+        <View style={s.noNumBanner}>
+          <Feather name="loader" size={15} color={C.accent} />
+          <Text style={s.noNumTxt}>Connecting secure voice service…</Text>
         </View>
       )}
 
@@ -216,7 +249,14 @@ export default function Dialer() {
           <View style={s.controlsRow}>
             <Pressable
               style={[s.ctrlBtn, muted && s.ctrlBtnActive]}
-              onPress={() => setMuted(m => !m)}
+              onPress={async () => {
+                try {
+                  await muteCall();
+                  setMuted(m => !m);
+                } catch (err: any) {
+                  showToast(err?.message || "Mute failed", "error");
+                }
+              }}
             >
               <Feather name={muted ? "mic-off" : "mic"} size={22} color={muted ? C.red : C.textSec} />
               <Text style={[s.ctrlLabel, muted && { color: C.red }]}>Mute</Text>

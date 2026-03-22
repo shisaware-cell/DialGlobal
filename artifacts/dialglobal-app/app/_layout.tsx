@@ -16,17 +16,25 @@ SplashScreen.preventAutoHideAsync();
 const queryClient = new QueryClient();
 
 function IncomingCallOverlay() {
-  const { incomingCall, dismissIncomingCall, showToast } = useApp();
+  const { incomingCall, answerCall, hangupCall, showToast } = useApp();
   if (!incomingCall) return null;
 
-  const handleAccept = () => {
-    dismissIncomingCall();
-    showToast("Call connected", "success");
+  const handleAccept = async () => {
+    try {
+      await answerCall();
+      showToast("Call connected", "success");
+    } catch (err: any) {
+      showToast(err?.message || "Unable to answer call", "error");
+    }
   };
 
-  const handleDecline = () => {
-    dismissIncomingCall();
-    showToast("Call declined", "info");
+  const handleDecline = async () => {
+    try {
+      await hangupCall();
+      showToast("Call declined", "info");
+    } catch (err: any) {
+      showToast(err?.message || "Unable to decline call", "error");
+    }
   };
 
   return (

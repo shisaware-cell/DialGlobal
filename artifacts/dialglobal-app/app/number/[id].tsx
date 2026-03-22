@@ -16,6 +16,7 @@ export default function NumberDetail() {
     recordings, toggleRecording,
     forwarding, toggleForwarding,
     forwardingNums, setForwardingNum,
+    telnyxReady, activeCall, startCall, hangupCall,
     showToast,
   } = useApp();
   const num = numbers.find(n => n.id === id);
@@ -95,6 +96,24 @@ export default function NumberDetail() {
     showToast("Forwarding number saved", "success");
   };
 
+  const handleQuickCall = async () => {
+    try {
+      await startCall(num.phone_number);
+      showToast(`Calling ${num.phone_number}`, "info");
+    } catch (err: any) {
+      showToast(err?.message || "Unable to place call", "error");
+    }
+  };
+
+  const handleHangup = async () => {
+    try {
+      await hangupCall();
+      showToast("Call ended", "info");
+    } catch (err: any) {
+      showToast(err?.message || "Unable to end call", "error");
+    }
+  };
+
   return (
     <View style={[styles.root, { paddingTop: insets.top + 8 }]}>
 
@@ -151,7 +170,7 @@ export default function NumberDetail() {
         {/* ── Quick actions ── */}
         <View style={styles.quickRow}>
           {[
-            { icon: "phone",          label: "Call",    onPress: () => {} },
+            { icon: "phone",          label: "Call",    onPress: handleQuickCall },
             { icon: "message-square", label: "Message", onPress: () => router.push("/(tabs)/inbox") },
             { icon: "copy",           label: "Copy",    onPress: copyNumber },
           ].map(q => (
@@ -165,6 +184,25 @@ export default function NumberDetail() {
             </Pressable>
           ))}
         </View>
+
+        {activeCall && (
+          <View style={styles.activeCallCard}>
+            <View style={styles.activeCallMeta}>
+              <Text style={styles.activeCallTitle}>Active Call</Text>
+              <Text style={styles.activeCallSub}>
+                {activeCall.number} · {activeCall.state}
+              </Text>
+            </View>
+            <Pressable style={styles.endCallBtn} onPress={handleHangup}>
+              <Feather name="phone-off" size={14} color="#fff" />
+              <Text style={styles.endCallTxt}>End</Text>
+            </Pressable>
+          </View>
+        )}
+
+        {!telnyxReady && (
+          <Text style={styles.telnyxHint}>Calling service is connecting…</Text>
+        )}
 
         {/* ── Call Settings ── */}
         <Text style={styles.secTitle}>CALL SETTINGS</Text>
@@ -347,6 +385,41 @@ const styles = StyleSheet.create({
     borderWidth: 1, borderColor: C.border, alignItems: "center", justifyContent: "center", gap: 7,
   },
   quickLbl: { fontFamily: "Inter_500Medium", fontSize: 11.5, color: C.textSec },
+  activeCallCard: {
+    marginHorizontal: 16,
+    marginTop: -8,
+    marginBottom: 18,
+    backgroundColor: C.blueDim,
+    borderWidth: 1,
+    borderColor: C.border,
+    borderRadius: 12,
+    padding: 12,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+  },
+  activeCallMeta: { flex: 1 },
+  activeCallTitle: { fontFamily: "Inter_700Bold", fontSize: 12, color: C.blue },
+  activeCallSub: { fontFamily: "Inter_500Medium", fontSize: 11.5, color: C.textSec, marginTop: 3 },
+  endCallBtn: {
+    height: 34,
+    borderRadius: 8,
+    backgroundColor: C.red,
+    paddingHorizontal: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+  },
+  endCallTxt: { fontFamily: "Inter_700Bold", fontSize: 12, color: "#fff" },
+  telnyxHint: {
+    marginHorizontal: 16,
+    marginTop: -6,
+    marginBottom: 14,
+    fontFamily: "Inter_400Regular",
+    fontSize: 11,
+    color: C.textMuted,
+  },
 
   secTitle: {
     paddingHorizontal: 16, paddingBottom: 8,

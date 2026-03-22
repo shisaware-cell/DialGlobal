@@ -1,9 +1,10 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { router } from "expo-router";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "@/lib/supabase";
 import { api } from "@/lib/api";
 import { PLANS } from "@/data/mockData";
+import { telnyxService } from "@/services/TelnyxService";
 import type { Session, User } from "@supabase/supabase-js";
 
 const CREDITS_KEY = "@dialglobal_credits";
@@ -58,7 +59,8 @@ export type Contact = { name: string; phone: string; initials: string };
 
 export type ToastType = "info" | "success" | "warning" | "error";
 export type Toast = { message: string; type: ToastType } | null;
-export type IncomingCall = { caller: string; number: string } | null;
+export type ActiveCall = { state: string; caller: string; number: string; callObj: any } | null;
+export type IncomingCall = { caller: string; number: string; callObj: any } | null;
 
 type AppCtx = {
   isAuthed: boolean;
@@ -118,8 +120,13 @@ type AppCtx = {
   toast: Toast;
   showToast: (message: string, type?: ToastType) => void;
   dismissToast: () => void;
+  telnyxReady: boolean;
+  activeCall: ActiveCall;
   incomingCall: IncomingCall;
-  simulateIncomingCall: () => void;
+  startCall: (number: string) => Promise<void>;
+  answerCall: () => Promise<void>;
+  hangupCall: () => Promise<void>;
+  muteCall: () => Promise<void>;
   dismissIncomingCall: () => void;
   activeEsim: string | null;
   activateEsim: (planId: string) => void;
@@ -165,8 +172,15 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [forwardingNums, setForwardingNums] = useState<Record<string, string>>({});
   const [notifications, setNotificationsState] = useState(true);
   const [toast, setToast] = useState<Toast>(null);
+  const [telnyxReady, setTelnyxReady] = useState(false);
+  const [activeCall, setActiveCall] = useState<ActiveCall>(null);
   const [incomingCall, setIncomingCall] = useState<IncomingCall>(null);
   const [activeEsim, setActiveEsimState] = useState<string | null>(null);
+  const incomingCallRef = useRef<IncomingCall>(null);
+
+  useEffect(() => {
+    incomingCallRef.current = incomingCall;
+  }, [incomingCall]);
 
   const loadProfile = async (userId: string) => {
     const { data } = await supabase
@@ -362,10 +376,89 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setTimeout(() => setToast(null), 3500);
   }, []);
 
+  useEffect(() => {
+    let disposed = false;
+
+    if (!isAuthed) {
+      telnyxService.disconnect();
+      setTelnyxReady(false);
+      setActiveCall(null);
+      setIncomingCall(null);
+      return;
+    }
+
+    telnyxService.init({
+      getLoginToken: async () => {
+        const res = await api.getTelnyxToken();
+        return res.login_token as string;
+      },
+      onClientReady: (ready) => {
+        if (!disposed) setTelnyxReady(ready);
+      },
+      onIncomingCall: (incoming) => {
+        if (disposed) return;
+        setIncomingCall(incoming);
+        setActiveCall({ state: "ringing", caller: incoming.caller, number: incoming.number, callObj: incoming.callObj });
+      },
+      onCallState: (payload) => {
+        if (disposed) return;
+        const normalized = {
+          state: payload.state,
+          caller: payload.caller,
+          number: payload.number,
+          callObj: payload.callObj,
+        };
+
+        if (["hangup", "destroy", "ended", "done", "disconnected"].includes(String(payload.state).toLowerCase())) {
+          setActiveCall(null);
+          setIncomingCall(null);
+          return;
+        }
+
+        setActiveCall(normalized);
+      },
+      onError: (err) => {
+        if (!disposed) showToast(err.message || "Telnyx connection failed", "error");
+      },
+    }).catch((err) => {
+      if (!disposed) showToast(err.message || "Unable to initialize calling", "error");
+    });
+
+    return () => {
+      disposed = true;
+      telnyxService.disconnect();
+    };
+  }, [isAuthed, showToast]);
+
   const dismissToast = useCallback(() => setToast(null), []);
-  const simulateIncomingCall = useCallback(() => {
-    setIncomingCall({ caller: "Marcus Webb", number: "+1 917 555 0134" });
+  const startCall = useCallback(async (number: string) => {
+    const destination = number?.trim();
+    if (!destination) throw new Error("Destination number is required");
+
+    const callObj = await telnyxService.makeCall(destination, "DialGlobal");
+    setIncomingCall(null);
+    setActiveCall({ state: "calling", caller: "DialGlobal", number: destination, callObj });
   }, []);
+
+  const answerCall = useCallback(async () => {
+    await telnyxService.answer();
+    const incoming = incomingCallRef.current;
+    if (incoming) {
+      setActiveCall({ state: "connected", caller: incoming.caller, number: incoming.number, callObj: incoming.callObj });
+    }
+    setIncomingCall(null);
+  }, []);
+
+  const hangupCall = useCallback(async () => {
+    await telnyxService.hangup();
+    setActiveCall(null);
+    setIncomingCall(null);
+  }, []);
+
+  const muteCall = useCallback(async () => {
+    await telnyxService.muteAudio();
+  }, []);
+
   const dismissIncomingCall = useCallback(() => setIncomingCall(null), []);
   const activateEsim = useCallback((planId: string) => setActiveEsimState(planId), []);
 
@@ -384,6 +477,10 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     setCredits(0);
     setIsInTrial(false);
     setTrialExpired(false);
+    telnyxService.disconnect();
+    setTelnyxReady(false);
+    setActiveCall(null);
+    setIncomingCall(null);
     router.replace("/onboarding");
   };
 
@@ -403,7 +500,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       forwarding, toggleForwarding, forwardingNums, setForwardingNum,
       notifications, setNotifications,
       toast, showToast, dismissToast,
-      incomingCall, simulateIncomingCall, dismissIncomingCall,
+      telnyxReady, activeCall, incomingCall,
+      startCall, answerCall, hangupCall, muteCall, dismissIncomingCall,
       activeEsim, activateEsim,
     }}>
       {children}
