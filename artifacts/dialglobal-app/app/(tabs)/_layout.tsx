@@ -90,7 +90,7 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
             <View style={tb.fabWrap}>
               {state.index === 0 ? (
                 <Pressable
-                  onPress={() => isAuthed ? router.push("/picker") : router.push("/paywall")}
+                  onPress={() => router.push("/picker")}
                   hitSlop={10}
                 >
                   <AnimatedFab />
