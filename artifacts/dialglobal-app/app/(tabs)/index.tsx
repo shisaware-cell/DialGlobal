@@ -11,11 +11,16 @@ import { useApp, VirtualNumber } from "@/context/AppContext";
 
 function NumberRow({ num, onDelete }: { num: VirtualNumber; onDelete: () => void }) {
   const [open, setOpen] = useState(false);
-  const { recordings, toggleRecording, forwarding, toggleForwarding, dndNumbers, toggleDnd, showToast } = useApp();
+  const { recordings, toggleRecording, forwarding, toggleForwarding, dndNumbers, toggleDnd, showToast, isAuthed } = useApp();
 
   const isRecording = recordings[num.id] ?? false;
   const isForwarding = forwarding[num.id] ?? false;
   const isDnd = dndNumbers[num.id] ?? false;
+
+  const guestGuard = (action: () => void) => {
+    if (!isAuthed) { router.push("/paywall"); return; }
+    action();
+  };
 
   const TOGGLES = [
     {
@@ -23,20 +28,20 @@ function NumberRow({ num, onDelete }: { num: VirtualNumber; onDelete: () => void
       sub: "Auto-save all calls",
       icon: "mic" as const,
       value: isRecording,
-      toggle: () => {
+      toggle: () => guestGuard(() => {
         toggleRecording(num.id);
         showToast(isRecording ? "Recording disabled" : "Recording enabled", isRecording ? "info" : "success");
-      },
+      }),
     },
     {
       label: "Call Forwarding",
       sub: "Route to another number",
       icon: "phone-forwarded" as const,
       value: isForwarding,
-      toggle: () => {
+      toggle: () => guestGuard(() => {
         toggleForwarding(num.id);
         showToast(isForwarding ? "Forwarding disabled" : "Forwarding enabled", isForwarding ? "info" : "success");
-      },
+      }),
     },
     {
       label: "Do Not Disturb",
@@ -91,11 +96,11 @@ function NumberRow({ num, onDelete }: { num: VirtualNumber; onDelete: () => void
         <View style={styles.expanded}>
           {/* Quick actions */}
           <View style={styles.actionBtns}>
-            <Pressable style={[styles.actionBtn, { backgroundColor: C.accent, flex: 1 }]}>
+            <Pressable style={[styles.actionBtn, { backgroundColor: C.accent, flex: 1 }]} onPress={() => guestGuard(() => router.push("/dialer"))}>
               <Feather name="phone" size={12} color={C.onAccent} />
               <Text style={[styles.actionTxt, { color: C.onAccent }]}>Call</Text>
             </Pressable>
-            <Pressable style={[styles.actionBtn, { flex: 1 }]} onPress={() => router.push("/(tabs)/inbox")}>
+            <Pressable style={[styles.actionBtn, { flex: 1 }]} onPress={() => guestGuard(() => router.push("/(tabs)/inbox"))}>
               <Feather name="message-square" size={12} color={C.textSec} />
               <Text style={styles.actionTxt}>Message</Text>
             </Pressable>
@@ -141,20 +146,25 @@ function NumberRow({ num, onDelete }: { num: VirtualNumber; onDelete: () => void
   );
 }
 
-const QUICK_ACCESS = [
-  { image: require("@/assets/images/esim.png"),         label: "eSIM Data",    sub: "Travel ready",      onPress: () => router.push("/esim")        },
-  { image: require("@/assets/images/spam_blocker.png"), label: "Spam Blocker", sub: "Block unwanted",    onPress: () => router.push("/spamblocker") },
-  { image: require("@/assets/images/auto-reply.png"),   label: "Auto-Reply",   sub: "Set away messages", onPress: () => router.push("/autoreply")   },
-  { image: require("@/assets/images/contact_list.png"), label: "Contacts",     sub: "Sync & manage",     onPress: () => router.push("/contacts")    },
+const QUICK_ACCESS_DEF = [
+  { image: require("@/assets/images/esim.png"),         label: "eSIM Data",    sub: "Travel ready",      route: "/esim",        gated: true  },
+  { image: require("@/assets/images/spam_blocker.png"), label: "Spam Blocker", sub: "Block unwanted",    route: "/spamblocker", gated: true  },
+  { image: require("@/assets/images/auto-reply.png"),   label: "Auto-Reply",   sub: "Set away messages", route: "/autoreply",   gated: true  },
+  { image: require("@/assets/images/contact_list.png"), label: "Contacts",     sub: "Sync & manage",     route: "/contacts",    gated: false },
 ] as const;
 
 export default function NumbersScreen() {
   const insets = useSafeAreaInsets();
   const {
     numbers, messages, removeNumber, refreshNumbers,
-    profile,
+    profile, isAuthed,
     isInTrial, trialEnds, trialMinsUsed, trialSmsUsed, trialExpired,
   } = useApp();
+
+  const guestGuardQA = (gated: boolean, route: string) => {
+    if (gated && !isAuthed) { router.push("/paywall"); return; }
+    router.push(route as any);
+  };
   const unreadCount = messages.filter(m => !m.read).length;
   const isWeb = Platform.OS === "web";
   const tabBarH = isWeb ? 84 : 66;
@@ -179,7 +189,7 @@ export default function NumbersScreen() {
     if (h < 17) return "GOOD AFTERNOON";
     return "GOOD EVENING";
   })();
-  const userName = profile?.name || profile?.email?.split("@")[0] || "User";
+  const userName = profile?.name || profile?.email?.split("@")[0] || (isAuthed ? "User" : "Guest");
 
   return (
     <View style={[styles.root, { paddingTop: insets.top + (isWeb ? 67 : 0) }]}>
@@ -342,11 +352,11 @@ export default function NumbersScreen() {
         <View style={styles.qaSection}>
           <Text style={styles.qaHeading}>QUICK ACCESS</Text>
           <View style={styles.qaGrid}>
-            {QUICK_ACCESS.map(q => (
+            {QUICK_ACCESS_DEF.map(q => (
               <Pressable
                 key={q.label}
                 style={({ pressed }) => [styles.qaCard, { opacity: pressed ? 0.75 : 1 }]}
-                onPress={q.onPress}
+                onPress={() => guestGuardQA(q.gated, q.route)}
               >
                 <Image source={q.image} style={styles.qaIcon} />
                 <Text style={styles.qaLabel}>{q.label}</Text>
