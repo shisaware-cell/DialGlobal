@@ -5,6 +5,7 @@ import {
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import C from "@/constants/colors";
+import { CharGlobeHolder, CharMidCall, CharTraveller } from "@/components/Characters";
 
 const { width: SW } = Dimensions.get("window");
 
@@ -98,21 +99,21 @@ const SLIDES = [
     bigWord: "Global.",
     sub: "Real local phone numbers in 100+ countries. Receive calls and texts like a local.",
     bg: "#D4E6FF",
-    Visual: GlobalVisual,
+    Character: CharGlobeHolder,
   },
   {
     key: "instant",
     bigWord: "Instant.",
     sub: "Get a number in seconds. Manage calls, texts, and voicemail from one clean dashboard.",
     bg: "#D4F0E4",
-    Visual: InstantVisual,
+    Character: CharMidCall,
   },
   {
     key: "private",
     bigWord: "Private.",
     sub: "Your real number stays hidden. Every call encrypted. Your identity, on your terms.",
     bg: "#EDD4FF",
-    Visual: PrivateVisual,
+    Character: CharTraveller,
   },
 ];
 
@@ -144,7 +145,7 @@ export default function Onboarding() {
             <Text style={styles.skipTxt}>Skip</Text>
           </Pressable>
         )}
-        <sl.Visual />
+        <sl.Character size={200} />
       </Animated.View>
 
       {/* ── White bottom sheet ── */}
