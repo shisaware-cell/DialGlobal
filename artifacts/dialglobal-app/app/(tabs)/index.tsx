@@ -209,55 +209,72 @@ export default function NumbersScreen() {
           </View>
         </View>
 
-        {/* ── Stats strip ── */}
-        <View style={styles.statsStrip}>
-          <View style={[styles.statCard, { backgroundColor: C.accentDim }]}>
-            <View style={styles.statTopRow}>
-              <Text style={[styles.statLabelUp, { color: C.accent }]}>Numbers</Text>
-              <View style={[styles.statIco, { backgroundColor: C.accentGlow }]}>
-                <Feather name="hash" size={11} color={C.accent} />
+        {/* ── Stat Tiles ── */}
+        <View style={styles.tilesRow}>
+          {/* Numbers tile */}
+          <View style={[styles.tile, { backgroundColor: C.accentDim, borderColor: "rgba(232,160,32,0.22)" }]}>
+            <View style={styles.tileTop}>
+              <View style={[styles.tileIco, { backgroundColor: "rgba(232,160,32,0.22)" }]}>
+                <Feather name="hash" size={13} color={C.accent} />
+              </View>
+              <View style={[styles.trendPill, { backgroundColor: "rgba(232,160,32,0.18)" }]}>
+                <Feather name="arrow-up-right" size={9} color={C.accent} />
+                <Text style={[styles.trendTxt, { color: C.accent }]}>Active</Text>
               </View>
             </View>
-            <Text style={[styles.statVal, { color: C.accent }]}>{numbers.length}</Text>
+            <Text style={[styles.tileVal, { color: C.accent }]}>{numbers.length}</Text>
+            <Text style={[styles.tileLbl, { color: C.accent }]}>Numbers</Text>
             <View style={styles.sparkline}>
-              {[3, 5, 4, 6, 5, 7, 6].map((h, i) => (
+              {[3, 5, 4, 6, 5, 7, numbers.length > 0 ? 8 : 3].map((h, i) => (
                 <View key={i} style={[styles.sparkBar, {
                   height: h * 3,
-                  backgroundColor: i === 6 ? C.accent : "rgba(232,160,32,0.28)",
+                  backgroundColor: i === 6 ? C.accent : "rgba(232,160,32,0.3)",
                 }]} />
               ))}
             </View>
           </View>
-          <View style={[styles.statCard, { backgroundColor: C.greenDim }]}>
-            <View style={styles.statTopRow}>
-              <Text style={[styles.statLabelUp, { color: C.green }]}>Messages</Text>
-              <View style={[styles.statIco, { backgroundColor: "rgba(22,163,74,0.18)" }]}>
-                <Feather name="message-square" size={11} color={C.green} />
+
+          {/* Messages tile */}
+          <View style={[styles.tile, { backgroundColor: C.greenDim, borderColor: "rgba(22,163,74,0.18)" }]}>
+            <View style={styles.tileTop}>
+              <View style={[styles.tileIco, { backgroundColor: "rgba(22,163,74,0.2)" }]}>
+                <Feather name="message-square" size={13} color={C.green} />
+              </View>
+              <View style={[styles.trendPill, { backgroundColor: "rgba(22,163,74,0.15)" }]}>
+                <Feather name="arrow-up-right" size={9} color={C.green} />
+                <Text style={[styles.trendTxt, { color: C.green }]}>SMS</Text>
               </View>
             </View>
-            <Text style={[styles.statVal, { color: C.green }]}>{totalSms}</Text>
+            <Text style={[styles.tileVal, { color: C.green }]}>{totalSms}</Text>
+            <Text style={[styles.tileLbl, { color: C.green }]}>Messages</Text>
             <View style={styles.sparkline}>
               {[3, 4, 5, 4, 6, 5, 7].map((h, i) => (
                 <View key={i} style={[styles.sparkBar, {
                   height: h * 3,
-                  backgroundColor: i === 6 ? C.green : "rgba(22,163,74,0.25)",
+                  backgroundColor: i === 6 ? C.green : "rgba(22,163,74,0.27)",
                 }]} />
               ))}
             </View>
           </View>
-          <View style={[styles.statCard, { backgroundColor: C.blueDim }]}>
-            <View style={styles.statTopRow}>
-              <Text style={[styles.statLabelUp, { color: C.blue }]}>Calls</Text>
-              <View style={[styles.statIco, { backgroundColor: "rgba(37,99,235,0.15)" }]}>
-                <Feather name="phone" size={11} color={C.blue} />
+
+          {/* Calls tile */}
+          <View style={[styles.tile, { backgroundColor: C.blueDim, borderColor: "rgba(37,99,235,0.15)" }]}>
+            <View style={styles.tileTop}>
+              <View style={[styles.tileIco, { backgroundColor: "rgba(37,99,235,0.18)" }]}>
+                <Feather name="phone" size={13} color={C.blue} />
+              </View>
+              <View style={[styles.trendPill, { backgroundColor: "rgba(37,99,235,0.12)" }]}>
+                <Feather name="arrow-up-right" size={9} color={C.blue} />
+                <Text style={[styles.trendTxt, { color: C.blue }]}>Total</Text>
               </View>
             </View>
-            <Text style={[styles.statVal, { color: C.blue }]}>{totalCalls}</Text>
+            <Text style={[styles.tileVal, { color: C.blue }]}>{totalCalls}</Text>
+            <Text style={[styles.tileLbl, { color: C.blue }]}>Calls</Text>
             <View style={styles.sparkline}>
               {[4, 3, 5, 4, 6, 5, 7].map((h, i) => (
                 <View key={i} style={[styles.sparkBar, {
                   height: h * 3,
-                  backgroundColor: i === 6 ? C.blue : "rgba(37,99,235,0.20)",
+                  backgroundColor: i === 6 ? C.blue : "rgba(37,99,235,0.22)",
                 }]} />
               ))}
             </View>
@@ -367,25 +384,28 @@ const styles = StyleSheet.create({
   },
   notifBadgeTxt: { fontFamily: "Inter_700Bold", fontSize: 9, color: "#fff" },
 
-  statsStrip: {
+  tilesRow: {
     flexDirection: "row", gap: 8,
-    paddingHorizontal: 16, paddingTop: 16, paddingBottom: 16,
+    paddingHorizontal: 14, paddingTop: 14, paddingBottom: 14,
     backgroundColor: C.surface, borderBottomWidth: 1, borderBottomColor: C.border,
   },
-  statCard: {
-    flex: 1, borderRadius: 16, padding: 13,
-    borderWidth: 1, borderColor: C.border,
+  tile: {
+    flex: 1, borderRadius: 18, padding: 12,
+    borderWidth: 1.5, gap: 2,
   },
-  statTopRow: {
-    flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 5,
+  tileTop: {
+    flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 6,
   },
-  statLabelUp: {
-    fontFamily: "Inter_600SemiBold", fontSize: 9, letterSpacing: 0.8, textTransform: "uppercase",
+  tileIco: {
+    width: 28, height: 28, borderRadius: 9, alignItems: "center", justifyContent: "center",
   },
-  statIco: {
-    width: 22, height: 22, borderRadius: 7, alignItems: "center", justifyContent: "center",
+  trendPill: {
+    flexDirection: "row", alignItems: "center", gap: 2,
+    paddingHorizontal: 5, paddingVertical: 2, borderRadius: 99,
   },
-  statVal: { fontFamily: "Inter_700Bold", fontSize: 28, letterSpacing: -1, marginBottom: 8 },
+  trendTxt: { fontFamily: "Inter_700Bold", fontSize: 8.5, letterSpacing: 0.3 },
+  tileVal: { fontFamily: "Inter_700Bold", fontSize: 30, letterSpacing: -1.5, lineHeight: 34 },
+  tileLbl: { fontFamily: "Inter_600SemiBold", fontSize: 10, letterSpacing: 0.4, marginBottom: 8 },
   sparkline: { flexDirection: "row", alignItems: "flex-end", gap: 2.5, height: 21 },
   sparkBar: { flex: 1, borderRadius: 2 },
 
