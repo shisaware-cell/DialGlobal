@@ -84,7 +84,7 @@ router.post("/numbers/provision", async (req, res) => {
     return;
   }
 
-  const { phone_number, country, country_code, flag, trial_days } = req.body;
+  const { phone_number, country, country_code, flag, trial_days, number_kind } = req.body;
   if (!phone_number) {
     res.status(400).json({ error: "phone_number required" });
     return;
@@ -115,7 +115,9 @@ router.post("/numbers/provision", async (req, res) => {
         country: country || "United States",
         country_code: country_code || "US",
         flag: flag || "🇺🇸",
-        type: expiresAt ? "trial" : "permanent",
+        type: expiresAt
+          ? (number_kind === "landline" ? "landline-trial" : "trial")
+          : (number_kind === "landline" ? "landline" : "permanent"),
         telnyx_order_id: orderId,
         status: "active",
         expires_at: expiresAt,
