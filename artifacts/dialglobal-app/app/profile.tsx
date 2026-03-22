@@ -11,7 +11,7 @@ import { PLANS } from "@/data/mockData";
 
 export default function Profile() {
   const insets = useSafeAreaInsets();
-  const { profile, numbers, currentPlan, signOut, updateProfile } = useApp();
+  const { profile, numbers, currentPlan, signOut, updateProfile, isAuthed } = useApp();
   const plan = PLANS.find(p => p.id === currentPlan) ?? PLANS[0];
 
   const [name,    setName]    = useState(profile?.name  ?? "");
@@ -26,7 +26,8 @@ export default function Profile() {
     }
   }, [profile]);
 
-  const initial = (name || profile?.name || "U").charAt(0).toUpperCase();
+  const displayName = isAuthed ? (profile?.name || profile?.email?.split("@")[0] || "User") : "Guest";
+  const initial = displayName.charAt(0).toUpperCase();
 
   const memberSince = profile
     ? new Date((profile as any).created_at ?? Date.now()).toLocaleDateString("en-US", {
@@ -82,7 +83,7 @@ export default function Profile() {
               <Feather name="camera" size={13} color={C.textSec} />
             </Pressable>
           </View>
-          <Text style={styles.name}>{profile?.name || profile?.email?.split("@")[0] || "User"}</Text>
+          <Text style={styles.name}>{displayName}</Text>
           <Text style={styles.email}>{profile?.email || ""}</Text>
           {plan && (
             <View style={styles.planBadge}>

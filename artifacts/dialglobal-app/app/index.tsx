@@ -4,11 +4,22 @@ import { supabase } from "@/lib/supabase";
 
 export default function Index() {
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        router.replace("/(tabs)");
-      } else {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
+      if (!session) {
         router.replace("/onboarding");
+        return;
+      }
+
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("plan")
+        .eq("id", session.user.id)
+        .single();
+
+      if (!profile?.plan) {
+        router.replace("/number-assignment");
+      } else {
+        router.replace("/(tabs)");
       }
     });
   }, []);

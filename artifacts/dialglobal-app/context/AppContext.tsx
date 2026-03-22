@@ -1,15 +1,19 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { router } from "expo-router";
 import { Platform } from "react-native";
+import Constants from "expo-constants";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as Notifications from "expo-notifications";
 import * as ExpoAV from "expo-av";
+
 import { supabase } from "@/lib/supabase";
 import { api } from "@/lib/api";
 import { PLANS } from "@/data/mockData";
 import { telnyxService } from "@/services/TelnyxService";
+
 import type { Session, User } from "@supabase/supabase-js";
 
+const isExpoGo = Constants.appOwnership === "expo";
 const CREDITS_KEY = "@dialglobal_credits";
 
 export type VirtualNumber = {
@@ -475,7 +479,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         telnyxService.handlePushNotification(response?.notification?.request?.content?.data).catch(() => {});
       });
 
-      if (Platform.OS !== "ios") return;
+      if (Platform.OS !== "ios" || isExpoGo) return;
 
       try { voipInstance = require("react-native-voip-push-notification").default; } catch { voipInstance = null; }
       if (!voipInstance) return;

@@ -62,8 +62,8 @@ export default function Settings() {
   const price = billing === "yearly" ? plan?.yearlyPrice : plan?.monthlyPrice;
   const needsTrialStart = isAuthed && numbers.length === 0 && !isInTrial && !trialExpired;
 
-  const userName  = profile?.name  || profile?.email?.split("@")[0] || "User";
-  const userEmail = profile?.email || "user@dialglobal.io";
+  const userName  = isAuthed ? (profile?.name || profile?.email?.split("@")[0] || "User") : "Guest";
+  const userEmail = isAuthed ? (profile?.email || "") : "Not signed in";
 
   const signOut = () => {
     Alert.alert("Sign Out?", "You'll be logged out on this device.", [
