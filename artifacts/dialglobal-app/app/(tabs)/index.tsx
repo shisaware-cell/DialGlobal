@@ -146,12 +146,13 @@ function NumberRow({ num, onDelete }: { num: VirtualNumber; onDelete: () => void
   );
 }
 
-const QUICK_ACCESS_DEF = [
-  { image: require("@/assets/images/esim.png"),         label: "eSIM Data",    sub: "Travel ready",      route: "/esim",        gated: false },
-  { image: require("@/assets/images/spam_blocker.png"), label: "Spam Blocker", sub: "Block unwanted",    route: "/spamblocker", gated: true  },
-  { image: require("@/assets/images/auto-reply.png"),   label: "Auto-Reply",   sub: "Set away messages", route: "/autoreply",   gated: true  },
-  { image: require("@/assets/images/contact_list.png"), label: "Contacts",     sub: "Sync & manage",     route: "/contacts",    gated: false },
-] as const;
+type QAItem = { image?: any; icon?: string; iconBg?: string; iconColor?: string; label: string; sub: string; route: string; gated: boolean };
+const QUICK_ACCESS_DEF: QAItem[] = [
+  { image: require("@/assets/images/esim.png"),         label: "eSIM Data",    sub: "Travel ready",      route: "/esim",                  gated: false },
+  { icon: "phone-call", iconBg: "#D4E8FF", iconColor: "#2D60C8", label: "Landline",  sub: "Business number",   route: "/picker?type=landline",  gated: false },
+  { image: require("@/assets/images/spam_blocker.png"), label: "Spam Blocker", sub: "Block unwanted",    route: "/spamblocker",           gated: true  },
+  { image: require("@/assets/images/auto-reply.png"),   label: "Auto-Reply",   sub: "Set away messages", route: "/autoreply",             gated: true  },
+];
 
 export default function NumbersScreen() {
   const insets = useSafeAreaInsets();
@@ -358,7 +359,13 @@ export default function NumbersScreen() {
                 style={({ pressed }) => [styles.qaCard, { opacity: pressed ? 0.75 : 1 }]}
                 onPress={() => guestGuardQA(q.gated, q.route)}
               >
-                <Image source={q.image} style={styles.qaIcon} />
+                {q.image ? (
+                  <Image source={q.image} style={styles.qaIcon} />
+                ) : (
+                  <View style={[styles.qaIconBox, { backgroundColor: q.iconBg }]}>
+                    <Feather name={q.icon as any} size={20} color={q.iconColor} />
+                  </View>
+                )}
                 <Text style={styles.qaLabel}>{q.label}</Text>
                 <Text style={styles.qaSub}>{q.sub}</Text>
               </Pressable>
@@ -494,6 +501,7 @@ const styles = StyleSheet.create({
     padding: 14, gap: 4,
   },
   qaIcon: { width: 36, height: 36, marginBottom: 4, resizeMode: "contain" },
+  qaIconBox: { width: 36, height: 36, borderRadius: 10, alignItems: "center", justifyContent: "center", marginBottom: 4 },
   qaLabel: { fontFamily: "Inter_700Bold", fontSize: 13, color: C.text },
   qaSub: { fontFamily: "Inter_400Regular", fontSize: 11, color: C.textMuted },
 
