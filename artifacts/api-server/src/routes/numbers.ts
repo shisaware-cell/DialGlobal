@@ -43,7 +43,7 @@ async function cleanupExpiredNumbers() {
 }
 
 router.get("/numbers/search", async (req, res) => {
-  const { country_code = "US", limit = "10" } = req.query;
+  const { country_code = "US", limit = "10", number_type } = req.query;
 
   try {
     const result = await telnyx.availablePhoneNumbers.list({
@@ -51,6 +51,7 @@ router.get("/numbers/search", async (req, res) => {
         country_code: country_code as string,
         limit: parseInt(limit as string),
         features: ["sms", "voice"],
+        ...(number_type ? { phone_number_type: number_type as string } : {}),
       },
     });
 
