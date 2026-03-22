@@ -85,13 +85,15 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
       {items.map(({ route, index, isFocused, options, onPress }) => (
         <React.Fragment key={route.key}>
           {index === FAB_INSERT_BEFORE && (
-            <Pressable
-              style={tb.fabWrap}
-              onPress={() => router.push("/picker")}
-              hitSlop={10}
-            >
-              <AnimatedFab />
-            </Pressable>
+            <View style={tb.fabWrap}>
+              {state.index === 0 ? (
+                <Pressable onPress={() => router.push("/picker")} hitSlop={10}>
+                  <AnimatedFab />
+                </Pressable>
+              ) : (
+                <View style={tb.fabPlaceholder} />
+              )}
+            </View>
           )}
 
           <Pressable style={tb.tabItem} onPress={onPress} hitSlop={6}>
@@ -206,6 +208,10 @@ const tb = StyleSheet.create({
     width: 72,
     paddingBottom: 6,
     zIndex: 10,
+  },
+  fabPlaceholder: {
+    width: 56,
+    height: 56,
   },
   fab: {
     width: 56,
