@@ -147,7 +147,7 @@ function NumberRow({ num, onDelete }: { num: VirtualNumber; onDelete: () => void
 }
 
 const QUICK_ACCESS_DEF = [
-  { image: require("@/assets/images/esim.png"),         label: "eSIM Data",    sub: "Travel ready",      route: "/esim",        gated: true  },
+  { image: require("@/assets/images/esim.png"),         label: "eSIM Data",    sub: "Travel ready",      route: "/esim",        gated: false },
   { image: require("@/assets/images/spam_blocker.png"), label: "Spam Blocker", sub: "Block unwanted",    route: "/spamblocker", gated: true  },
   { image: require("@/assets/images/auto-reply.png"),   label: "Auto-Reply",   sub: "Set away messages", route: "/autoreply",   gated: true  },
   { image: require("@/assets/images/contact_list.png"), label: "Contacts",     sub: "Sync & manage",     route: "/contacts",    gated: false },
