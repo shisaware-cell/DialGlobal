@@ -75,6 +75,7 @@ export const api = {
     country: string;
     country_code: string;
     flag: string;
+    number_kind?: string;
   }) =>
     apiFetch("/numbers/provision", {
       method: "POST",
