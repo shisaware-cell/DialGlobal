@@ -3,6 +3,7 @@ import {
   View, Text, StyleSheet, ScrollView, Pressable, TextInput,
   ActivityIndicator,
 } from "react-native";
+import { CharCelebrating } from "@/components/Characters";
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Feather } from "@expo/vector-icons";
@@ -174,14 +175,17 @@ export default function NumberAssignment() {
       <View style={[act.root, { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 32 }]}>
         <View style={act.iconWrap}>
           {progress < 100 ? (
-            <ActivityIndicator size="large" color={C.accent} />
+            <View style={{ position: "relative", width: 160, height: 160, alignItems: "center", justifyContent: "center" }}>
+              <ActivityIndicator size="large" color={C.accent} style={{ position: "absolute", width: 160, height: 160 }} />
+              <CharCelebrating size={130} />
+            </View>
           ) : (
-            <Text style={{ fontSize: 52 }}>✅</Text>
+            <CharCelebrating size={160} />
           )}
         </View>
 
         <Text style={act.title}>
-          {progress < 100 ? "Setting things up…" : "You're all set!"}
+          {progress < 100 ? "Setting things up…" : "You're all set! 🎉"}
         </Text>
         <Text style={act.sub}>
           {progress < 100
