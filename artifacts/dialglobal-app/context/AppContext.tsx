@@ -436,6 +436,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     let cancelled = false;
     let foregroundSub: Notifications.Subscription | null = null;
     let responseSub: Notifications.Subscription | null = null;
+    let pushTokenSub: Notifications.Subscription | null = null;
     let voipRegisterHandler: ((token: string) => void) | null = null;
     let voipNotificationHandler: ((notification: any) => void) | null = null;
     let voipInstance: any = null;
@@ -443,6 +444,23 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     if (!isAuthed || !notifications) {
       return;
     }
+
+    const upsertPushTokens = async (fields: { ios_voip_token?: string | null; android_fcm_token?: string | null }) => {
+      if (!user?.id) return;
+      const { error } = await supabase.from("user_push_tokens").upsert(
+        {
+          user_id: user.id,
+          ios_voip_token: fields.ios_voip_token,
+          android_fcm_token: fields.android_fcm_token,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id" },
+      );
+
+      if (error) {
+        throw new Error(error.message);
+      }
+    };
 
     Notifications.setNotificationHandler({
       handleNotification: async () => ({
@@ -461,11 +479,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         const deviceToken = await Notifications.getDevicePushTokenAsync();
         const tokenValue = String((deviceToken as any)?.data ?? "");
         if (tokenValue) {
+          await upsertPushTokens({ android_fcm_token: tokenValue });
           await telnyxService.registerPushToken(tokenValue, "fcm");
         }
       } catch {
         // Do not interrupt app flow if push registration is unavailable in this runtime.
       }
+
+      pushTokenSub = (Notifications as any).addPushTokenListener?.((event: any) => {
+        const refreshed = String(event?.data ?? "");
+        if (!refreshed) return;
+
+        upsertPushTokens({ android_fcm_token: refreshed }).catch(() => {});
+        telnyxService.registerPushToken(refreshed, "fcm").catch(() => {});
+      }) ?? null;
 
       foregroundSub = Notifications.addNotificationReceivedListener((event) => {
         telnyxService.handlePushNotification(event?.request?.content?.data).catch(() => {});
@@ -485,6 +512,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       if (!voipInstance) return;
 
       voipRegisterHandler = (token: string) => {
+        upsertPushTokens({ ios_voip_token: token }).catch(() => {});
         telnyxService.registerPushToken(token, "voip").catch(() => {});
       };
 
@@ -512,6 +540,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       cancelled = true;
       foregroundSub?.remove();
       responseSub?.remove();
+      pushTokenSub?.remove();
       if (voipInstance && voipRegisterHandler) {
         voipInstance.removeEventListener("register", voipRegisterHandler);
       }
@@ -519,7 +548,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         voipInstance.removeEventListener("notification", voipNotificationHandler);
       }
     };
-  }, [isAuthed, notifications, showToast]);
+  }, [isAuthed, notifications, showToast, user?.id]);
 
   const dismissToast = useCallback(() => setToast(null), []);
   const startCall = useCallback(async (number: string) => {

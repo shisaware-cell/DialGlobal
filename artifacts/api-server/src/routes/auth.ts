@@ -136,10 +136,70 @@ router.get("/auth/telnyx-token", async (req, res) => {
       return;
     }
 
-    res.json({ login_token: loginToken, expires_in: raw?.data?.expires_in ?? 3600 });
+    const { data: pushTokens } = await supabaseAdmin
+      .from("user_push_tokens")
+      .select("ios_voip_token, android_fcm_token, updated_at")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    res.json({
+      login_token: loginToken,
+      expires_in: raw?.data?.expires_in ?? 3600,
+      push_tokens: pushTokens ?? null,
+    });
   } catch (err: any) {
     res.status(500).json({ error: err?.message || "Unable to generate Telnyx token" });
   }
+});
+
+router.get("/auth/push-tokens", async (req, res) => {
+  const user = await getBearerUser(req);
+  if (!user) {
+    res.status(401).json({ error: "Invalid token" });
+    return;
+  }
+
+  const { data, error } = await supabaseAdmin
+    .from("user_push_tokens")
+    .select("user_id, ios_voip_token, android_fcm_token, updated_at")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (error) {
+    res.status(500).json({ error: error.message });
+    return;
+  }
+
+  res.json({ push_tokens: data ?? null });
+});
+
+router.post("/auth/push-tokens", async (req, res) => {
+  const user = await getBearerUser(req);
+  if (!user) {
+    res.status(401).json({ error: "Invalid token" });
+    return;
+  }
+
+  const { ios_voip_token, android_fcm_token } = req.body || {};
+  const payload = {
+    user_id: user.id,
+    ios_voip_token: ios_voip_token ?? null,
+    android_fcm_token: android_fcm_token ?? null,
+    updated_at: new Date().toISOString(),
+  };
+
+  const { data, error } = await supabaseAdmin
+    .from("user_push_tokens")
+    .upsert(payload, { onConflict: "user_id" })
+    .select("user_id, ios_voip_token, android_fcm_token, updated_at")
+    .single();
+
+  if (error) {
+    res.status(500).json({ error: error.message });
+    return;
+  }
+
+  res.json({ push_tokens: data });
 });
 
 export default router;

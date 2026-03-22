@@ -60,11 +60,20 @@ CREATE TABLE IF NOT EXISTS calls (
   created_at TIMESTAMPTZ DEFAULT now()
 );
 
+-- User push tokens table
+CREATE TABLE IF NOT EXISTS user_push_tokens (
+  user_id UUID PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
+  ios_voip_token TEXT,
+  android_fcm_token TEXT,
+  updated_at TIMESTAMPTZ DEFAULT now()
+);
+
 -- RLS policies
 ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
 ALTER TABLE virtual_numbers ENABLE ROW LEVEL SECURITY;
 ALTER TABLE messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE calls ENABLE ROW LEVEL SECURITY;
+ALTER TABLE user_push_tokens ENABLE ROW LEVEL SECURITY;
 
 -- Profiles: users can read/update their own
 CREATE POLICY profiles_select_own ON profiles FOR SELECT USING (auth.uid() = id);
@@ -83,6 +92,11 @@ CREATE POLICY messages_insert_own ON messages FOR INSERT WITH CHECK (auth.uid() 
 -- Calls: users can read their own
 CREATE POLICY calls_select_own ON calls FOR SELECT USING (auth.uid() = user_id);
 CREATE POLICY calls_insert_own ON calls FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Push tokens: users can read and upsert their own row
+CREATE POLICY push_tokens_select_own ON user_push_tokens FOR SELECT USING (auth.uid() = user_id);
+CREATE POLICY push_tokens_insert_own ON user_push_tokens FOR INSERT WITH CHECK (auth.uid() = user_id);
+CREATE POLICY push_tokens_update_own ON user_push_tokens FOR UPDATE USING (auth.uid() = user_id);
 
 -- Helper functions for counter increments
 CREATE OR REPLACE FUNCTION increment_sms(num_id UUID)
@@ -112,3 +126,4 @@ CREATE INDEX IF NOT EXISTS idx_messages_user ON messages(user_id);
 CREATE INDEX IF NOT EXISTS idx_messages_number ON messages(number_id);
 CREATE INDEX IF NOT EXISTS idx_calls_user ON calls(user_id);
 CREATE INDEX IF NOT EXISTS idx_calls_number ON calls(number_id);
+CREATE INDEX IF NOT EXISTS idx_user_push_tokens_updated_at ON user_push_tokens(updated_at);
