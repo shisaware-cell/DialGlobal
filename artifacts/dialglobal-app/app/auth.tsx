@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
   div: { flex: 1, height: 1, backgroundColor: C.border },
   divTxt: { fontFamily: "Inter_400Regular", fontSize: 12, color: C.textMuted },
   social: { height: 48, borderRadius: 12, borderWidth: 1, borderColor: C.border, backgroundColor: C.raised, flexDirection: "row", alignItems: "center", justifyContent: "center", gap: 10 },
-  socialIcon: { width: 16, height: 16, resizeMode: "contain" },
+  socialIcon: { width: 22, height: 22, resizeMode: "contain" },
   socialTxt: { fontFamily: "Inter_500Medium", fontSize: 14, color: C.textSec },
   terms: { fontFamily: "Inter_400Regular", fontSize: 11.5, color: C.textMuted, textAlign: "center", lineHeight: 18 },
 });

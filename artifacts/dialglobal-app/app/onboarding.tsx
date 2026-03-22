@@ -8,6 +8,8 @@ import C from "@/constants/colors";
 import { CharGlobeHolder, CharMidCall, CharTraveller, CharCelebrating } from "@/components/Characters";
 
 const { width: SW } = Dimensions.get("window");
+const IS_SMALL = SW <= 390;
+const SIDE_BADGE_W = IS_SMALL ? 92 : 108;
 
 /* ── Slide 1 — GLOBAL  ─────────────────────────────────────────────────── */
 const FLAG_EMOJIS = ["🇺🇸","🇬🇧","🇯🇵","🇩🇪","🇫🇷","🇦🇺","🇧🇷","🇮🇳","🇨🇦","🇿🇦"];
@@ -52,10 +54,10 @@ const LL_RIGHT = [
 
 function LandlineVisual() {
   return (
-    <View style={{ flex: 1, width: "100%", flexDirection: "row", alignItems: "center", justifyContent: "center", paddingHorizontal: 14, gap: 12 }}>
-      <View style={{ gap: 14, alignItems: "flex-end", flex: 1 }}>
+    <View style={{ flex: 1, width: "100%", flexDirection: "row", alignItems: "center", justifyContent: "center", paddingHorizontal: 12, gap: IS_SMALL ? 8 : 12 }}>
+      <View style={{ gap: IS_SMALL ? 10 : 14, alignItems: "flex-end", width: SIDE_BADGE_W }}>
         {LL_LEFT.map(b => (
-          <View key={b.label} style={[pv.badge, { backgroundColor: b.bg }]}> 
+          <View key={b.label} style={[pv.badge, { backgroundColor: b.bg, width: SIDE_BADGE_W }]}> 
             <View style={pv.badgeRow}>
               <Text style={pv.badgeIcon}>{b.icon}</Text>
               <Text style={[pv.badgeTxt, { color: b.clr }]} numberOfLines={1}>{b.label}</Text>
@@ -63,10 +65,10 @@ function LandlineVisual() {
           </View>
         ))}
       </View>
-      <CharCelebrating size={158} />
-      <View style={{ gap: 14, alignItems: "flex-start", flex: 1 }}>
+      <CharCelebrating size={IS_SMALL ? 140 : 158} />
+      <View style={{ gap: IS_SMALL ? 10 : 14, alignItems: "flex-start", width: SIDE_BADGE_W }}>
         {LL_RIGHT.map(b => (
-          <View key={b.label} style={[pv.badge, { backgroundColor: b.bg }]}> 
+          <View key={b.label} style={[pv.badge, { backgroundColor: b.bg, width: SIDE_BADGE_W }]}> 
             <View style={pv.badgeRow}>
               <Text style={pv.badgeIcon}>{b.icon}</Text>
               <Text style={[pv.badgeTxt, { color: b.clr }]} numberOfLines={1}>{b.label}</Text>
@@ -138,11 +140,11 @@ const RIGHT_BADGES = [
 
 function PrivateVisual() {
   return (
-    <View style={{ flex: 1, width: "100%", flexDirection: "row", alignItems: "center", justifyContent: "center", paddingHorizontal: 14, gap: 12 }}>
+    <View style={{ flex: 1, width: "100%", flexDirection: "row", alignItems: "center", justifyContent: "center", paddingHorizontal: 12, gap: IS_SMALL ? 8 : 12 }}>
       {/* Left column */}
-      <View style={{ gap: 14, alignItems: "flex-end", flex: 1 }}>
+      <View style={{ gap: IS_SMALL ? 10 : 14, alignItems: "flex-end", width: SIDE_BADGE_W }}>
         {LEFT_BADGES.map(b => (
-          <View key={b.label} style={[pv.badge, { backgroundColor: b.bg }]}> 
+          <View key={b.label} style={[pv.badge, { backgroundColor: b.bg, width: SIDE_BADGE_W }]}> 
             <View style={pv.badgeRow}>
               <Text style={pv.badgeIcon}>{b.icon}</Text>
               <Text style={[pv.badgeTxt, { color: b.clr }]} numberOfLines={1}>{b.label}</Text>
@@ -151,11 +153,11 @@ function PrivateVisual() {
         ))}
       </View>
       {/* Character centred */}
-      <CharTraveller size={182} />
+      <CharTraveller size={IS_SMALL ? 162 : 182} />
       {/* Right column */}
-      <View style={{ gap: 14, alignItems: "flex-start", flex: 1 }}>
+      <View style={{ gap: IS_SMALL ? 10 : 14, alignItems: "flex-start", width: SIDE_BADGE_W }}>
         {RIGHT_BADGES.map(b => (
-          <View key={b.label} style={[pv.badge, { backgroundColor: b.bg }]}> 
+          <View key={b.label} style={[pv.badge, { backgroundColor: b.bg, width: SIDE_BADGE_W }]}> 
             <View style={pv.badgeRow}>
               <Text style={pv.badgeIcon}>{b.icon}</Text>
               <Text style={[pv.badgeTxt, { color: b.clr }]} numberOfLines={1}>{b.label}</Text>
@@ -353,7 +355,7 @@ const pv = StyleSheet.create({
     borderWidth: 1.5, borderColor: "rgba(124,58,237,0.2)",
   },
   badge: {
-    borderRadius: 20, paddingHorizontal: 10, paddingVertical: 6, minWidth: 108,
+    borderRadius: 20, paddingHorizontal: 8, paddingVertical: 6,
     shadowColor: "#000", shadowOpacity: 0.08, shadowRadius: 8,
     shadowOffset: { width: 0, height: 2 }, elevation: 3,
   },
