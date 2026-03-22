@@ -229,10 +229,10 @@ export default function NumbersScreen() {
           <View style={[styles.tile, { backgroundColor: C.accentDim, borderColor: "rgba(232,160,32,0.22)" }]}>
             <View style={styles.tileTop}>
               <View style={[styles.tileIco, { backgroundColor: "rgba(232,160,32,0.22)" }]}>
-                <Feather name="hash" size={13} color={C.accent} />
+                <Feather name="hash" size={11} color={C.accent} />
               </View>
               <View style={[styles.trendPill, { backgroundColor: "rgba(232,160,32,0.18)" }]}>
-                <Feather name="arrow-up-right" size={9} color={C.accent} />
+                <Feather name="arrow-up-right" size={8} color={C.accent} />
                 <Text style={[styles.trendTxt, { color: C.accent }]}>Active</Text>
               </View>
             </View>
@@ -241,7 +241,7 @@ export default function NumbersScreen() {
             <View style={styles.sparkline}>
               {[3, 5, 4, 6, 5, 7, numbers.length > 0 ? 7 : 3].map((h, i) => (
                 <View key={i} style={[styles.sparkBar, {
-                  height: h * 2,
+                  height: Math.round(h * 1.2),
                   backgroundColor: i === 6 ? C.accent : "rgba(232,160,32,0.3)",
                 }]} />
               ))}
@@ -252,10 +252,10 @@ export default function NumbersScreen() {
           <View style={[styles.tile, { backgroundColor: C.greenDim, borderColor: "rgba(22,163,74,0.18)" }]}>
             <View style={styles.tileTop}>
               <View style={[styles.tileIco, { backgroundColor: "rgba(22,163,74,0.2)" }]}>
-                <Feather name="message-square" size={13} color={C.green} />
+                <Feather name="message-square" size={11} color={C.green} />
               </View>
               <View style={[styles.trendPill, { backgroundColor: "rgba(22,163,74,0.15)" }]}>
-                <Feather name="arrow-up-right" size={9} color={C.green} />
+                <Feather name="arrow-up-right" size={8} color={C.green} />
                 <Text style={[styles.trendTxt, { color: C.green }]}>SMS</Text>
               </View>
             </View>
@@ -264,7 +264,7 @@ export default function NumbersScreen() {
             <View style={styles.sparkline}>
               {[3, 4, 5, 4, 6, 5, 7].map((h, i) => (
                 <View key={i} style={[styles.sparkBar, {
-                  height: h * 2,
+                  height: Math.round(h * 1.2),
                   backgroundColor: i === 6 ? C.green : "rgba(22,163,74,0.27)",
                 }]} />
               ))}
@@ -275,10 +275,10 @@ export default function NumbersScreen() {
           <View style={[styles.tile, { backgroundColor: C.blueDim, borderColor: "rgba(37,99,235,0.15)" }]}>
             <View style={styles.tileTop}>
               <View style={[styles.tileIco, { backgroundColor: "rgba(37,99,235,0.18)" }]}>
-                <Feather name="phone" size={13} color={C.blue} />
+                <Feather name="phone" size={11} color={C.blue} />
               </View>
               <View style={[styles.trendPill, { backgroundColor: "rgba(37,99,235,0.12)" }]}>
-                <Feather name="arrow-up-right" size={9} color={C.blue} />
+                <Feather name="arrow-up-right" size={8} color={C.blue} />
                 <Text style={[styles.trendTxt, { color: C.blue }]}>Total</Text>
               </View>
             </View>
@@ -287,7 +287,7 @@ export default function NumbersScreen() {
             <View style={styles.sparkline}>
               {[4, 3, 5, 4, 6, 5, 7].map((h, i) => (
                 <View key={i} style={[styles.sparkBar, {
-                  height: h * 2,
+                  height: Math.round(h * 1.2),
                   backgroundColor: i === 6 ? C.blue : "rgba(37,99,235,0.22)",
                 }]} />
               ))}
@@ -405,34 +405,34 @@ const styles = StyleSheet.create({
   notifBadgeTxt: { fontFamily: "Inter_700Bold", fontSize: 9, color: "#fff" },
 
   tilesRow: {
-    flexDirection: "row", gap: 7,
-    paddingHorizontal: 14, paddingTop: 10, paddingBottom: 10,
+    flexDirection: "row", gap: 6,
+    paddingHorizontal: 14, paddingTop: 8, paddingBottom: 8,
     backgroundColor: C.surface, borderBottomWidth: 1, borderBottomColor: C.border,
   },
   tile: {
-    flex: 1, borderRadius: 14, padding: 10,
-    borderWidth: 1.5, gap: 1,
+    flex: 1, borderRadius: 12, padding: 8,
+    borderWidth: 1.5, gap: 0,
   },
   tileTop: {
-    flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 4,
+    flexDirection: "row", justifyContent: "space-between", alignItems: "center", marginBottom: 2,
   },
   tileIco: {
-    width: 24, height: 24, borderRadius: 7, alignItems: "center", justifyContent: "center",
+    width: 20, height: 20, borderRadius: 6, alignItems: "center", justifyContent: "center",
   },
   trendPill: {
     flexDirection: "row", alignItems: "center", gap: 2,
     paddingHorizontal: 4, paddingVertical: 1, borderRadius: 99,
   },
   trendTxt: { fontFamily: "Inter_700Bold", fontSize: 8, letterSpacing: 0.3 },
-  tileVal: { fontFamily: "Inter_700Bold", fontSize: 22, letterSpacing: -1, lineHeight: 26 },
-  tileLbl: { fontFamily: "Inter_600SemiBold", fontSize: 9.5, letterSpacing: 0.4, marginBottom: 5 },
-  sparkline: { flexDirection: "row", alignItems: "flex-end", gap: 2, height: 14 },
+  tileVal: { fontFamily: "Inter_700Bold", fontSize: 18, letterSpacing: -0.8, lineHeight: 21 },
+  tileLbl: { fontFamily: "Inter_600SemiBold", fontSize: 9, letterSpacing: 0.4, marginBottom: 3 },
+  sparkline: { flexDirection: "row", alignItems: "flex-end", gap: 2, height: 10 },
   sparkBar: { flex: 1, borderRadius: 2 },
 
-  listCard: { backgroundColor: C.surface, marginTop: 8, borderRadius: 0 },
+  listCard: { backgroundColor: C.surface, marginTop: 6, borderRadius: 0 },
   listHeader: {
     flexDirection: "row", justifyContent: "space-between", alignItems: "center",
-    paddingHorizontal: 20, paddingTop: 10, paddingBottom: 6,
+    paddingHorizontal: 20, paddingTop: 7, paddingBottom: 4,
   },
   listHeading: { fontFamily: "Inter_700Bold", fontSize: 11, color: C.textMuted, letterSpacing: 1.4 },
 
