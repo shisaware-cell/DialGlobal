@@ -5,7 +5,7 @@ import {
 import { router } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import C from "@/constants/colors";
-import { CharGlobeHolder, CharMidCall, CharTraveller } from "@/components/Characters";
+import { CharGlobeHolder, CharMidCall, CharTraveller, CharCelebrating } from "@/components/Characters";
 
 const { width: SW } = Dimensions.get("window");
 
@@ -38,7 +38,41 @@ function GlobalVisual() {
   );
 }
 
-/* ── Slide 2 — INSTANT  ────────────────────────────────────────────────── */
+/* ── Slide 2 — LANDLINE  ───────────────────────────────────────────────── */
+const LL_LEFT = [
+  { txt: "📞 HD Voice",      bg: "#D4E8FF", clr: "#2D60C8" },
+  { txt: "🏢 Fixed Address", bg: "#FFF0D4", clr: "#A06010" },
+  { txt: "📠 Fax Ready",     bg: "#F4D4FF", clr: "#7030B0" },
+];
+const LL_RIGHT = [
+  { txt: "⭐ Trusted",   bg: "#D4F4E8", clr: "#2D9966" },
+  { txt: "🆘 E911",      bg: "#FFD4D4", clr: "#C83030" },
+  { txt: "💼 Business",  bg: "#D4E8FF", clr: "#2D60C8" },
+];
+
+function LandlineVisual() {
+  return (
+    <View style={{ flex: 1, width: "100%", flexDirection: "row", alignItems: "center", justifyContent: "center", paddingHorizontal: 10, gap: 10 }}>
+      <View style={{ gap: 9, alignItems: "flex-end" }}>
+        {LL_LEFT.map(b => (
+          <View key={b.txt} style={[pv.badge, { backgroundColor: b.bg }]}>
+            <Text style={[pv.badgeTxt, { color: b.clr }]}>{b.txt}</Text>
+          </View>
+        ))}
+      </View>
+      <CharCelebrating size={148} />
+      <View style={{ gap: 9, alignItems: "flex-start" }}>
+        {LL_RIGHT.map(b => (
+          <View key={b.txt} style={[pv.badge, { backgroundColor: b.bg }]}>
+            <Text style={[pv.badgeTxt, { color: b.clr }]}>{b.txt}</Text>
+          </View>
+        ))}
+      </View>
+    </View>
+  );
+}
+
+/* ── Slide 3 — INSTANT  ────────────────────────────────────────────────── */
 const PHONE_ROWS = [
   { flag: "🇺🇸", num: "+1 (415) 823-4921", active: true  },
   { flag: "🇬🇧", num: "+44 7700 123 456",  active: false },
@@ -129,6 +163,13 @@ const SLIDES = [
     sub: "Real local phone numbers in 100+ countries. Receive calls and texts like a local.",
     bg: "#D4E6FF",
     Visual: GlobalVisual,
+  },
+  {
+    key: "landline",
+    bigWord: "Landline.",
+    sub: "A real business phone number with HD voice, fax, and E911. Your office, anywhere.",
+    bg: "#FFF4D4",
+    Visual: LandlineVisual,
   },
   {
     key: "instant",
