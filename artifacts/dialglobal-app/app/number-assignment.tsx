@@ -247,7 +247,6 @@ export default function NumberAssignment() {
                 { label: "📞 Voice", color: "#2D60C8", bg: "#D4E8FF" },
                 { label: "💬 SMS",   color: "#2D9966", bg: "#D4F4E8" },
                 { label: "🖼 MMS",   color: "#A06010", bg: "#FFF0D4" },
-                { label: "📶 Data",  color: "#7030B0", bg: "#F4D4FF" },
               ].map(cap => (
                 <View key={cap.label} style={{ backgroundColor: cap.bg, borderRadius: 99, paddingHorizontal: 10, paddingVertical: 4 }}>
                   <Text style={{ fontFamily: "Inter_600SemiBold", fontSize: 10, color: cap.color }}>{cap.label}</Text>
